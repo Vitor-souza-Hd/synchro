@@ -25,6 +25,7 @@ public class User implements Serializable {
         this.id = id;
         this.name = name;
         this.email = email;
+        this.password = password;
     }
 
     public Long getId() {
@@ -55,6 +56,10 @@ public class User implements Serializable {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -69,11 +74,11 @@ public class User implements Serializable {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(email, user.email) && Objects.equals(password, user.password);
+        return Objects.equals(id, user.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(email, password);
+        return Objects.hashCode(id);
     }
 }
