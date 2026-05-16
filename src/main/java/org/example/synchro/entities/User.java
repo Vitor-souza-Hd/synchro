@@ -3,6 +3,8 @@ package org.example.synchro.entities;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.Objects;
 
 @Entity
@@ -16,16 +18,18 @@ public class User implements Serializable {
     private String name;
     private String email;
     private String password;
+    private LocalDate birthDay;
 
     public User(){
 
     }
 
-    public User(Long id, String name, String email, String password) {
+    public User(Long id, String name, String email, String password, LocalDate birthDay) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
+        this.birthDay = birthDay;
     }
 
     public Long getId() {
@@ -58,6 +62,14 @@ public class User implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public LocalDate getBirthDay() {
+        return birthDay;
+    }
+
+    public void setBirthDay(LocalDate birthDay) {
+        this.birthDay = birthDay;
     }
 
     @Override
