@@ -1,6 +1,5 @@
 package org.example.synchro.services;
 
-import org.example.synchro.repositories.UserRepository;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,16 +8,16 @@ import org.springframework.stereotype.Service;
 public class PasswordService {
 
     @Autowired
-    private BCrypt BCrypt;
+    private BCrypt passwordEncoder;
 
-    private static String salt = BCrypt.gensalt(12);
+    private final String salt = passwordEncoder.gensalt(12);
 
     public String hashPassword(String password) {
-        return BCrypt.hashpw(password, salt);
+        return passwordEncoder.hashpw(password, salt);
     }
 
     public boolean checkPassword(String bDPassword, String password) {
-        return BCrypt.checkpw(bDPassword, password);
+        return passwordEncoder.checkpw(bDPassword, password);
     }
 }
 
