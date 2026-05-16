@@ -2,6 +2,7 @@ package org.example.synchro.services;
 
 import org.example.synchro.entities.User;
 import org.example.synchro.repositories.UserRepository;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
