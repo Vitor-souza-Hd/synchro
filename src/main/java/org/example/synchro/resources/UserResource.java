@@ -21,16 +21,4 @@ public class UserResource {
         return ResponseEntity.ok().body(list);
     }
 
-    @PostMapping (value = "/registro")
-    public ResponseEntity<User> register(@RequestBody User obj){
-       obj = service.register(obj);
-       return ResponseEntity.ok().body(obj);
-    }
-
-    @GetMapping (value = "/login")
-    public ResponseEntity<User> login(@RequestBody User obj){
-        obj =service.Login(obj);
-        return ResponseEntity.ok().body(obj);
-    }
-
 }
