@@ -25,6 +25,6 @@ public class TestConfig implements CommandLineRunner {
         User u4 = new User(null, "vitor souza", "vitor@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2009,1,6));
 
 
-        userRepository.saveAllAndFlush(Arrays.asList(u1,u2,u3,u4));
+        userRepository.saveAllAndFlush(Arrays.asList(u1,u2,u3));
     }
 }

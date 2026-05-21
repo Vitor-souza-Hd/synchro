@@ -4,6 +4,7 @@ import org.example.synchro.dto.LoginRequest;
 import org.example.synchro.dto.RegistroRequest;
 import org.example.synchro.entities.User;
 import org.example.synchro.repositories.UserRepository;
+import org.example.synchro.services.exception.BadCredentialsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +25,9 @@ public class AuthService {
                 userRepository.save(user);
                 return user;
             }else {
-                throw new RuntimeException("senhas incompátiveis");
+                throw new BadCredentialsException();
             }
-        }else throw new RuntimeException("email já em uso");
+        }else throw new BadCredentialsException();
     }
 
     public User login(LoginRequest obj){
@@ -35,11 +36,11 @@ public class AuthService {
             if(passwordService.hashPassword(obj.getPassword()).equals(user.getPassword())){
                 return user;
             }else  {
-                throw new RuntimeException("Email ou senha incorreta");
+                throw new BadCredentialsException();
             }
         }
-        catch (Exception e){
-            throw new RuntimeException("Email ou senha incorreta");
+        catch (RuntimeException e){
+            throw new BadCredentialsException();
         }
     }
 
