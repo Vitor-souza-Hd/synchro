@@ -23,16 +23,15 @@ public class AuthResource {
     UserRepository userRepository;
 
     @PostMapping(value = "/registro")
-    public ResponseEntity<User> registro(@Valid @RequestBody RegistroRequest request) {
-        User user = authService.registro(request);
-        userRepository.save(user);
-        return  ResponseEntity.ok().body(user);
+    public ResponseEntity<String> registro(@Valid @RequestBody RegistroRequest request) {
+        String token = authService.registro(request);
+        return  ResponseEntity.ok().body(token);
     }
 
     @PostMapping(value = "/login")
-    public ResponseEntity<User> login(@Valid @RequestBody LoginRequest request) {
-        User user = authService.login(request);
-        return  ResponseEntity.ok().body(user);
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
+        String token = authService.login(request);
+        return  ResponseEntity.ok().body(token);
     }
 
 }

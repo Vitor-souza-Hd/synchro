@@ -18,23 +18,26 @@ public class AuthService {
     @Autowired
     private PasswordService passwordService;
 
-    public User registro(RegistroRequest obj){
+    @Autowired
+    private JwtService jwtService;
+
+    public String registro(RegistroRequest obj){
         if(!userRepository.existsByEmail(obj.getEmail())){
             if(obj.getPassword().equals(obj.getConfirmPassword())){
                 User user = new User(null,obj.getName(),obj.getEmail(), passwordService.hashPassword(obj.getPassword()),obj.getBirthDay());
-                userRepository.save(user);
-                return user;
+                User userSalvo = userRepository.save(user);
+                return jwtService.generateToken(userSalvo.getId(),userSalvo.getName(),userSalvo.getEmail());
             }else {
                 throw new BadCredentialsException();
             }
         }else throw new BadCredentialsException();
     }
 
-    public User login(LoginRequest obj){
+    public String login(LoginRequest obj){
         try {
             User user = userRepository.findByEmail(obj.getEmail());
             if(passwordService.hashPassword(obj.getPassword()).equals(user.getPassword())){
-                return user;
+                return jwtService.generateToken(user.getId(),user.getName(),user.getEmail());
             }else  {
                 throw new BadCredentialsException();
             }
