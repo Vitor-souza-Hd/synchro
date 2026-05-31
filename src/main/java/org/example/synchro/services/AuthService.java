@@ -26,7 +26,7 @@ public class AuthService {
             if(obj.getPassword().equals(obj.getConfirmPassword())){
                 User user = new User(null,obj.getName(),obj.getEmail(), passwordService.hashPassword(obj.getPassword()),obj.getBirthDay());
                 User userSalvo = userRepository.save(user);
-                return jwtService.generateToken(userSalvo.getId(),userSalvo.getName(),userSalvo.getEmail());
+                return token(userSalvo);
             }else {
                 throw new BadCredentialsException();
             }
@@ -37,7 +37,7 @@ public class AuthService {
         try {
             User user = userRepository.findByEmail(obj.getEmail());
             if(passwordService.hashPassword(obj.getPassword()).equals(user.getPassword())){
-                return jwtService.generateToken(user.getId(),user.getName(),user.getEmail());
+                return token(user);
             }else  {
                 throw new BadCredentialsException();
             }
@@ -46,5 +46,7 @@ public class AuthService {
             throw new BadCredentialsException();
         }
     }
-
+    private String token(User user){
+        return jwtService.generateToken(user.getId(),user.getName(),user.getEmail());
+    }
 }

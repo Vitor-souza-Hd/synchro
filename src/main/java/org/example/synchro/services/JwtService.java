@@ -3,6 +3,7 @@ package org.example.synchro.services;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +28,14 @@ public class JwtService {
                 .sign(algorithm);
     }
 
-    public DecodedJWT DecodeToken(String token){
+    public Boolean verificarToken(String token){
         JWTVerifier verifier = JWT.require(algorithm).build();
-        return verifier.verify(token);
+        try {
+            verifier.verify(token);
+            return true;
+        } catch (JWTVerificationException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 
