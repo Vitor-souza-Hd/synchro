@@ -2,12 +2,17 @@ package org.example.synchro.entities;
 
 import jakarta.persistence.*;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-public class Musica extends Midia {
+public class Musica extends Midia implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     private Duration duracao;
     private String genero;
 
@@ -51,13 +56,9 @@ public class Musica extends Midia {
         artista.getMusicas().remove(this);
     }
 
-    // Getters e Setters
     public Set<Artista> getArtistas() {
         return artistas;
     }
 
-    public void setArtistas(Set<Artista> artistas) {
-        this.artistas = artistas;
-    }
 }
-}
+

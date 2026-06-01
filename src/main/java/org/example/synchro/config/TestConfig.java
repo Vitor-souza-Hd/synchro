@@ -1,7 +1,9 @@
 package org.example.synchro.config;
 
+import org.example.synchro.entities.Artista;
 import org.example.synchro.entities.Musica;
 import org.example.synchro.entities.User;
+import org.example.synchro.repositories.ArtistaRepository;
 import org.example.synchro.repositories.UserRepository;
 import org.example.synchro.repositories.MusicaRepository;
 import org.example.synchro.services.PasswordService;
@@ -21,11 +23,18 @@ public class TestConfig implements CommandLineRunner {
     private PasswordService passwordService;
     @Autowired
     private MusicaRepository  musicaRepository;
+    @Autowired
+    private ArtistaRepository artistaRepository;
     @Override
     public void run(String... args)  throws  Exception{
 
+        Artista a1 = new Artista("YungLixo");
+
+        artistaRepository.saveAll(Arrays.asList(a1));
 
         Musica m1 = new Musica("Rumo à vitória","musica do album validation", Duration.ofSeconds(207),"trap");
+        m1.addArtista(a1);
+
 
         musicaRepository.saveAll(Arrays.asList(m1));
 

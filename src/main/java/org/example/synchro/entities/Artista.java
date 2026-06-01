@@ -2,20 +2,27 @@ package org.example.synchro.entities;
 
 import jakarta.persistence.*;
 
-import java.util.List;
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-public class Artista {
+public class Artista implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nome;
 
-    @OneToMany(mappedBy = "artista", cascade = CascadeType.ALL,orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Musica> musicas;
+    @ManyToMany(mappedBy = "artistas", fetch = FetchType.LAZY)
+    private Set<Musica> musicas = new HashSet<>();
+
     public Artista() {
     }
+
     public Artista(String nome) {
         this.nome = nome;
     }
@@ -32,10 +39,13 @@ public class Artista {
     public void setNome(String nome) {
         this.nome = nome;
     }
-    public List<Musica> getMusicas() {
-        return musicas;
+    public Set<Musica> getMusicas() {
+         return musicas;
     }
-    public void setMusicas(List<Musica> musicas) {
-        this.musicas = musicas;
+    public void addMusica(Musica musica) {
+        this.musicas.add(musica);
+    }
+    public void removeMusica(Musica musica) {
+        this.musicas.remove(musica);
     }
 }
