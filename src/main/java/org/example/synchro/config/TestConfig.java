@@ -1,12 +1,15 @@
 package org.example.synchro.config;
 
+import org.example.synchro.entities.Musica;
 import org.example.synchro.entities.User;
 import org.example.synchro.repositories.UserRepository;
+import org.example.synchro.repositories.MusicaRepository;
 import org.example.synchro.services.PasswordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Arrays;
 
@@ -16,8 +19,15 @@ public class TestConfig implements CommandLineRunner {
     private UserRepository userRepository;
     @Autowired
     private PasswordService passwordService;
+    @Autowired
+    private MusicaRepository  musicaRepository;
     @Override
     public void run(String... args)  throws  Exception{
+
+
+        Musica m1 = new Musica("Rumo à vitória","musica do album validation", Duration.ofSeconds(207),"trap");
+
+        musicaRepository.saveAll(Arrays.asList(m1));
 
         User u1 = new User(null, "vitor souza", "vitor@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2009,1,6));
         User u2 = new User(null, "otavio ramos", "tavio@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,7,14));
