@@ -29,11 +29,13 @@ public class TestConfig implements CommandLineRunner {
     public void run(String... args)  throws  Exception{
 
         Artista a1 = new Artista("YungLixo");
+        Artista a2 = new Artista("Biffe");
 
-        artistaRepository.saveAll(Arrays.asList(a1));
+        artistaRepository.saveAll(Arrays.asList(a1,a2));
 
         Musica m1 = new Musica("Rumo à vitória","musica do album validation", Duration.ofSeconds(207),"trap");
         m1.addArtista(a1);
+        m1.addArtista(a2);
 
 
         musicaRepository.saveAll(Arrays.asList(m1));

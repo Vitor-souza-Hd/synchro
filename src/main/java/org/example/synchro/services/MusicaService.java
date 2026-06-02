@@ -1,5 +1,6 @@
 package org.example.synchro.services;
 
+import org.example.synchro.dto.MusicaDto;
 import org.example.synchro.entities.Musica;
 import org.example.synchro.repositories.MusicaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,12 @@ public class MusicaService {
     @Autowired
     private MusicaRepository musicaRepository;
 
-    public Optional<Musica> findById(Long id) {
-        return musicaRepository.findById(id);
+    public MusicaDto findById(Long id) {
+        Optional<Musica> m1 = musicaRepository.findById(id);
+        MusicaDto musicaDto = new MusicaDto(m1.get());
+
+
+        return musicaDto;
+
     }
 }

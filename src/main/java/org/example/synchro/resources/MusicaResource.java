@@ -1,5 +1,6 @@
 package org.example.synchro.resources;
 
+import org.example.synchro.dto.MusicaDto;
 import org.example.synchro.entities.Musica;
 import org.example.synchro.services.MusicaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,9 @@ public class MusicaResource {
     private MusicaService musicaService;
 
     @GetMapping(value = "{id}")
-    public ResponseEntity<Musica> buscarMusicaById(@PathVariable Long id){
-        Optional<Musica> m1 = musicaService.findById(id);
-        return ResponseEntity.ok().body(m1.orElse(null));
+    public ResponseEntity<MusicaDto> buscarMusicaById(@PathVariable Long id){
+        MusicaDto m1 = musicaService.findById(id);
+        return ResponseEntity.ok().body(m1);
     }
 
 }
