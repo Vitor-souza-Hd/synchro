@@ -24,6 +24,10 @@ public class Musica extends Midia implements Serializable {
     )
     private Set<Artista> artistas = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "album_id")
+    private Album album;
+
     public Musica() {
         super();
     }
@@ -37,15 +41,19 @@ public class Musica extends Midia implements Serializable {
     public Duration getDuracao() {
         return duracao;
     }
+
     public void setDuracao(Duration duracao) {
         this.duracao = duracao;
     }
+
     public String getGenero() {
         return genero;
     }
+
     public void setGenero(String genero) {
         this.genero = genero;
     }
+
     public void addArtista(Artista artista) {
         this.artistas.add(artista);
         artista.getMusicas().add(this);
@@ -60,6 +68,12 @@ public class Musica extends Midia implements Serializable {
         return artistas;
     }
 
+    public Album getAlbum() {
+        return album;
+    }
 
+    public void setAlbum(Album album) {
+        this.album = album;
+    }
 }
 

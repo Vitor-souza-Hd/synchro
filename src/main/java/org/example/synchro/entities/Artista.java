@@ -23,6 +23,9 @@ public class Artista implements Serializable {
     @ManyToMany(mappedBy = "artistas", fetch = FetchType.LAZY)
     private Set<Musica> musicas = new HashSet<>();
 
+    @ManyToMany(mappedBy = "artistas", fetch = FetchType.LAZY)
+    private Set<Album> albums = new HashSet<>();
+
     public Artista() {
     }
 
@@ -64,6 +67,18 @@ public class Artista implements Serializable {
     }
     public void setBiografia(String Biografia) {
         this.Biografia = Biografia;
+    }
+    public Set<Album> getAlbums() {
+        return albums;
+    }
+    public void setAlbums(Set<Album> albums) {
+        this.albums = albums;
+    }
+    public void addAlbum(Album album) {
+        this.albums.add(album);
+    }
+    public void removeAlbum(Album album) {
+        this.albums.remove(album);
     }
 
     @Override

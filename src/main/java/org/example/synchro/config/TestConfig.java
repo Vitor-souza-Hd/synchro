@@ -1,8 +1,10 @@
 package org.example.synchro.config;
 
+import org.example.synchro.entities.Album;
 import org.example.synchro.entities.Artista;
 import org.example.synchro.entities.Musica;
 import org.example.synchro.entities.User;
+import org.example.synchro.repositories.AlbumRepository;
 import org.example.synchro.repositories.ArtistaRepository;
 import org.example.synchro.repositories.UserRepository;
 import org.example.synchro.repositories.MusicaRepository;
@@ -15,6 +17,8 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Arrays;
 
+import static tools.jackson.databind.type.LogicalType.DateTime;
+
 @Configuration
 public class TestConfig implements CommandLineRunner {
     @Autowired
@@ -25,6 +29,9 @@ public class TestConfig implements CommandLineRunner {
     private MusicaRepository  musicaRepository;
     @Autowired
     private ArtistaRepository artistaRepository;
+    @Autowired
+    private AlbumRepository albumRepository;
+
     @Override
     public void run(String... args)  throws  Exception{
 
@@ -33,13 +40,20 @@ public class TestConfig implements CommandLineRunner {
 
         artistaRepository.saveAll(Arrays.asList(a1,a2));
 
+        LocalDate lançamento;
+        Album album1 = new Album("Validation","album do artista yunglixo feito em collab com biffe", LocalDate.of(2022,12,22));
+        albumRepository.save(album1);
+        album1.addArtista(a1);
+        album1.addArtista(a2);
+
         Musica m1 = new Musica("Rumo à vitória","musica do album validation", Duration.ofSeconds(207),"trap");
         m1.addArtista(a1);
         m1.addArtista(a2);
 
 
         musicaRepository.saveAll(Arrays.asList(m1));
-
+        album1.addMusica(m1);
+        albumRepository.save(album1);
         User u1 = new User(null, "vitor souza", "vitor@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2009,1,6));
         User u2 = new User(null, "otavio ramos", "tavio@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,7,14));
         User u3 = new User(null, "brenno", "brenno@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,10,7));
