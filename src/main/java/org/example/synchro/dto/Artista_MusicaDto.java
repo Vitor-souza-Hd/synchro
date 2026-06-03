@@ -2,6 +2,9 @@ package org.example.synchro.dto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.example.synchro.entities.Artista;
+
+import java.util.Objects;
+
 @JsonPropertyOrder({
         "id",
         "nome",
@@ -52,4 +55,17 @@ public class Artista_MusicaDto {
     public void setBiografia(String biografia) {
         this.biografia = biografia;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Artista_MusicaDto that = (Artista_MusicaDto) o;
+        return id == that.id && Objects.equals(nome, that.nome);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, nome);
+    }
+
 }
