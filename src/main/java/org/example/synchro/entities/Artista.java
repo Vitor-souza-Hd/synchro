@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -16,6 +17,8 @@ public class Artista implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nome;
+    private String imgUrl;
+    private String Biografia;
 
     @ManyToMany(mappedBy = "artistas", fetch = FetchType.LAZY)
     private Set<Musica> musicas = new HashSet<>();
@@ -23,8 +26,10 @@ public class Artista implements Serializable {
     public Artista() {
     }
 
-    public Artista(String nome) {
+    public Artista(String nome, String Biografia, String imgUrl) {
         this.nome = nome;
+        this.imgUrl = imgUrl;
+        this.Biografia = Biografia;
     }
 
     public Long getId() {
@@ -47,5 +52,29 @@ public class Artista implements Serializable {
     }
     public void removeMusica(Musica musica) {
         this.musicas.remove(musica);
+    }
+    public String getImgUrl() {
+        return imgUrl;
+    }
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
+    public String getBiografia() {
+        return Biografia;
+    }
+    public void setBiografia(String Biografia) {
+        this.Biografia = Biografia;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Artista artista = (Artista) o;
+        return Objects.equals(id, artista.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }

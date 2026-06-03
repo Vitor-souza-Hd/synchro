@@ -2,9 +2,7 @@ package org.example.synchro.entities;
 
 import jakarta.persistence.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 
 @MappedSuperclass
 public abstract class Midia {
@@ -42,4 +40,15 @@ public abstract class Midia {
         this.descricao = descricao;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Midia midia = (Midia) o;
+        return Objects.equals(id, midia.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }

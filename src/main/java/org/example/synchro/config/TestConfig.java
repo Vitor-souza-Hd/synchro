@@ -28,8 +28,8 @@ public class TestConfig implements CommandLineRunner {
     @Override
     public void run(String... args)  throws  Exception{
 
-        Artista a1 = new Artista("YungLixo");
-        Artista a2 = new Artista("Biffe");
+        Artista a1 = new Artista("YungLixo","musico de trap brasileiro",null );
+        Artista a2 = new Artista("Biffe", "produtor musical", null);
 
         artistaRepository.saveAll(Arrays.asList(a1,a2));
 
