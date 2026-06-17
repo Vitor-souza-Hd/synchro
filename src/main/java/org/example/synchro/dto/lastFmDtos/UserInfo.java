@@ -9,23 +9,30 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserInfo {
 
     private String name;
-    private String realname;
-    private String url;
-    private String country;
-    private String gender;
     private String age;
     private String subscriber;
-    private String playcount;
+    private String realname;
+    private String bootstrap;
     private String playlists;
-    private String track_count;
-    private String album_count;
-    private String artist_count;
+    private String country;
+    private String gender;
+    private String url;
+    private String type;
+
+    private String playcount;
+
+    @JsonProperty("artist_count")
+    private String artistCount;
+
+    @JsonProperty("track_count")
+    private String trackCount;
+
+    @JsonProperty("album_count")
+    private String albumCount;
 
     @JsonProperty("image")
     private List<ImageDto> images;
