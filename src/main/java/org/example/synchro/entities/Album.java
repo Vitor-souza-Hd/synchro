@@ -2,12 +2,16 @@ package org.example.synchro.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Getter
+@Setter
 public class Album extends Midia{
 
     private LocalDate dataLancamento;
@@ -36,22 +40,6 @@ public class Album extends Midia{
         this.dataLancamento = dataLancamento;
     }
 
-    public LocalDate getDataLancamento() {
-        return dataLancamento;
-    }
-
-    public void setDataLancamento(LocalDate dataLancamento) {
-        this.dataLancamento = dataLancamento;
-    }
-
-    public Set<Musica> getMusicas() {
-        return musicas;
-    }
-
-    public Set<Artista> getArtistas() {
-        return artistas;
-    }
-
     public void addMusica(Musica musica){
         this.musicas.add(musica);
         musica.setAlbum(this);
@@ -59,6 +47,6 @@ public class Album extends Midia{
 
     public void addArtista(Artista artista){
         artistas.add(artista);
-        artista.addAlbum(this);
+        artista.getAlbums().add(this);
     }
 }

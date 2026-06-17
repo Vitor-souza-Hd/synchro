@@ -1,6 +1,8 @@
 package org.example.synchro.entities;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -9,6 +11,8 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
+@Getter
+@Setter
 public class Artista implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -35,50 +39,21 @@ public class Artista implements Serializable {
         this.Biografia = Biografia;
     }
 
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public String getNome() {
-        return nome;
-    }
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-    public Set<Musica> getMusicas() {
-         return musicas;
-    }
-    public void addMusica(Musica musica) {
-        this.musicas.add(musica);
-    }
-    public void removeMusica(Musica musica) {
-        this.musicas.remove(musica);
-    }
-    public String getImgUrl() {
-        return imgUrl;
-    }
-    public void setImgUrl(String imgUrl) {
-        this.imgUrl = imgUrl;
-    }
-    public String getBiografia() {
-        return Biografia;
-    }
-    public void setBiografia(String Biografia) {
-        this.Biografia = Biografia;
-    }
-    public Set<Album> getAlbums() {
-        return albums;
-    }
-    public void setAlbums(Set<Album> albums) {
-        this.albums = albums;
-    }
     public void addAlbum(Album album) {
-        this.albums.add(album);
+        albums.add(album);
+        album.addArtista(this);
     }
     public void removeAlbum(Album album) {
         this.albums.remove(album);
+        album.getArtistas().remove(this);
+    }
+    public void addMusica(Musica musica) {
+        musicas.add(musica);
+        musica.addArtista(this);
+    }
+    public void removeMusica(Musica musica) {
+        musicas.remove(musica);
+        musica.getArtistas().remove(this);
     }
 
     @Override

@@ -24,7 +24,7 @@ public class AuthService {
     public String registro(RegistroRequest obj){
         if(!userRepository.existsByEmail(obj.getEmail())){
             if(obj.getPassword().equals(obj.getConfirmPassword())){
-                User user = new User(null,obj.getName(),obj.getEmail(), passwordService.hashPassword(obj.getPassword()),obj.getBirthDay());
+                User user = new User(null,obj.getName(),obj.getEmail(), passwordService.hashPassword(obj.getPassword()),obj.getBirthDay(),obj.getLastFmUsername());
                 User userSalvo = userRepository.save(user);
                 return token(userSalvo);
             }else {

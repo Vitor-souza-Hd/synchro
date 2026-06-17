@@ -1,6 +1,8 @@
 package org.example.synchro.entities;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -9,6 +11,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Getter
+@Setter
 public class Musica extends Midia implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -38,21 +42,6 @@ public class Musica extends Midia implements Serializable {
         this.genero = genero;
     }
 
-    public Duration getDuracao() {
-        return duracao;
-    }
-
-    public void setDuracao(Duration duracao) {
-        this.duracao = duracao;
-    }
-
-    public String getGenero() {
-        return genero;
-    }
-
-    public void setGenero(String genero) {
-        this.genero = genero;
-    }
 
     public void addArtista(Artista artista) {
         this.artistas.add(artista);
@@ -64,16 +53,5 @@ public class Musica extends Midia implements Serializable {
         artista.getMusicas().remove(this);
     }
 
-    public Set<Artista> getArtistas() {
-        return artistas;
-    }
-
-    public Album getAlbum() {
-        return album;
-    }
-
-    public void setAlbum(Album album) {
-        this.album = album;
-    }
 }
 

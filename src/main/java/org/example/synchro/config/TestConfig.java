@@ -4,10 +4,7 @@ import org.example.synchro.entities.Album;
 import org.example.synchro.entities.Artista;
 import org.example.synchro.entities.Musica;
 import org.example.synchro.entities.User;
-import org.example.synchro.repositories.AlbumRepository;
-import org.example.synchro.repositories.ArtistaRepository;
-import org.example.synchro.repositories.UserRepository;
-import org.example.synchro.repositories.MusicaRepository;
+import org.example.synchro.repositories.*;
 import org.example.synchro.services.PasswordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -33,6 +30,8 @@ public class TestConfig implements CommandLineRunner {
     private ArtistaRepository artistaRepository;
     @Autowired
     private AlbumRepository albumRepository;
+    @Autowired
+    private UserDataRepository userDataRepository;
 
     @Override
     public void run(String... args)  throws  Exception{
@@ -70,12 +69,17 @@ public class TestConfig implements CommandLineRunner {
             album2.addMusica(musica);
         }
         albumRepository.saveAll(Arrays.asList(album1,album2));
-        User u1 = new User(null, "vitor souza", "vitor@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2009,1,6));
-        User u2 = new User(null, "otavio ramos", "tavio@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,7,14));
-        User u3 = new User(null, "brenno", "brenno@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,10,7));
-        User u4 = new User(null, "vitor souza", "vitor@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2009,1,6));
+        User u1 = new User(null, "vitor souza", "vitor@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2009,1,6), "jinka070");
+        User u2 = new User(null, "otavio ramos", "tavio@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,7,14),null);
+        User u3 = new User(null, "brenno", "brenno@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,10,7),null);
+        User u4 = new User(null, "vitor souza", "vitor@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2009,1,6),null);
 
+       List<User>users = new ArrayList<>();
+       users.addAll(Arrays.asList(u1,u2,u3,u4));
+       for (User user: users){
+           userDataRepository.save(user.getData());
+       }
 
-        userRepository.saveAllAndFlush(Arrays.asList(u1,u2,u3));
+        userRepository.saveAll(Arrays.asList(u1,u2,u3));
     }
 }
