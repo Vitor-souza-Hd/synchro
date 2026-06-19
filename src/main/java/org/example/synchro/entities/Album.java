@@ -49,4 +49,13 @@ public class Album extends Midia{
         artistas.add(artista);
         artista.getAlbums().add(this);
     }
+
+    public void removeMusica(Musica musica){
+        this.musicas.remove(musica);
+        musica.setAlbum(null);
+    }
+    public void removeArtista(Artista artista){
+        artistas.remove(artista);
+        artista.getAlbums().remove(this);
+    }
 }
