@@ -9,9 +9,10 @@ import java.time.LocalDate;
 @Getter
 @Setter
 public class RegistroRequest {
+
     @NotBlank(message = "O nome é obrigatório")
     @Size(min = 3, max = 100, message = "O nome deve ter entre 3 e 100 caracteres")
-    private String name;
+    private String username;
 
     @NotBlank(message = "O email é obrigatório")
     @Email(message = "Email inválido")

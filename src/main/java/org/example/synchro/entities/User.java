@@ -20,7 +20,7 @@ public class User implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private String username;
     private String email;
     private String password;
     private LocalDate birthDay;
@@ -32,21 +32,21 @@ public class User implements Serializable {
 
     }
 
-    public User(Long id, String name, String email, String password, LocalDate birthDay, String lastFmUsername) {
+    public User(Long id, String username, String email, String password, LocalDate birthDay, String lastFmUsername) {
         this.id = id;
-        this.name = name;
+        this.username = username;
         this.email = email;
         this.password = password;
         this.birthDay = birthDay;
         this.lastFmUsername = lastFmUsername;
-        this.data = new UserData();
+        this.data = new UserData(this);
     }
 
     @Override
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
+                ", name='" + username + '\'' +
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
                 '}';

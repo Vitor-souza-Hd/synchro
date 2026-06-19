@@ -1,14 +1,16 @@
 package org.example.synchro.services;
 
+import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class PasswordService {
 
     @Autowired
-    private BCrypt passwordEncoder;
+    private final BCrypt passwordEncoder = new BCrypt();
 
     private final String salt = passwordEncoder.gensalt(12);
 

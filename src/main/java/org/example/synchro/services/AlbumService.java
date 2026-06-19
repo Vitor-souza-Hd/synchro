@@ -1,5 +1,6 @@
 package org.example.synchro.services;
 
+import lombok.RequiredArgsConstructor;
 import org.example.synchro.dto.AlbumDto;
 import org.example.synchro.entities.Album;
 import org.example.synchro.repositories.AlbumRepository;
@@ -9,9 +10,10 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class AlbumService {
-    @Autowired
-    private AlbumRepository albumRepository;
+
+    private final AlbumRepository albumRepository;
 
     public AlbumDto findByid(Long id){
         Optional<Album> album = albumRepository.findById(id);

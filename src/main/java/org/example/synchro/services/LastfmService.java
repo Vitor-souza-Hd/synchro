@@ -9,7 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Array;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,4 +35,12 @@ public class LastfmService {
                 .toEntity(LastFmUserDto.class)
                 .timeout(Duration.ofSeconds(15));
     }
-}
+    public List<Integer> contadores (String username){
+        LastFmUserDto lfu = getUserInfo(username)
+                .block()
+                .getBody();
+
+        return Arrays.asList(Integer.parseInt(lfu.getUser().getPlaycount()),Integer.parseInt(lfu.getUser().getArtistCount()));
+    };
+ }
+
