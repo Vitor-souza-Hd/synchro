@@ -1,12 +1,13 @@
 package org.example.synchro.dto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.synchro.entities.Artista;
 
 import java.util.Objects;
-
+@Data
 @JsonPropertyOrder({
         "id",
         "nome",

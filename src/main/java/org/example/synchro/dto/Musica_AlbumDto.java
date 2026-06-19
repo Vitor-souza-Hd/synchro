@@ -1,16 +1,23 @@
 package org.example.synchro.dto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.example.synchro.entities.Musica;
 
 import java.time.Duration;
 import java.util.Objects;
+
+@Data
 @JsonPropertyOrder({
         "id",
         "titulo",
         "descricao",
         "duracao"
 })
+@Getter
+@Setter
 public class Musica_AlbumDto {
     private Long id;
     private String titulo;
@@ -22,38 +29,6 @@ public class Musica_AlbumDto {
         this.titulo = musica.getTitulo();
         this.descricao = musica.getDescricao();
         this.duracao = musica.getDuracao();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getTitulo() {
-        return titulo;
-    }
-
-    public void setTitulo(String titulo) {
-        this.titulo = titulo;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
-
-    public Duration getDuracao() {
-        return duracao;
-    }
-
-    public void setDuracao(Duration duracao) {
-        this.duracao = duracao;
     }
 
     @Override

@@ -53,6 +53,7 @@ public class TestConfig implements CommandLineRunner {
         Musica m4 = new Musica("Puppet Parade","musica do album MegaDeath", Duration.ofSeconds(401),"rock");
         Musica m5 = new Musica("Let There Be Shred","musica do album MegaDeath", Duration.ofSeconds(238),"rock");
         Musica m6 = new Musica("Another Bad Day","musica do album MegaDeath", Duration.ofSeconds(217),"rock");
+        Musica m7 = new Musica("tomodachi","single do yunglixo feat. SHO-SENSEI!!", Duration.ofSeconds(156),"sla ksksk");
         List<Musica>musicasMD = new ArrayList<>();
         musicasMD.addAll(Arrays.asList(m2,m3,m4,m5,m6));
 
@@ -61,9 +62,9 @@ public class TestConfig implements CommandLineRunner {
         }
         m1.addArtista(a1);
         m1.addArtista(a2);
+        m7.addArtista(a1);
 
-
-        musicaRepository.saveAll(Arrays.asList(m1,m2,m3,m4,m5,m6));
+        musicaRepository.saveAll(Arrays.asList(m1,m2,m3,m4,m5,m6,m7));
         album1.addMusica(m1);
         for (Musica musica: musicasMD){
             album2.addMusica(musica);

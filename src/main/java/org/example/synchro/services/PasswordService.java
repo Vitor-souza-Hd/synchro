@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PasswordService {
 
-    @Autowired
     private final BCrypt passwordEncoder = new BCrypt();
 
     private final String salt = passwordEncoder.gensalt(12);

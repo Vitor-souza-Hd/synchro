@@ -13,6 +13,6 @@ import org.springframework.context.annotation.Configuration;
 public class LastFmConfig {
     private String apiKey;
     private String sharedSecret;
-    private String baseUrl = "http://ws.audioscrobbler.com/2.0/";
+    private String baseUrl = "https://ws.audioscrobbler.com/2.0/";
 
 }

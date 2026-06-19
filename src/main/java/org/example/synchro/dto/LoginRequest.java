@@ -3,7 +3,9 @@ package org.example.synchro.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
+@Data
 public class LoginRequest {
 
     @NotBlank(message = "o email não deve ser vazio")

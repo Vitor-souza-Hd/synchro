@@ -5,12 +5,10 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.synchro.entities.Album;
-import org.example.synchro.entities.Artista;
 import org.example.synchro.entities.Musica;
 
 import java.util.HashSet;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 @Data
@@ -18,42 +16,36 @@ import java.util.Set;
         "id",
         "titulo",
         "descricao",
-        "musicas",
-        "artistas"
+        "musicas"
 })
 @Getter
 @Setter
-public class AlbumDto {
+public class Album_ArtistaDto {
     private Long id;
     private String titulo;
     private String descricao;
-    private Set<Musica_AlbumDto>  musicas = new HashSet<Musica_AlbumDto>();
-    private Set<Artista_MusicaDto> artistas = new HashSet<>();
+    private Set<Musica_AlbumDto> musicas = new HashSet<>();
 
-    public AlbumDto() {
+    public Album_ArtistaDto() {}
 
-    }
-    public AlbumDto(Album album) {
+    public Album_ArtistaDto(Album album) {
         this.id = album.getId();
         this.titulo = album.getTitulo();
         this.descricao = album.getDescricao();
         for (Musica musica : album.getMusicas()) {
             this.musicas.add(new Musica_AlbumDto(musica));
         }
-        for (Artista artista : album.getArtistas()) {
-            this.artistas.add(new Artista_MusicaDto(artista));
-        }
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        AlbumDto albumDto = (AlbumDto) o;
-        return Objects.equals(id, albumDto.id) && Objects.equals(titulo, albumDto.titulo);
+        Album_ArtistaDto that = (Album_ArtistaDto) o;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, titulo);
+        return Objects.hashCode(id);
     }
 }

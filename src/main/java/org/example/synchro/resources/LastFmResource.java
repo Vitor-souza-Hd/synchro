@@ -1,5 +1,6 @@
 package org.example.synchro.resources;
 
+import lombok.RequiredArgsConstructor;
 import org.example.synchro.config.LastFmConfig;
 import org.example.synchro.dto.lastFmDtos.LastFmUserDto;
 import org.example.synchro.services.LastfmService;
@@ -14,7 +15,9 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping(value = "/last-fm")
+@RequiredArgsConstructor
 public class LastFmResource {
+
     @Autowired
     LastfmService lastfmService;
     @Autowired
