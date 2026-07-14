@@ -3,7 +3,9 @@ package org.example.synchro.resources;
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.config.LastFmConfig;
 import org.example.synchro.dto.lastFmDtos.LastFmUserDto;
+import org.example.synchro.services.CookieService;
 import org.example.synchro.services.LastfmService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,6 +24,9 @@ public class LastFmResource {
 
     private final LastFmConfig config;
 
+    private final CookieService cookieService;
+
+
     @GetMapping(value = "/user/{username}")
     public Mono<ResponseEntity<LastFmUserDto>> getuserInfo(@PathVariable String username) {
         return lastfmService.getUserInfo(username);
@@ -36,20 +41,24 @@ public class LastFmResource {
                 )));
     }
     @GetMapping("/auth/callback")
-    public Mono<ResponseEntity<Map<String, String>>> callback(@RequestParam String token) {
-        return lastfmService.getSession(token)
-                .map(sessionDto -> {
-                    String sessionKey = sessionDto.getSession().getKey();
-                    
-                    return ResponseEntity.ok(Map.of(
-                            "message", "Autenticação realizada com sucesso!",
-                            "username", sessionDto.getSession().getName(),
-                            "sessionKey", sessionKey,
-                            "token", token
-                    ));
-                })
-                .onErrorResume(e -> Mono.just(ResponseEntity.badRequest()
-                        .body(Map.of("error", e.getMessage()))));
+    public Mono<ResponseEntity<Map<String, String>>> callback(@CookieValue(name = "token_jwt", required = false) String cookie, @RequestParam String token) {
+        if (!cookieService.checkCookie(token)) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+        } else {
+            return lastfmService.getSession(cookie, token)
+                    .map(sessionDto -> {
+                        String sessionKey = sessionDto.getSession().getKey();
+
+                        return ResponseEntity.ok(Map.of(
+                                "message", "Autenticação realizada com sucesso!",
+                                "username", sessionDto.getSession().getName(),
+                                "sessionKey", sessionKey,
+                                "token", token
+                        ));
+                    })
+                    .onErrorResume(e -> Mono.just(ResponseEntity.badRequest()
+                            .body(Map.of("error", e.getMessage()))));
+        }
     }
     @GetMapping("/auth/status")
     public ResponseEntity<String> status() {

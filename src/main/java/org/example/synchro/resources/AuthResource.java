@@ -1,6 +1,7 @@
 package org.example.synchro.resources;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.example.synchro.dto.LoginRequest;
 import org.example.synchro.dto.RegistroRequest;
 import org.example.synchro.repositories.UserRepository;
@@ -10,21 +11,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/auth")
+@RequiredArgsConstructor
 public class AuthResource {
 
-    @Autowired
-    AuthService authService;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    CookieService cookieService;
+
+    private final AuthService authService;
+    private final CookieService cookieService;
 
     @PostMapping(value = "/registro")
     public ResponseEntity<String> registro(@Valid @RequestBody RegistroRequest request) {
@@ -40,6 +36,16 @@ public class AuthResource {
 
         ResponseCookie cookie = cookieService.createCookie("token_jwt", token);
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body("login concluido");
+    }
+
+    @GetMapping(value = "/cookie")
+    public ResponseEntity<String> getCookie(@CookieValue(name = "token_jwt", required = false) String token){
+        if(cookieService.checkCookie(token)){
+            return ResponseEntity.ok().body(cookieService.getId(token));
+        }
+        else {
+            return ResponseEntity.ok().body("preto burro");
+        }
     }
 
 }

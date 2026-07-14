@@ -1,6 +1,7 @@
 package org.example.synchro.services;
 
 import lombok.RequiredArgsConstructor;
+import org.example.synchro.config.LastFmConfig;
 import org.example.synchro.dto.LoginRequest;
 import org.example.synchro.dto.RegistroRequest;
 import org.example.synchro.entities.User;
@@ -9,6 +10,9 @@ import org.example.synchro.repositories.UserRepository;
 import org.example.synchro.services.exception.BadCredentialsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 
 @Service
@@ -22,6 +26,10 @@ public class AuthService {
     private final JwtService jwtService;
 
     private final UserDataService userDataService;
+
+    private final LastfmService lastfmService;
+
+    private final LastFmConfig lastFmConfig;
 
     private final UserDataRepository userDataRepository;
 

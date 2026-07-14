@@ -1,9 +1,7 @@
 package org.example.synchro.config;
 
-import org.example.synchro.entities.Album;
-import org.example.synchro.entities.Artista;
-import org.example.synchro.entities.Musica;
-import org.example.synchro.entities.User;
+import lombok.RequiredArgsConstructor;
+import org.example.synchro.entities.*;
 import org.example.synchro.repositories.*;
 import org.example.synchro.services.PasswordService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,20 +17,22 @@ import java.util.List;
 import static tools.jackson.databind.type.LogicalType.DateTime;
 
 @Configuration
+@RequiredArgsConstructor
 public class TestConfig implements CommandLineRunner {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PasswordService passwordService;
-    @Autowired
-    private MusicaRepository  musicaRepository;
-    @Autowired
-    private ArtistaRepository artistaRepository;
-    @Autowired
-    private AlbumRepository albumRepository;
-    @Autowired
-    private UserDataRepository userDataRepository;
 
+    private final UserRepository userRepository;
+
+    private final PasswordService passwordService;
+
+    private final MusicaRepository  musicaRepository;
+
+    private final ArtistaRepository artistaRepository;
+
+    private final AlbumRepository albumRepository;
+
+    private final UserDataRepository userDataRepository;
+
+    private final LastFmSessionRepository lastFmSessionRepository;
     @Override
     public void run(String... args)  throws  Exception{
 
@@ -70,6 +70,17 @@ public class TestConfig implements CommandLineRunner {
             album2.addMusica(musica);
         }
         albumRepository.saveAll(Arrays.asList(album1,album2));
+
+        LastFmSession lastFmSession1 = new LastFmSession(null,null,0);
+        LastFmSession lastFmSession2 = new LastFmSession(null,null,0);
+        LastFmSession lastFmSession3 = new LastFmSession(null,null,0);
+        LastFmSession lastFmSession4 = new LastFmSession(null,null,0);
+
+        List<LastFmSession> lastFmSessionsMD = new ArrayList<>();
+        lastFmSessionsMD.addAll(Arrays.asList(lastFmSession1,lastFmSession2,lastFmSession3,lastFmSession4));
+        lastFmSessionRepository.saveAll(lastFmSessionsMD);
+
+
         User u1 = new User(null, "vitor souza", "vitor@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2009,1,6), "jinka070");
         User u2 = new User(null, "otavio ramos", "tavio@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,7,14),null);
         User u3 = new User(null, "brenno", "brenno@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,10,7),null);
@@ -77,8 +88,11 @@ public class TestConfig implements CommandLineRunner {
 
        List<User>users = new ArrayList<>();
        users.addAll(Arrays.asList(u1,u2,u3,u4));
+       int i = 0;
        for (User user: users){
            userDataRepository.save(user.getData());
+           lastFmSessionsMD.get(i).setSynchroUser(user);
+           i++;
        }
 
         userRepository.saveAll(Arrays.asList(u1,u2,u3));

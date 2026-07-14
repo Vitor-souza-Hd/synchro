@@ -26,8 +26,12 @@ public class User implements Serializable {
     private LocalDate birthDay;
     private String lastFmUsername;
 
+    @OneToOne(mappedBy = "synchroUser")
+    private LastFmSession session;
+
     @OneToOne(mappedBy = "user")
     private UserData data;
+
     public User(){
 
     }
@@ -41,6 +45,7 @@ public class User implements Serializable {
         this.lastFmUsername = lastFmUsername;
         this.data = new UserData(this);
     }
+
 
     @Override
     public String toString() {
