@@ -5,6 +5,8 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.stereotype.Service;
+import org.example.synchro.services.exception.InvalidTokenException;
+import org.springframework.web.bind.annotation.CookieValue;
 
 import java.util.Date;
 
@@ -27,13 +29,17 @@ public class JwtService {
                 .sign(algorithm);
     }
 
-    public Boolean verificarToken(String token){
+    public Boolean verificarToken(@CookieValue(name = "token_jwt", required = false) String token){
         JWTVerifier verifier = JWT.require(algorithm).build();
         try {
-            verifier.verify(token);
+
+            verifier.verify(JWT.decode(token).getToken());
             return true;
         } catch (JWTVerificationException e) {
-            throw new RuntimeException(e);
+            System.out.println("sdsddfff");
+            System.out.println(e.getMessage());
+            System.out.println(e.getCause());
+            throw new InvalidTokenException("sessão inválida");
         }
     }
 

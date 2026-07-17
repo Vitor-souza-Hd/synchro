@@ -8,6 +8,7 @@ import org.example.synchro.entities.User;
 import org.example.synchro.repositories.UserDataRepository;
 import org.example.synchro.repositories.UserRepository;
 import org.example.synchro.services.exception.BadCredentialsException;
+import org.example.synchro.services.exception.ResourceConflictException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -41,9 +42,9 @@ public class AuthService {
                 User userSalvo = userRepository.save(user);
                 return token(userSalvo);
             }else {
-                throw new BadCredentialsException();
+                throw new BadCredentialsException("senhas não coincidem");
             }
-        }else throw new BadCredentialsException();
+        }else throw new ResourceConflictException("email",  obj.getEmail());
     }
 
     public String login(LoginRequest obj){
@@ -52,11 +53,11 @@ public class AuthService {
             if(passwordService.hashPassword(obj.getPassword()).equals(user.getPassword())){
                 return token(user);
             }else  {
-                throw new BadCredentialsException();
+                throw new RuntimeException();
             }
         }
         catch (RuntimeException e){
-            throw new BadCredentialsException();
+            throw new BadCredentialsException("email ou senha inválido");
         }
     }
     private String token(User user){

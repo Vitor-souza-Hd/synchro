@@ -22,7 +22,10 @@ public class CookieService {
 
     public boolean checkCookie(@CookieValue(name = "token_jwt", required = false) String token){
         if(token != null && !token.isEmpty()){
-            return true;
+            if (jwtService.verificarToken(token)) {
+                return true;
+            }
+            return false;
         }
         return false;
     }

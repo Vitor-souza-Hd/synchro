@@ -9,6 +9,7 @@ import org.example.synchro.entities.LastFmSession;
 import org.example.synchro.entities.User;
 import org.example.synchro.repositories.LastFmSessionRepository;
 import org.example.synchro.repositories.UserRepository;
+import org.example.synchro.services.exception.InvalidTokenException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -80,35 +81,45 @@ public class LastfmService {
     }
 
     public Mono<LastFmSessionDto> getSession(@CookieValue(name = "token_jwt", required = false) String cookie, String token) {
-        String apiSig = generateApiSignature(token);
-            return webClient
-                    .post()
-                    .uri("")
-                    .contentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED)
-                    .bodyValue("method=auth.getSession" +
-                            "&api_key=" + config.getApiKey() +
-                            "&token=" + token +
-                            "&api_sig=" + apiSig +
-                            "&format=json")
-                    .retrieve()
-                    .bodyToMono(LastFmSessionDto.class)
-                    .doOnSuccess(LastFmSessionDto ->{
-                      Long id = Long.parseLong(cookieService.getId(cookie));
-                      LastFmSession lastFmSession = new LastFmSession(LastFmSessionDto);
-                        Optional<User> user = userRepository.findById(id);
-                        user.ifPresent(user1 -> {
-                            if(user1.getId() == null){
-                                throw new RuntimeException("User not found");
-                            }
-                            else {
-                                lastFmSessionRepository.save(lastFmSession);
-                                lastFmSession.setSynchroUser(user1);
-                                userRepository.save(user1);
-                                lastFmSessionRepository.save(lastFmSession);
-                            }
-                        });
+        try {
+            String apiSig = generateApiSignature(token);
+            if (!cookieService.checkCookie(cookie)) {
+                throw new InvalidTokenException("sessão inválida");
+            } else {
+                return webClient
+                        .post()
+                        .uri("")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED)
+                        .bodyValue("method=auth.getSession" +
+                                "&api_key=" + config.getApiKey() +
+                                "&token=" + token +
+                                "&api_sig=" + apiSig +
+                                "&format=json")
+                        .retrieve()
+                        .bodyToMono(LastFmSessionDto.class)
+                        .doOnSuccess(LastFmSessionDto -> {
+                            Long id = Long.parseLong(cookieService.getId(cookie));
+                            LastFmSession lastFmSession = new LastFmSession(LastFmSessionDto);
+                            Optional<User> user = userRepository.findById(id);
+                            user.ifPresent(user1 -> {
+                                if (user1.getId() == null) {
+                                    throw new InvalidTokenException("sessão inválida");
+                                } else {
+                                    lastFmSessionRepository.save(lastFmSession);
+                                    lastFmSession.setSynchroUser(user1);
+                                    userRepository.save(user1);
+                                    lastFmSessionRepository.save(lastFmSession);
+                                }
+                            });
 
-                    });
+                        });
+            }
+        } catch (InvalidTokenException e1) {
+            System.out.println(e1.getLocalizedMessage());
+            throw e1;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
     private String generateApiSignature(String token) {
         String toSign = "api_key" + config.getApiKey() +
@@ -128,4 +139,4 @@ public class LastfmService {
             throw new RuntimeException("Erro ao gerar api_sig", e);
         }
     }
- }
+}

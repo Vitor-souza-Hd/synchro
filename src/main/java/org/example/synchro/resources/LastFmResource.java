@@ -42,9 +42,6 @@ public class LastFmResource {
     }
     @GetMapping("/auth/callback")
     public Mono<ResponseEntity<Map<String, String>>> callback(@CookieValue(name = "token_jwt", required = false) String cookie, @RequestParam String token) {
-        if (!cookieService.checkCookie(token)) {
-            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
-        } else {
             return lastfmService.getSession(cookie, token)
                     .map(sessionDto -> {
                         String sessionKey = sessionDto.getSession().getKey();
@@ -59,7 +56,6 @@ public class LastFmResource {
                     .onErrorResume(e -> Mono.just(ResponseEntity.badRequest()
                             .body(Map.of("error", e.getMessage()))));
         }
-    }
     @GetMapping("/auth/status")
     public ResponseEntity<String> status() {
         // Aqui você pode verificar se tem session key salva no banco
