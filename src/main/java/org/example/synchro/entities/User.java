@@ -31,7 +31,6 @@ public class User implements Serializable {
 
     @OneToOne(mappedBy = "user")
     private UserData data;
-
     public User(){
 
     }

@@ -33,6 +33,9 @@ public class TestConfig implements CommandLineRunner {
     private final UserDataRepository userDataRepository;
 
     private final LastFmSessionRepository lastFmSessionRepository;
+
+    private final ReviewRepository reviewRepository;
+
     @Override
     public void run(String... args)  throws  Exception{
 
@@ -96,5 +99,9 @@ public class TestConfig implements CommandLineRunner {
        }
 
         userRepository.saveAll(Arrays.asList(u1,u2,u3));
+
+       Review r1 = new Review(5,"muito louco slk",m7,u1.getData());
+       Review r2 = new Review(10, "nunca vi esse album", album1,u2.getData());
+       reviewRepository.saveAll(Arrays.asList(r1,r2));
     }
 }
