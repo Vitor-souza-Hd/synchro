@@ -80,7 +80,7 @@ public class LastfmService {
         return "https://www.last.fm/api/auth/?api_key=" + config.getApiKey() + "&token=" + token;
     }
 
-    public Mono<LastFmSessionDto> getSession(@CookieValue(name = "token_jwt", required = false) String cookie, String token) {
+    public Mono<LastFmSessionDto> getSession(String cookie, String token) {
         try {
             String apiSig = generateApiSignature(token);
             if (!cookieService.checkCookie(cookie)) {
@@ -98,7 +98,7 @@ public class LastfmService {
                         .retrieve()
                         .bodyToMono(LastFmSessionDto.class)
                         .doOnSuccess(LastFmSessionDto -> {
-                            Long id = Long.parseLong(cookieService.getId(cookie));
+                            Long id = cookieService.getId(cookie);
                             LastFmSession lastFmSession = new LastFmSession(LastFmSessionDto);
                             Optional<User> user = userRepository.findById(id);
                             user.ifPresent(user1 -> {

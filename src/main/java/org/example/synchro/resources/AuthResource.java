@@ -41,7 +41,7 @@ public class AuthResource {
     @GetMapping(value = "/cookie")
     public ResponseEntity<String> getCookie(@CookieValue(name = "token_jwt", required = false) String token){
         if(cookieService.checkCookie(token)){
-            return ResponseEntity.ok().body(cookieService.getId(token));
+            return ResponseEntity.ok().body("ok");
         }
         else {
             return ResponseEntity.ok().body("preto burro");

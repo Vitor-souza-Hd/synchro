@@ -29,7 +29,7 @@ public class JwtService {
                 .sign(algorithm);
     }
 
-    public Boolean verificarToken(@CookieValue(name = "token_jwt", required = false) String token){
+    public Boolean verificarToken( String token){
         JWTVerifier verifier = JWT.require(algorithm).build();
         try {
 

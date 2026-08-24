@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.example.synchro.entities.Artista;
 import org.example.synchro.entities.Musica;
+import org.example.synchro.entities.Review;
 
 import java.time.Duration;
 import java.util.HashSet;
@@ -29,6 +30,7 @@ public class MusicaDto {
     private Duration duracao;
     private String genero;
     private Set<Artista_MusicaDto> artistas = new HashSet<>();
+    private Set<Review_MusicaDto> reviews = new HashSet<>();
 
     public  MusicaDto() {
 
@@ -44,10 +46,13 @@ public class MusicaDto {
         for (Artista artista : musica.getArtistas()) {
             this.artistas.add(new Artista_MusicaDto(artista));
         }
+        for (Review review : musica.getReview()){
+            this.reviews.add(new Review_MusicaDto(review));
+        }
     }
 
     public void AddArtista(Artista_MusicaDto artista) {
         this.artistas.add(artista);
     }
-
+    public void AddReview(Review_MusicaDto review) {}
 }

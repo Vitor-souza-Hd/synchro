@@ -20,7 +20,7 @@ public class CookieService {
             .build();
     }
 
-    public boolean checkCookie(@CookieValue(name = "token_jwt", required = false) String token){
+    public boolean checkCookie(String token){
         if(token != null && !token.isEmpty()){
             if (jwtService.verificarToken(token)) {
                 return true;
@@ -30,7 +30,7 @@ public class CookieService {
         return false;
     }
 
-    public String getId(@CookieValue(name = "token_jwt", required = false) String token){
-        return jwtService.getUserID(token);
+    public Long getId (String token){
+        return Long.parseLong(jwtService.getUserID(token));
     }
 }
