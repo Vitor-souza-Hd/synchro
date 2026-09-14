@@ -1,6 +1,9 @@
 package org.example.synchro.services;
 
 import lombok.RequiredArgsConstructor;
+import org.example.synchro.dto.ReviewDto;
+import org.example.synchro.dto.ReviewRequest;
+import org.example.synchro.dto.Review_MusicaDto;
 import org.example.synchro.entities.Midia;
 import org.example.synchro.entities.Review;
 import org.example.synchro.entities.User;
@@ -25,18 +28,19 @@ public class ReviewService {
     private final CookieService cookieService;
 
 
-    public Review postReview(String token,String review, Integer rating, Long midiaId){
-        if (!cookieService.checkCookie(token)) {
+    public ReviewDto postReview(String cookie, ReviewRequest review, Long midiaId){
+        if (!cookieService.checkCookie(cookie)) {
             throw new InvalidTokenException("Token invalido");
         }
-        Long userId = cookieService.getId(token);
+        Long userId = cookieService.getId(cookie);
         Optional<User> userOptional = userRepository.findById(userId);
         Optional<Midia> midiaOptional = midiaRepository.findById(midiaId);
         User user = userOptional.orElseThrow(()->new ResourceNotFoundException("User not found"));
         Midia midia =  midiaOptional.orElseThrow(()->new ResourceNotFoundException("Midia not found"));
 
-        Review reviewEntity = new Review(rating,review,midia,user.getData());
+        Review reviewEntity = new Review(review.getRating(),review.getReview(),midia,user.getData());
         reviewRepository.save(reviewEntity);
-        return reviewEntity;
+
+            return new ReviewDto(reviewEntity);
     }
 }
