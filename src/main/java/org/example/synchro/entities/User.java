@@ -14,8 +14,10 @@ import java.util.Objects;
 @Getter
 @Setter
 public class User implements Serializable {
+
     @Serial
     private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,13 +31,16 @@ public class User implements Serializable {
     @OneToOne(mappedBy = "synchroUser")
     private LastFmSession session;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserData data;
-    public User(){
 
+    public User() {
+        this.data = new UserData(this);
     }
 
-    public User(Long id, String username, String email, String password, LocalDate birthDay, String lastFmUsername) {
+    public User(Long id, String username, String email, String password,
+                LocalDate birthDay, String lastFmUsername) {
+
         this.id = id;
         this.username = username;
         this.email = email;
@@ -44,7 +49,6 @@ public class User implements Serializable {
         this.lastFmUsername = lastFmUsername;
         this.data = new UserData(this);
     }
-
 
     @Override
     public String toString() {
@@ -59,7 +63,9 @@ public class User implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
+
         User user = (User) o;
+
         return Objects.equals(id, user.id);
     }
 

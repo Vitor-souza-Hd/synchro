@@ -1,7 +1,7 @@
 package org.example.synchro.resources;
 
+import org.example.synchro.dto.RegistroRequest;
 import org.example.synchro.dto.UserDto;
-import org.example.synchro.entities.User;
 import org.example.synchro.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,10 +21,21 @@ public class UserResource {
         return ResponseEntity.ok().body(service.findAll());
     }
 
-    @GetMapping
-    @RequestMapping(value = "{username}")
-    public ResponseEntity<UserDto> findByUsername(@PathVariable String username){
-        return ResponseEntity.ok().body(service.FindByUsername(username));
+    @GetMapping("/{username}")
+    public ResponseEntity<UserDto> findByUsername(
+            @PathVariable String username
+    ) {
+        return ResponseEntity.ok().body(
+                service.FindByUsername(username)
+        );
     }
 
+    @PostMapping
+    public ResponseEntity<UserDto> register(
+            @RequestBody RegistroRequest request
+    ) {
+        return ResponseEntity.ok().body(
+                service.register(request)
+        );
+    }
 }

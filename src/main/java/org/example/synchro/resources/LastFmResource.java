@@ -33,12 +33,20 @@ public class LastFmResource {
     }
 
     @GetMapping("/auth/login")
-    public Mono<ResponseEntity<Map<String, String>>> startAuth() {
-        return lastfmService.getToken()
-                .map(token -> ResponseEntity.ok(Map.of(
-                        "authUrl", "https://www.last.fm/api/auth/?api_key=" + config.getApiKey() + "&token=" + token,
-                        "token", token
-                )));
+    public ResponseEntity<Map<String, String>> startAuth() {
+
+        String callbackUrl =
+                "http://localhost:8080/last-fm/auth/callback";
+
+        String authUrl =
+                "https://www.last.fm/api/auth/?api_key="
+                        + config.getApiKey()
+                        + "&cb="
+                        + callbackUrl;
+
+        return ResponseEntity.ok(Map.of(
+                "authUrl", authUrl
+        ));
     }
     @GetMapping("/auth/callback")
     public Mono<ResponseEntity<Map<String, String>>> callback(@CookieValue(name = "token_jwt", required = false) String cookie, @RequestParam String token) {

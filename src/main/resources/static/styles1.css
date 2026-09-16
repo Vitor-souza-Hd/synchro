@@ -1,0 +1,221 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    background: linear-gradient(180deg, #39256f 0%, #5f3b98 42%, #9253af 68%, #c27ab7 100%);
+}
+
+.scene {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.scene-stars {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.95) 0 1.5px, transparent 1.7px),
+        radial-gradient(circle at 15% 7%, rgba(255, 255, 255, 0.9) 0 1.2px, transparent 1.4px),
+        radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.88) 0 1.3px, transparent 1.5px),
+        radial-gradient(circle at 35% 9%, rgba(255, 255, 255, 0.92) 0 1.4px, transparent 1.6px),
+        radial-gradient(circle at 48% 14%, rgba(255, 255, 255, 0.9) 0 1.2px, transparent 1.4px),
+        radial-gradient(circle at 62% 8%, rgba(255, 255, 255, 0.96) 0 1.5px, transparent 1.7px),
+        radial-gradient(circle at 72% 16%, rgba(255, 255, 255, 0.9) 0 1.2px, transparent 1.4px),
+        radial-gradient(circle at 84% 10%, rgba(255, 255, 255, 0.94) 0 1.4px, transparent 1.6px),
+        radial-gradient(circle at 91% 22%, rgba(255, 255, 255, 0.9) 0 1.2px, transparent 1.4px),
+        radial-gradient(circle at 6% 34%, rgba(255, 255, 255, 0.9) 0 1.1px, transparent 1.3px),
+        radial-gradient(circle at 20% 28%, rgba(255, 255, 255, 0.88) 0 1.2px, transparent 1.4px),
+        radial-gradient(circle at 42% 32%, rgba(255, 255, 255, 0.92) 0 1.3px, transparent 1.5px),
+        radial-gradient(circle at 57% 29%, rgba(255, 255, 255, 0.9) 0 1.2px, transparent 1.4px),
+        radial-gradient(circle at 76% 30%, rgba(255, 255, 255, 0.92) 0 1.3px, transparent 1.5px),
+        radial-gradient(circle at 94% 36%, rgba(255, 255, 255, 0.9) 0 1.1px, transparent 1.3px),
+        radial-gradient(circle at 14% 45%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.2px),
+        radial-gradient(circle at 31% 41%, rgba(255, 255, 255, 0.82) 0 1px, transparent 1.2px),
+        radial-gradient(circle at 68% 44%, rgba(255, 255, 255, 0.82) 0 1px, transparent 1.2px),
+        radial-gradient(circle at 87% 48%, rgba(255, 255, 255, 0.82) 0 1px, transparent 1.2px);
+    opacity: 0.95;
+}
+
+.scene-mountains {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 58vh;
+    background: linear-gradient(180deg, rgba(75, 43, 128, 0) 0%, rgba(46, 24, 86, 0.18) 18%, rgba(46, 22, 84, 0.85) 100%);
+    clip-path: polygon(0% 72%, 8% 70%, 15% 56%, 23% 67%, 31% 50%, 40% 58%, 49% 43%, 59% 60%, 68% 45%, 78% 63%, 87% 52%, 94% 67%, 100% 60%, 100% 100%, 0% 100%);
+}
+
+.btn-default {
+    background-color: #6366f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #ffffff;
+    cursor: pointer;
+    gap: 8px;
+    height: fit-content;
+    box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+.btn-default:hover {
+    background-color: #818cf8;
+}
+
+#form_container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    height: 100%;
+    background-color: rgba(58, 34, 98, 0.28);
+    padding: 20px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    box-shadow: 0 20px 40px rgba(31, 18, 61, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+#form_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#form_title {
+    font-weight: 500;
+    color: #f7f2ff;
+    position: relative;
+}
+
+#form_title::after {
+    content: '';
+    position: absolute;
+    width: 100px;
+    height: 3px;
+    border-radius: 30px;
+    background-color: #6366f1;
+    left: 0;
+    bottom: 0;
+}
+
+#form {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    gap: 32px;
+    height: 100%;
+}
+
+#input_container {
+    display: grid;
+    gap: 24px;
+}
+
+.form-label {
+    font-size: 12px;
+    color: #efe6ff;
+    font-weight: 500;
+}
+
+.input-field {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.82);
+    border-radius: 10px;
+    box-shadow: 0px 10px 20px -10px rgba(19, 9, 45, 0.35);
+}
+
+.input-field i {
+    display: flex;
+    align-items: center;
+    width: 30px;
+    height: 20px;
+    color: #5d4a87;
+}
+
+.form-control {
+    padding: 10px;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+}
+
+.input-field .password-icon:hover {
+    cursor: pointer;
+    color: #3d2c66;
+}
+
+.form-control:focus {
+    outline: none;
+}
+
+.input-box .input-field:focus-within {
+    outline: 2px solid #d9b8ff;
+}
+
+input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+    color: #000;
+}
+
+.radio-container {
+    grid-column: span 2;
+}
+
+#gender_inputs {
+    display: flex;
+    gap: 20px;
+}
+
+.radio-box {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.form-control[type="radio"] {
+    accent-color: #d9b8ff;
+}
+
+@media screen and (max-width: 500px) {
+    #form_container {
+        width: 100%;
+        min-height: 100vh;
+        padding: 32px;
+    }
+
+    #input_container {
+        display: flex;
+        flex-direction: column;
+        gap: 38px;
+    }
+
+    .form-control[type="date"] {
+        background-color: #fff;
+    }
+}

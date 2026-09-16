@@ -13,7 +13,11 @@ import java.time.LocalDate;
 public class RegistroRequest {
 
     @NotBlank(message = "O nome é obrigatório")
-    @Size(min = 3, max = 100, message = "O nome deve ter entre 3 e 100 caracteres")
+    @Size(
+            min = 3,
+            max = 100,
+            message = "O nome deve ter entre 3 e 100 caracteres"
+    )
     private String username;
 
     @NotBlank(message = "O email é obrigatório")
@@ -25,13 +29,15 @@ public class RegistroRequest {
     private LocalDate birthDay;
 
     @NotBlank(message = "A senha é obrigatória")
-    @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
+    @Size(
+            min = 6,
+            message = "A senha deve ter no mínimo 6 caracteres"
+    )
     private String password;
 
     @NotBlank(message = "A confirmação de senha é obrigatória")
     private String confirmPassword;
 
     private String lastFmUsername;
-
 }
 
