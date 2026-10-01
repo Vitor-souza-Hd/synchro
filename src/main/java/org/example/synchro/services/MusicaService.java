@@ -6,7 +6,6 @@ import org.example.synchro.entities.Artista;
 import org.example.synchro.entities.Musica;
 import org.example.synchro.repositories.ArtistaRepository;
 import org.example.synchro.repositories.MusicaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -28,14 +27,28 @@ public class MusicaService {
     public MusicaDto findByTitulo(String titulo) {
         Musica m1 = musicaRepository.findByTitulo(titulo);
         return new MusicaDto(m1);
+
+
     }
 
     public List<MusicaDto> findByArtistas(String artista) {
-        List<MusicaDto>dto = new ArrayList<>();
+        List<MusicaDto> dto = new ArrayList<>();
+        // ...
         List<Musica> m1 = musicaRepository.findByArtistas(artistaRepository.findByNome(artista));
         for (Musica musica : m1) {
             dto.add(new MusicaDto(musica));
         }
         return dto;
+    }
+
+    public List<MusicaDto> findByTermoGeral(String query) {
+        List<Musica> resultados = musicaRepository
+                .findByTituloContainingIgnoreCaseOrArtistasNomeContainingIgnoreCase(query, query);
+
+        List<MusicaDto> dtos = new ArrayList<>();
+        for (Musica musica : resultados) {
+            dtos.add(new MusicaDto(musica));
+        }
+        return dtos;
     }
 }
