@@ -1,0 +1,858 @@
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&display=swap');
+*{
+  font-family: "Josefin Sans", sans-serif;
+  font-optical-sizing: auto;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+a{
+    text-decoration: none;
+    color: white;
+}
+i{
+    color: white;
+}
+
+body{
+    background: black;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+h2{
+    margin-top: 20px;
+    color: white;
+}
+.menu h5{
+    color: rgb(224, 224, 224);
+}
+.container{
+    width: 100%;
+    max-width: 1800px;
+    margin: 0 auto;
+    min-height: 100vh;
+
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 20px;
+}
+
+.container .sidebar{
+    height: 100%;
+    width: 100%;
+    min-width: 260px;
+    padding: 20px 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    z-index: 10000;
+    transition: all 0.6s ease;
+    background: rgba(255, 255, 255, 0.128);
+    border: 2px solid rgba(255, 253, 253, 0.07);
+    border-radius: 0px 20px 20px 0px;
+    backdrop-filter: blur(30px);
+}
+.container .sidebar .logo{
+    display: flex;
+    align-items: center;
+    margin-bottom: 40px;
+
+}
+
+.container .sidebar .logo i{
+    font-size: 30px;
+    transition: all 0.3s ease;
+    color: #cd2727;
+    animation-name: example;
+    animation-duration: 10s;
+    animation-iteration-count: infinite;
+}
+
+.container .sidebar .logo a{
+    font-weight: bold;
+    font-size: 20px;
+    transition: all 0.3s ease;
+    color: #cd2727;
+    animation-name: example;
+    animation-duration: 10s;
+    animation-iteration-count: infinite;
+}
+.container .sidebar .logo a:hover{
+    font-size: 21px;
+}
+.container .sidebar .logo i:hover{
+    font-size: 32px;
+}
+.container .sidebar .menu ul li:hover a,
+.container .sidebar .menu ul li:hover i,
+.container main header .nav-links a:hover{
+    color: #1ffee4;
+}
+
+.container .sidebar .menu h5{
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.container .sidebar .menu ul{
+    list-style: none;
+}
+
+.container .sidebar .menu ul li{
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+}
+.container .sidebar .menu ul li a{
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+.sidebar.active{
+    left: 0 !important;
+}
+.nav-footer{
+    margin-top: auto;
+
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    padding-top: 20px;
+
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+.nav-footer a{
+    font-size: 12px;
+
+    color: #919191;
+
+    transition: 0.3s ease;
+}
+.nav-footer a:hover{
+    color: white;
+}
+.nav-language-button{
+    margin-top: 20px;
+
+    width: auto;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    background: transparent;
+
+    border: 1px solid rgba(255,255,255,0.2);
+
+    color: white;
+
+    padding: 10px 14px;
+
+    border-radius: 20px;
+
+    cursor: pointer;
+
+    transition: 0.3s ease;
+}
+.nav-language-button:hover{
+    background: rgba(255,255,255,0.08);
+}
+.nav-language-button i {
+    color: white;
+}
+.nav-links{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.nav-links i{
+justify-content: space-between;
+gap: 20px;
+}
+.nav-links a{
+    text-transform: uppercase;
+    color: #919191;
+    transition: all 0.3s ease;
+}
+.user i{
+    justify-content: space-between;
+    gap: 20px;
+    color: white;
+    font-size: 25px;
+}
+.menu{
+    margin-bottom: 70px;
+}
+
+/*BARRA DE MENU*/
+.menu-toggle{
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+
+    z-index: 100000;
+}
+
+.menu-toggle i{
+    font-size: 24px;
+    color: white;
+}
+.search {
+    text-decoration: none;
+    border: none;
+    background-color: transparent;
+    outline: none;
+    color: white;
+    font-size: 15px;
+    width: 100%;
+}
+
+/* =========================================
+   BARRA DE PESQUISA E SUGESTÕES (LAYOUT MOBILE)
+   ========================================= */
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 15px;
+    background: #000; /* Fundo preto como na imagem */
+    position: relative;
+    z-index: 1000;
+}
+
+/* Botões redondos (Voltar e Scan) */
+.icon-btn {
+    background: #1f1f1f;
+    border: none;
+    color: #fff;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+.icon-btn:hover {
+    background: #333;
+}
+
+/* Caixa de pesquisa */
+.search-box {
+    flex: 1;
+    background: #1f1f1f;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    height: 42px;
+    position: relative; /* Necessário para ancorar as sugestões */
+}
+
+.search-box input.search {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    height: 100%;
+}
+
+.search-box input.search::placeholder {
+    color: #b3b3b3;
+}
+
+/* Ícone de microfone dentro da barra */
+.search-box .mic-icon {
+    color: #b3b3b3;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* =========================================
+   LISTA DE SUGESTÕES (DROPDOWN)
+   ========================================= */
+
+#search-results {
+    position: absolute;
+    top: calc(100% + 8px); /* Fica logo abaixo da barra */
+    left: 0;
+    width: 100%;
+    background: #000; /* Fundo preto para cobrir o fundo */
+    max-height: 70vh;
+    overflow-y: auto;
+    z-index: 9999;
+}
+
+/* Item individual da sugestão */
+.search-suggestion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid #1f1f1f;
+}
+
+.search-suggestion:hover {
+    background: #1a1a1a;
+}
+
+/* Lado esquerdo: Ícone de lupa + Texto */
+.search-suggestion-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.search-suggestion-left i {
+    color: #b3b3b3;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.search-suggestion-left span {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ícone da setinha no canto direito */
+.search-suggestion .fa-arrow-up-right-from-square {
+    color: #b3b3b3;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+/* Ajustes para telas maiores (Desktop) */
+@media (min-width: 769px) {
+    .search-bar {
+        max-width: 600px;
+        margin: 0 auto;
+        background: transparent;
+    }
+    #search-results {
+        border-radius: 8px;
+        border: 1px solid #1f1f1f;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+}
+.container main .buttons{
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.container main .buttons button{
+    padding: 12px 16px;
+    background-color: #5773ff;
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.container main .buttons i{
+    color: #5773ff;
+    font-size: 20px;
+    border: 2px solid #fff;
+    padding: 10px;
+    border-radius: 50%;
+}
+
+.container main{
+    width: 100%;
+    padding: 20px;
+}
+
+.container main header{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+}
+
+
+/*IMAGENS*/
+.genres, .artists, .albums {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+
+    gap: 18px;
+
+    overflow-y: hidden;
+
+    scroll-behavior: smooth;
+
+    padding: 10px;
+}
+
+.genre-card, .artist-card, .album-card {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 7px;
+
+    border-radius: 10px;
+
+    transition: 0.3s;
+
+    flex-shrink: 0;
+}
+
+.genre-card:hover, .artist-card:hover, .album-card:hover {
+    background: rgba(255, 255, 255, 0.249);
+    backdrop-filter: blur(20px);
+    transform: scale(1.03);
+}
+
+.genre-card img, .artist-card img, .album-card img{
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.genre-card h3, .artist-card h3, .album-card h3 {
+    color: rgb(236, 234, 234);
+    font-size: 16px;
+}
+.genre-card p, .artist-card p, .album-card p{
+    margin-top: 5px;
+    color: rgba(197, 196, 196, 0.669);
+    font-size: 14px;
+}
+.genres::-webkit-scrollbar,
+.artists::-webkit-scrollbar,
+.albums::-webkit-scrollbar {
+    display: none;
+}
+/* REVIEWS */
+.reviews{
+    display: grid;
+
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+
+    gap: 20px;
+}
+
+.reviews-card{
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 18px;
+    transition: .3s;
+}
+
+.reviews-card:hover{
+    transform: translateY(-5px);
+}
+
+.reviews-header{
+    display: flex;
+    gap: 15px;
+}
+.album-cover{
+    width: 90px;
+    height: 90px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+.review-info{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.review-info h3{
+    color: white;
+    margin-bottom: 5px;
+}
+
+.review-info h5{
+    color: #bdbdbd;
+    font-weight: 400;
+}
+
+.rating{
+    margin-top: 10px;
+    background: #1db954;
+    color: white;
+    width: fit-content;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.review-text{
+    color: #d6d6d6;
+    margin: 15px 0;
+    line-height: 1.5;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.review-user{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 12px;
+}
+
+.user-avatar{
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.review-user span{
+    color: rgb(149, 147, 158);
+    font-size: .9rem;
+}
+
+/*BACKGROUND*/
+.background-video{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+/*RESPONSIVIDADE*/
+@media (min-width: 1600px){
+
+    .container{
+        max-width: 2000px;
+    }
+
+    .genres,
+    .artists,
+    .albums{
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .genre-card,
+    .artist-card,
+    .album-card{
+        min-width: 220px;
+        max-width: 220px;
+    }
+
+    .genre-card img,
+    .artist-card img,
+    .album-card img{
+        height: 220px;
+    }
+
+    h2{
+        font-size: 32px;
+    }
+
+    .search-box{
+        flex: 1;
+    max-width: 1000px;
+    }
+
+    .nav-links a{
+        font-size: 18px;
+    }
+}
+
+/*RESPONSIVIDADE*/
+@media (min-width: 1920px){
+
+    .container{
+        max-width: 2400px;
+        grid-template-columns: 280px 1fr;
+    }
+    .container main{
+        padding: 40px;
+    }
+    .container .sidebar{
+        height: 100%;
+        width: 100%;
+        min-width: 300px;
+        max-width: 300px;
+    }
+
+    .genre,
+    .artist,
+    .album{
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+    }
+
+    .genre-card,
+    .artist-card,
+    .album-card{
+        min-width: 260px;
+        max-width: 260px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .genre-card img,
+    .artist-card img,
+    .album-card img{
+        height: 260px;
+    }
+
+    h2{
+        font-size: 2rem;
+    }
+    h5{
+        font-size: 1.5rem;
+    }
+    .menu li{
+        font-size: 25px;
+    }
+    .container .sidebar .logo i{
+        font-size: 40px;
+    }
+    .container .sidebar .logo a{
+        font-size: 30px;
+    }
+    .container .sidebar .logo i:hover{
+        font-size: 44px;
+    }
+    .container .sidebar .logo a:hover{
+        font-size: 34px;
+    }
+
+    .search-box{
+        max-width: 900px;
+    }
+
+    .nav-links a{
+        font-size: 20px;
+    }
+    .nav-links i{
+        font-size: 22px;
+    }
+
+    .reviews{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 25px;
+    }
+}
+
+/*CELULAR*/
+@media (max-width: 768px){
+
+    /* MENU BUTTON */
+    .menu-toggle{
+        display: block;
+        top: 15px;
+        left: 15px;
+        margin-top: 6px;
+        z-index: 100001;
+
+    cursor: pointer;
+    }
+
+    .nav-links a{
+        display: none;
+        margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    }
+
+    /* CONTAINER */
+    .container{
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* SIDEBAR */
+    .container .sidebar{
+        position: fixed;
+        left: -100%;
+        top: 0;
+
+        width: 260px;
+        height: 100vh;
+
+        transition: 0.4s ease;
+
+        z-index: 99999;
+    }
+
+    .sidebar.active{
+        left: 0;
+    }
+
+    .nav-footer,
+    .nav-language-button{
+        display: none;
+    }
+
+    /* MAIN */
+    .container main{
+        width: 100%;
+        padding-top: 100px;
+        padding-left: 15px;
+        padding-right: 15px;
+        padding-bottom: 20px;
+    }
+
+     .review-header{
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .album-cover{
+        width: 120px;
+        height: 120px;
+    }
+
+    /* HEADER */
+    .search-bar{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background: transparent;
+    backdrop-filter: blur(20px);
+
+    z-index: 9999;
+    }
+
+    .search-box{
+        flex: 1;
+        min-width: 0;
+        margin-left: 50px;
+    }
+    .search{
+    width: 100%;
+    font-size: 14px;
+    }
+
+    .logo{
+        margin-left: 60px;
+        margin-bottom: 60px;
+        justify-content: center;
+    }
+
+    .nav-links{
+        display: flex;
+        gap: 15px;
+        margin: 0;
+    }
+
+    .user{
+        align-self: flex-end;
+        margin: 0;
+        margin-bottom: 5px;
+    }
+
+    /* CARDS */
+    .genres,
+    .artists,
+    .albums{
+        display: grid;
+
+        grid-template-columns: repeat(2, 1fr);
+
+        gap: 12px;
+
+        overflow: visible;
+    }
+
+    .genre-card,
+    .artist-card,
+    .album-card{
+        width: 100%;
+        max-width: 180px;
+            justify-self: center;
+
+    }
+
+    .genre-card img,
+    .artist-card img,
+    .album-card img{
+        width: 100%;
+    }
+}
+/*CELULAR PEQUENO*/
+@media (max-width: 480px){
+
+    .genres,
+    .artists,
+    .albums{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    }
+    .genre-card img,
+    .artist-card img,
+    .album-card img{
+        height: 200px;
+    }
+
+    h2{
+        font-size: 20px;
+    }
+}
+@keyframes example {
+    0% {color:#cd2727;}
+    10%{color:#d53b2d;}
+    20%{color:#e87929;}
+    30%{color:#fbb23e;}
+    40%{color:#5ed536;}
+    50%{color:#41ca91;}
+    60%{color:#2152f1;}
+    70%{color:#432fd8;}
+    80%{color:#c423c4;}
+    90%{color:#cd2743;}
+    100%{color:#cd2727;}
+}

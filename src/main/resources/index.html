@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SYNCHRO</title>
+
+    <!-- Boxicons -->
+    <link
+            href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+            rel="stylesheet"
+    >
+
+    <!-- Font Awesome -->
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    >
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- BACKGROUND VIDEO -->
+    <video
+            autoplay
+            loop
+            muted
+            playsinline
+            class="background-video"
+    >
+        <source
+                src="./img/background-blur-dark.mp4"
+                type="video/mp4"
+        >
+    </video>
+
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <!-- LOGO -->
+        <div class="logo">
+            <i class="bx bx-pulse"></i>
+            <a href="#">SYNCHRO</a>
+        </div>
+
+
+        <!-- MENU -->
+        <div class="menu">
+
+            <h5>Menu</h5>
+
+            <ul>
+                <li>
+                    <i class="bx bxs-bolt-circle"></i>
+                    <a href="#">Explorar</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-volume-full"></i>
+                    <a href="#">Gêneros</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-album"></i>
+                    <a href="#">Álbuns</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-microphone"></i>
+                    <a href="#">Artistas</a>
+                </li>
+            </ul>
+
+        </div>
+
+
+        <!-- SUA BIBLIOTECA -->
+        <div class="menu">
+
+            <h5>Sua Biblioteca</h5>
+
+            <ul>
+                <li>
+                    <i class="bx bx-undo"></i>
+                    <a href="#">Recentes</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-photo-album"></i>
+                    <a href="#">Avaliações</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-heart"></i>
+                    <a href="#">Favoritos</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-folder"></i>
+                    <a href="#">Local</a>
+                </li>
+
+                <li>
+                    <i class="fa-solid fa-ticket"></i>
+                    <a href="#">Shows perto de você</a>
+                </li>
+            </ul>
+
+        </div>
+
+
+        <!-- PLAYLIST -->
+        <div class="menu">
+
+            <h5>Playlist</h5>
+
+            <ul>
+                <li>
+                    <i class="bx bxs-plus-square"></i>
+                    <a href="#">Criar uma nova</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="#">Suas Playlists</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="#">Recomendados</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="#">Playlists do Synchro</a>
+                </li>
+            </ul>
+
+        </div>
+
+
+        <!-- FOOTER DA SIDEBAR -->
+        <div class="nav-footer">
+
+            <a href="#">Legal</a>
+            <a href="#">Centro de Privacidade</a>
+            <a href="#">Política de Privacidade</a>
+            <a href="#">Cookies</a>
+            <a href="#">Sobre Anúncios</a>
+            <a href="#">Acessibilidades</a>
+
+        </div>
+
+
+        <!-- IDIOMA -->
+        <button class="nav-language-button">
+
+            <i class="fa-solid fa-globe"></i>
+
+            Português do Brasil
+
+        </button>
+
+    </aside>
+
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main>
+
+        <!-- BOTÃO MENU MOBILE -->
+        <button class="menu-toggle">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+
+        <!-- HEADER -->
+        <!-- HEADER -->
+        <!-- HEADER -->
+        <header class="top-header">
+
+            <!-- BARRA DE PESQUISA -->
+            <div class="search-bar">
+
+                <!-- Botão de Voltar -->
+                <button class="icon-btn back-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+
+                <!-- Caixa de Pesquisa -->
+                <div class="search-box">
+                    <input
+                            id="search-bar"
+                            class="search"
+                            type="text"
+                            placeholder="O que você quer ouvir?"
+                            aria-label="Buscar música"
+                            autocomplete="off"
+                    >
+                    <!-- Ícone de Microfone -->
+                    <i class="fa-solid fa-microphone mic-icon"></i>
+
+                    <!-- Resultados/Sugestões -->
+                    <div id="search-results"></div>
+                </div>
+
+                <!-- Botão de Scan (Ondas) -->
+                <button class="icon-btn scan-btn">
+                    <i class="fa-solid fa-wave-square"></i>
+                </button>
+
+            </div>
+
+        </header>
+        <!-- CONTEÚDO -->
+        <section class="content">
+
+            <!-- ARTISTAS -->
+            <h2>Artistas Populares</h2>
+
+            <div class="artists">
+                <!-- Inserir dados com JS -->
+            </div>
+
+
+            <!-- ÁLBUNS -->
+            <h2>Álbuns Populares</h2>
+
+            <div class="albums">
+                <!-- Inserir dados com JS -->
+            </div>
+
+
+            <!-- GÊNEROS -->
+            <h2>Gêneros Populares</h2>
+
+            <div class="genres">
+                <!-- Inserir dados com JS -->
+            </div>
+
+
+            <!-- REVIEWS -->
+            <h2>Reviews Recentes dos Usuários</h2>
+
+            <div class="reviews">
+                <!-- Inserir dados com JS -->
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script src="script2.js"></script>
+<script src="search.js"></script>
+
+</body>
+</html>
