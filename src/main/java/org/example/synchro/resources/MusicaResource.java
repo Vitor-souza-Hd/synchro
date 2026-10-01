@@ -31,4 +31,8 @@ public class MusicaResource {
         return ResponseEntity.ok().body(musicaService.findByArtistas(artista));
     }
 
+    @GetMapping(value = "/buscar")
+    public ResponseEntity<List<MusicaDto>> buscarParcial(@RequestParam("query") String query) {
+        return ResponseEntity.ok().body(musicaService.findByTermoGeral(query));
+    }
 }
