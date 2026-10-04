@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+>
+
+<link rel="stylesheet" href="src/styles/formulario.css">
+
+<title>Synchro — Criar conta</title>
+
+</head>
+
+<body>
+
+<main id="form_container">
+
+
+    <!-- CABEÇALHO -->
+    <header id="form_header">
+
+        <div class="title-container">
+            <h1 id="form_title">
+                Criar conta
+            </h1>
+
+            <p>
+                Preencha seus dados para começar
+            </p>
+        </div>
+
+        <a
+            href="../login.html"
+            class="btn-icon"
+            aria-label="Voltar para o login"
+            title="Voltar para o login"
+        >
+            <i class="fa-solid fa-right-to-bracket"></i>
+        </a>
+
+    </header>
+
+
+    <!-- FORMULÁRIO -->
+    <form action="" id="form">
+
+        <div id="input_container">
+
+            <!-- NOME -->
+            <div class="input-box">
+
+                <label for="name" class="form-label">
+                    Nome completo
+                </label>
+
+                <div class="input-field">
+
+                    <input
+                        type="text"
+                        name="name"
+                        id="name"
+                        class="form-control"
+                        placeholder="Digite seu nome completo"
+                        autocomplete="name"
+                        required
+                    >
+
+                    <i class="fa-regular fa-user"></i>
+
+                </div>
+
+            </div>
+
+
+            <!-- USUÁRIO -->
+            <div class="input-box">
+
+                <label for="user" class="form-label">
+                    Nome de usuário
+                </label>
+
+                <div class="input-field">
+
+                    <input
+                        type="text"
+                        name="user"
+                        id="user"
+                        class="form-control"
+                        placeholder="Escolha um nome de usuário"
+                        autocomplete="username"
+                        required
+                    >
+
+                    <i class="fa-solid fa-at"></i>
+
+                </div>
+
+            </div>
+
+
+            <!-- DATA DE NASCIMENTO -->
+            <div class="input-box">
+
+                <label for="birthdate" class="form-label">
+                    Data de nascimento
+                </label>
+
+                <div class="input-field">
+
+                    <input
+                        type="date"
+                        name="birthdate"
+                        id="birthdate"
+                        class="form-control"
+                        required
+                    >
+
+                    <i class="fa-regular fa-calendar"></i>
+
+                </div>
+
+            </div>
+
+
+            <!-- E-MAIL -->
+            <div class="input-box">
+
+                <label for="email" class="form-label">
+                    E-mail
+                </label>
+
+                <div class="input-field">
+
+                    <input
+                        type="email"
+                        name="email"
+                        id="email"
+                        class="form-control"
+                        placeholder="exemplo@gmail.com"
+                        autocomplete="email"
+                        required
+                    >
+
+                    <i class="fa-regular fa-envelope"></i>
+
+                </div>
+
+            </div>
+
+
+            <!-- SENHA -->
+            <div class="input-box">
+
+                <label for="password" class="form-label">
+                    Senha
+                </label>
+
+                <div class="input-field">
+
+                    <input
+                        type="password"
+                        name="password"
+                        id="password"
+                        class="form-control password-input"
+                        placeholder="Digite sua senha"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-icon"
+                        aria-label="Mostrar senha"
+                    >
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CONFIRMAR SENHA -->
+            <div class="input-box">
+
+                <label for="confirm_password" class="form-label">
+                    Confirmar senha
+                </label>
+
+                <div class="input-field">
+
+                    <input
+                        type="password"
+                        name="confirm_password"
+                        id="confirm_password"
+                        class="form-control password-input"
+                        placeholder="Digite sua senha novamente"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-icon"
+                        aria-label="Mostrar senha"
+                    >
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- GÊNERO -->
+            <div class="radio-container">
+
+                <label class="form-label">
+                    Gênero
+                </label>
+
+                <div id="gender_inputs">
+
+                    <div class="radio-box">
+
+                        <input
+                            type="radio"
+                            name="gender"
+                            id="female"
+                            value="female"
+                        >
+
+                        <label for="female">
+                            Feminino
+                        </label>
+
+                    </div>
+
+
+                    <div class="radio-box">
+
+                        <input
+                            type="radio"
+                            name="gender"
+                            id="male"
+                            value="male"
+                        >
+
+                        <label for="male">
+                            Masculino
+                        </label>
+
+                    </div>
+
+
+                    <div class="radio-box">
+
+                        <input
+                            type="radio"
+                            name="gender"
+                            id="other"
+                            value="other"
+                        >
+
+                        <label for="other">
+                            Outro
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- BOTÃO -->
+        <button type="submit" class="btn-submit">
+
+            <span>
+                Criar conta
+            </span>
+
+            <i class="fa-solid fa-arrow-right"></i>
+
+        </button>
+
+    </form>
+
+</main>
+
+
+<script src="src/javascript/script.js"></script>
+
+</body>
+</html>

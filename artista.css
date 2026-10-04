@@ -1,0 +1,532 @@
+/* ================================
+   ARTISTA
+================================ */
+
+.artist-header {
+
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 40px;
+
+    padding: 40px;
+
+    margin-top: 25px;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.10),
+            rgba(255,255,255,.02)
+        );
+
+    border: 1px solid rgba(255,255,255,.08);
+
+}
+
+
+/* IMAGEM */
+
+.artist-image {
+
+    flex-shrink: 0;
+
+}
+
+
+.artist-image img {
+
+    width: 230px;
+
+    height: 230px;
+
+    object-fit: cover;
+
+    border-radius: 50%;
+
+    display: block;
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.45);
+
+}
+
+
+/* INFORMAÇÕES */
+
+.artist-info {
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+}
+
+
+.artist-label {
+
+    color: #aaa;
+
+    font-size: 13px;
+
+    font-weight: bold;
+
+    letter-spacing: 2px;
+
+}
+
+
+.artist-info h1 {
+
+    font-size: clamp(40px, 5vw, 65px);
+
+    margin: 10px 0 15px;
+
+    color: white;
+
+    line-height: 1;
+
+}
+
+
+/* TAGS */
+
+.tags {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin: 5px 0 20px;
+
+}
+
+
+.tags span {
+
+    padding: 7px 14px;
+
+    border-radius: 20px;
+
+    background: rgba(255,255,255,.08);
+
+    border: 1px solid rgba(255,255,255,.08);
+
+    color: #aaa;
+
+    font-size: 13px;
+
+}
+
+
+/* FAVORITO */
+
+#favoriteBtn {
+
+    width: fit-content;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    border: none;
+
+    padding: 12px 20px;
+
+    border-radius: 25px;
+
+    background: #ff1744;
+
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: .3s ease;
+
+}
+
+
+#favoriteBtn:hover {
+
+    transform: scale(1.05);
+
+    background: #ff3158;
+
+}
+
+
+#favoriteBtn i {
+
+    color: white;
+
+}
+
+
+
+/* ================================
+   SEÇÕES
+================================ */
+
+.artist-section {
+
+    margin-top: 35px;
+
+}
+
+
+.artist-section h2 {
+
+    margin-bottom: 15px;
+
+    color: white;
+
+}
+
+
+
+/* ================================
+   MÚSICAS
+================================ */
+
+.tracks {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+
+}
+
+
+.track {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    padding: 10px 15px;
+
+    border-radius: 10px;
+
+    transition: .2s ease;
+
+}
+
+
+.track:hover {
+
+    background: rgba(255,255,255,.07);
+
+}
+
+
+.track-number {
+
+    width: 30px;
+
+    color: #777;
+
+    text-align: center;
+
+}
+
+
+.track-info {
+
+    flex: 1;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+
+}
+
+
+.track-info strong {
+
+    color: white;
+
+    font-size: 16px;
+
+}
+
+
+.track-info span {
+
+    color: #777;
+
+    font-size: 13px;
+
+}
+
+
+.track button {
+
+    width: 40px;
+
+    height: 40px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background: transparent;
+
+    cursor: pointer;
+
+}
+
+
+.track button i {
+
+    color: white;
+
+    font-size: 20px;
+
+}
+
+
+
+/* ================================
+   ÁLBUNS
+================================ */
+
+.albums {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fill, minmax(170px, 1fr));
+
+    gap: 22px;
+
+}
+
+
+.album-card {
+
+    min-width: 0;
+
+    cursor: pointer;
+
+    transition: transform .25s ease;
+
+}
+
+
+.album-card:hover {
+
+    transform: translateY(-6px);
+
+}
+
+
+.album-card img {
+
+    width: 100%;
+
+    aspect-ratio: 1 / 1;
+
+    object-fit: cover;
+
+    border-radius: 12px;
+
+    display: block;
+
+}
+
+
+.album-card h3 {
+
+    margin-top: 10px;
+
+    color: white;
+
+    font-size: 17px;
+
+}
+
+
+.album-card p {
+
+    margin-top: 5px;
+
+    color: #888;
+
+}
+
+
+
+/* ================================
+   BIOGRAFIA
+================================ */
+
+.biography {
+
+    padding-bottom: 40px;
+
+}
+
+
+.biography p {
+
+    max-width: 900px;
+
+    color: #aaa;
+
+    line-height: 1.7;
+
+    font-size: 15px;
+
+}
+
+
+
+/* ================================
+   RESPONSIVIDADE
+================================ */
+
+@media (max-width: 900px) {
+
+    .container {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .sidebar {
+
+        position: fixed;
+
+        left: -280px;
+
+        top: 0;
+
+        width: 260px;
+
+        height: 100vh;
+
+    }
+
+
+    .sidebar.active {
+
+        left: 0;
+
+    }
+
+
+    .menu-toggle {
+
+        display: block;
+
+    }
+
+
+    .artist-header {
+
+        padding: 30px;
+
+        gap: 25px;
+
+    }
+
+
+    .artist-image img {
+
+        width: 180px;
+
+        height: 180px;
+
+    }
+
+}
+
+
+
+@media (max-width: 600px) {
+
+    .container main {
+
+        padding: 15px;
+
+    }
+
+
+    .search-bar {
+
+        padding-left: 45px;
+
+    }
+
+
+    .nav-links a {
+
+        display: none;
+
+    }
+
+
+    .nav-links {
+
+        gap: 12px;
+
+    }
+
+
+    .artist-header {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        padding: 25px;
+
+    }
+
+
+    .artist-image img {
+
+        width: 150px;
+
+        height: 150px;
+
+    }
+
+
+    .artist-info h1 {
+
+        font-size: 40px;
+
+    }
+
+
+    .albums {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 15px;
+
+    }
+
+}

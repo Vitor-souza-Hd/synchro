@@ -1,0 +1,711 @@
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&display=swap');
+
+/* =========================
+RESET
+========================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  }
+
+html,
+body {
+width: 100%;
+min-height: 100%;
+}
+
+body {
+font-family: "Josefin Sans", sans-serif;
+
+min-height: 100vh;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+padding: 30px;
+
+background:
+        linear-gradient(
+            135deg,
+            rgba(8, 5, 20, 0.82),
+            rgba(47, 24, 73, 0.65)
+        ),
+        url("./blur-background.jpg");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color: #241536;
+
+    color: #ffffff;
+
+    overflow-x: hidden;
+
+}
+
+/* =========================
+CONTAINER
+========================= */
+
+#form_container {
+position: relative;
+
+width: 100%;
+max-width: 900px;
+
+padding: 36px;
+
+border-radius: 28px;
+
+
+border: 1px solid rgba(255, 255, 255, 0.14);
+
+backdrop-filter: blur(24px) saturate(140%);
+-webkit-backdrop-filter: blur(24px) saturate(140%);
+
+box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+animation: formAppear 0.7s ease;
+
+}
+
+/* brilho superior */
+
+#form_container::before {
+content: "";
+
+position: absolute;
+
+top: 0;
+left: 15%;
+
+width: 70%;
+height: 1px;
+
+background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+);
+
+}
+
+/* =========================
+HEADER
+========================= */
+
+#form_header {
+display: flex;
+
+align-items: center;
+justify-content: space-between;
+
+gap: 20px;
+
+margin-bottom: 34px;
+
+}
+
+.title-container {
+display: flex;
+
+flex-direction: column;
+
+gap: 6px;
+
+}
+
+#form_title {
+position: relative;
+
+width: fit-content;
+
+color: #fff;
+
+font-size: 2rem;
+font-weight: 600;
+
+letter-spacing: 0.02em;
+
+}
+
+#form_title::after {
+content: "";
+
+position: absolute;
+
+left: 0;
+bottom: -8px;
+
+width: 65%;
+
+height: 3px;
+
+border-radius: 20px;
+
+background: linear-gradient(
+    90deg,
+    #a978ff,
+    #d9a9ff
+);
+
+}
+
+.title-container p {
+margin-top: 7px;
+
+color: rgba(255, 255, 255, 0.55);
+
+font-size: 0.9rem;
+
+}
+
+/* =========================
+BOTÃO VOLTAR
+========================= */
+
+.btn-icon {
+width: 46px;
+height: 46px;
+
+display: flex;
+
+align-items: center;
+justify-content: center;
+
+flex-shrink: 0;
+
+border: 1px solid rgba(255, 255, 255, 0.14);
+
+border-radius: 13px;
+
+background: rgba(255, 255, 255, 0.07);
+
+color: rgba(255, 255, 255, 0.8);
+
+text-decoration: none;
+
+font-size: 1rem;
+
+transition:
+    background 0.25s ease,
+    transform 0.25s ease,
+    color 0.25s ease;
+
+}
+
+.btn-icon:hover {
+background: rgba(169, 120, 255, 0.2);
+
+color: #d9c2ff;
+
+transform: translateY(-2px);
+
+}
+
+/* =========================
+FORM
+========================= */
+
+#form {
+display: flex;
+
+flex-direction: column;
+
+gap: 30px;
+
+}
+
+/* =========================
+INPUT CONTAINER
+========================= */
+
+#input_container {
+display: grid;
+
+grid-template-columns: repeat(2, minmax(0, 1fr));
+
+gap: 22px 24px;
+
+}
+
+/* =========================
+INPUT BOX
+========================= */
+
+.input-box {
+display: flex;
+
+flex-direction: column;
+
+gap: 8px;
+
+}
+
+/* =========================
+LABEL
+========================= */
+
+.form-label {
+color: rgba(255, 255, 255, 0.72);
+
+font-size: 0.85rem;
+
+font-weight: 500;
+
+}
+
+/* =========================
+INPUT FIELD
+========================= */
+
+.input-field {
+position: relative;
+
+display: flex;
+
+align-items: center;
+
+width: 100%;
+height: 52px;
+
+border: 1px solid rgba(255, 255, 255, 0.13);
+
+border-radius: 13px;
+
+background: rgba(255, 255, 255, 0.065);
+
+transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+
+}
+
+.input-field:focus-within {
+border-color: rgba(183, 142, 255, 0.75);
+
+background: rgba(255, 255, 255, 0.095);
+
+box-shadow:
+    0 0 0 3px rgba(169, 120, 255, 0.11);
+
+}
+
+/* =========================
+INPUT
+========================= */
+
+.form-control {
+width: 100%;
+height: 100%;
+
+padding: 0 48px 0 17px;
+
+border: none;
+
+outline: none;
+
+background: transparent;
+
+color: #fff;
+
+font-family: inherit;
+
+font-size: 0.95rem;
+
+}
+
+.form-control::placeholder {
+color: rgba(255, 255, 255, 0.38);
+}
+
+.form-control[type="date"] {
+color-scheme: dark;
+
+padding-right: 17px;
+
+}
+
+.form-control[type="date"]::-webkit-calendar-picker-indicator {
+opacity: 0.65;
+
+cursor: pointer;
+
+}
+
+/* =========================
+ÍCONES
+========================= */
+
+.input-field > i {
+position: absolute;
+
+right: 17px;
+
+color: rgba(255, 255, 255, 0.45);
+
+font-size: 1rem;
+
+pointer-events: none;
+
+}
+
+/* =========================
+SENHA
+========================= */
+
+.password-icon {
+position: absolute;
+
+right: 13px;
+
+width: 32px;
+height: 32px;
+
+display: flex;
+
+align-items: center;
+justify-content: center;
+
+border: none;
+
+background: transparent;
+
+color: rgba(255, 255, 255, 0.45);
+
+cursor: pointer;
+
+font-size: 1rem;
+
+transition: color 0.25s ease;
+
+}
+
+.password-icon:hover {
+color: #c6a4ff;
+}
+
+/* =========================
+GÊNERO
+========================= */
+
+.radio-container {
+grid-column: 1 / -1;
+
+display: flex;
+
+flex-direction: column;
+
+gap: 10px;
+
+padding-top: 2px;
+
+}
+
+#gender_inputs {
+display: flex;
+
+align-items: center;
+
+flex-wrap: wrap;
+
+gap: 12px;
+
+}
+
+.radio-box {
+display: flex;
+
+align-items: center;
+
+gap: 9px;
+
+min-width: 130px;
+
+padding: 11px 15px;
+
+border: 1px solid rgba(255, 255, 255, 0.11);
+
+border-radius: 11px;
+
+background: rgba(255, 255, 255, 0.045);
+
+transition:
+    border-color 0.25s ease,
+    background 0.25s ease;
+
+}
+
+.radio-box:hover {
+border-color: rgba(183, 142, 255, 0.4);
+
+background: rgba(255, 255, 255, 0.075);
+
+}
+
+.radio-box input {
+appearance: none;
+
+width: 16px;
+height: 16px;
+
+margin: 0;
+
+border: 1px solid rgba(255, 255, 255, 0.35);
+
+border-radius: 50%;
+
+background: transparent;
+
+cursor: pointer;
+
+transition: 0.2s ease;
+
+}
+
+.radio-box input:checked {
+border: 4px solid #b68aff;
+
+background: transparent;
+
+}
+
+.radio-box label {
+color: rgba(255, 255, 255, 0.68);
+
+font-size: 0.85rem;
+
+cursor: pointer;
+
+}
+
+/* =========================
+BOTÃO SUBMIT
+========================= */
+
+.btn-submit {
+width: 100%;
+height: 54px;
+
+display: flex;
+
+align-items: center;
+justify-content: center;
+
+gap: 10px;
+
+border: none;
+
+border-radius: 14px;
+
+background:
+    linear-gradient(
+        135deg,
+        #ffffff,
+        #d9c2ff
+    );
+
+color: #281344;
+
+font-family: inherit;
+
+font-size: 1rem;
+
+font-weight: 700;
+
+cursor: pointer;
+
+box-shadow:
+    0 12px 30px rgba(120, 75, 200, 0.22);
+
+transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    filter 0.25s ease;
+
+}
+
+.btn-submit:hover {
+transform: translateY(-2px);
+
+box-shadow:
+    0 16px 38px rgba(120, 75, 200, 0.32);
+
+filter: brightness(1.04);
+
+}
+
+.btn-submit:active {
+transform: translateY(0);
+}
+
+/* =========================
+AUTOFILL
+========================= */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+-webkit-text-fill-color: #fff;
+
+-webkit-box-shadow:
+    0 0 0 1000px #241536 inset;
+
+transition:
+    background-color 5000s ease-in-out 0s;
+
+}
+
+/* =========================
+ANIMAÇÃO
+========================= */
+
+@keyframes formAppear {
+
+from {
+    opacity: 0;
+
+    transform:
+        translateY(20px)
+        scale(0.98);
+}
+
+to {
+    opacity: 1;
+
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+}
+
+/* =========================
+TABLET
+========================= */
+
+@media (max-width: 700px) {
+
+body {
+    padding: 20px;
+}
+
+#form_container {
+    max-width: 600px;
+
+    padding: 30px;
+}
+
+}
+
+/* =========================
+CELULAR
+========================= */
+
+@media (max-width: 560px) {
+
+body {
+    min-height: 100svh;
+
+    padding: 15px;
+
+    overflow-y: auto;
+}
+
+
+#form_container {
+    width: 100%;
+
+    padding: 25px 20px;
+
+    border-radius: 22px;
+}
+
+
+#form_header {
+    align-items: flex-start;
+
+    margin-bottom: 28px;
+}
+
+
+#form_title {
+    font-size: 1.65rem;
+}
+
+
+.title-container p {
+    font-size: 0.8rem;
+}
+
+
+#input_container {
+    grid-template-columns: 1fr;
+
+    gap: 18px;
+}
+
+
+.radio-container {
+    grid-column: auto;
+}
+
+
+#gender_inputs {
+    flex-direction: column;
+
+    align-items: stretch;
+}
+
+
+.radio-box {
+    width: 100%;
+}
+
+
+#form {
+    gap: 25px;
+}
+
+}
+
+/* =========================
+CELULARES PEQUENOS
+========================= */
+
+@media (max-width: 360px) {
+
+#form_container {
+    padding: 22px 16px;
+}
+
+
+#form_title {
+    font-size: 1.5rem;
+}
+
+
+.btn-icon {
+    width: 42px;
+    height: 42px;
+}
+
+
+.input-field {
+    height: 50px;
+}
+
+
+.btn-submit {
+    height: 52px;
+}
+
+}
