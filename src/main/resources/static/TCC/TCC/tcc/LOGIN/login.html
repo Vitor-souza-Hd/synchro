@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link
+    href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+    rel="stylesheet">
+<link rel="stylesheet" href="login.css">
+<title>Synchro - Login</title>
+</head>
+
+<body>
+<main class="container">
+
+    <!-- VÍDEO DE FUNDO -->
+    <video autoplay loop muted playsinline class="background-video">
+        <source src="background-blur-video.mp4" type="video/mp4">
+    </video>
+
+    <!-- CAMADA ESCURA SOBRE O VÍDEO -->
+    <div class="overlay"></div>
+
+    <!-- LOGIN -->
+    <form class="login">
+
+        <div class="logo">
+            <h1>Synchro</h1>
+            <p>Entre na sua conta</p>
+        </div>
+
+        <div class="input-box">
+            <input
+                type="email"
+                placeholder="Usuário"
+                autocomplete="username"
+                required>
+
+            <i class="bx bx-user"></i>
+        </div>
+
+        <div class="input-box">
+            <input
+                type="password"
+                placeholder="Senha"
+                autocomplete="current-password"
+                required>
+
+            <i class="bx bx-lock-alt"></i>
+        </div>
+
+        <div class="remember-forgot">
+
+            <label>
+                <input type="checkbox" id="remember-me">
+                <span>Lembrar-me</span>
+            </label>
+
+            <a href="#">Esqueci minha senha</a>
+
+        </div>
+
+        <button type="submit">
+            Entrar
+        </button>
+
+        <div class="divider">
+            <span>ou</span>
+        </div>
+
+        <div class="register-link">
+            <p>
+                Não tem uma conta?
+                <a href="FORMULARIO/formulario.html">
+                    Registrar-se
+                </a>
+            </p>
+        </div>
+
+    </form>
+
+</main>
+
+</body>
+</html>

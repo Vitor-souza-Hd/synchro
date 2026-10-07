@@ -29,7 +29,7 @@ public class User implements Serializable {
     @OneToOne(mappedBy = "synchroUser")
     private LastFmSession session;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserData data;
     public User(){
 

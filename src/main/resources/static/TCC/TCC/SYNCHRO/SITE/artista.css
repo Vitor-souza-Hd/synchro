@@ -1,0 +1,185 @@
+
+.artist-image img {
+
+    width: 230px;
+    height: 230px;
+
+    object-fit: cover;
+
+    border-radius: 50%;
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.35);
+}
+
+.artist-info h1 {
+
+    font-size: 52px;
+
+    margin: 10px 0;
+
+    color: white;
+}
+
+.tags {
+
+    display: flex;
+
+    gap: 10px;
+
+    margin: 20px 0;
+}
+
+.tags span {
+
+    padding: 7px 14px;
+
+    border-radius: 20px;
+
+    background: rgba(255,255,255,.1);
+
+    color: #bbb;
+}
+
+#favoriteBtn {
+
+    border: none;
+
+    padding: 12px 20px;
+
+    border-radius: 25px;
+
+    background: #ff1744;
+
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.tracks {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.track {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 20px;
+
+    padding: 15px;
+
+    border-radius: 10px;
+
+    transition: .2s;
+}
+
+.track:hover {
+
+    background: rgba(255,255,255,.08);
+}
+
+.track-number {
+
+    width: 30px;
+
+    color: #888;
+
+    text-align: center;
+}
+
+.track-info {
+
+    flex: 1;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+.track-info strong {
+
+    color: white;
+
+    font-size: 17px;
+}
+
+.track-info span {
+
+    color: #888;
+
+    font-size: 13px;
+}
+
+.track button {
+
+    border: none;
+
+    background: transparent;
+
+    color: white;
+
+    font-size: 22px;
+
+    cursor: pointer;
+}
+
+.albums {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fill, minmax(180px, 1fr));
+
+    gap: 25px;
+}
+
+.album-card {
+
+    cursor: pointer;
+
+    transition: .25s;
+}
+
+.album-card:hover {
+
+    transform: translateY(-5px);
+}
+
+.album-card img {
+
+    width: 100%;
+
+    aspect-ratio: 1;
+
+    object-fit: cover;
+
+    border-radius: 12px;
+}
+
+.album-card h3 {
+
+    margin-top: 10px;
+
+    color: white;
+
+    font-size: 17px;
+}
+
+.album-card p {
+
+    margin-top: 5px;
+
+    color: #888;
+}
+
