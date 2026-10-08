@@ -8,7 +8,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface AlbumRepository extends JpaRepository<Album,Long> {
-    public List<Album> findByArtistas(Artista artista);
-    public Album findByTitulo(String titulo);
+public interface AlbumRepository extends JpaRepository<Album, Long> {
+
+    List<Album> findByArtistas(Artista artista);
+
+    Album findByTitulo(String titulo);
+
+    List<Album> findByTituloContainingIgnoreCase(String titulo);
 }
