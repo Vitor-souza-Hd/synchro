@@ -251,11 +251,18 @@
                         class="tags">
                     </div>
 
-
+                <div class="button">
                     <button id="favoriteBtn">
                         <i class='bx bx-heart'></i>
                         Favoritar
                     </button>
+
+                    <button class="open-review" type="button">
+                        <i class='bx bx-plus'></i>
+                        Resenha
+                    </button>
+                </div>
+
                 </div>
             </section>
 
@@ -303,8 +310,68 @@
     </div>
 
 
-    <script src="artista.js"></script>
+<!-- Janela de review -->
+<div class="review-overlay" id="reviewModal" aria-hidden="true">
+    <section class="review-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reviewTitle">
 
+        <button class="review-close" id="closeReview"
+            type="button" aria-label="Fechar janela">&times;
+        </button>
+
+        <h2 id="reviewTitle">Avaliar artista</h2>
+        <p class="review-artist" id="reviewArtist"></p>
+
+        <form id="reviewForm">
+            <label>Sua nota</label>
+
+            <div class="star-rating" role="group"
+                aria-label="Escolha uma nota de 1 a 5">
+                <button type="button" data-rating="1"
+                    aria-label="1 estrela">★</button>
+                <button type="button" data-rating="2"
+                    aria-label="2 estrelas">★</button>
+                <button type="button" data-rating="3"
+                    aria-label="3 estrelas">★</button>
+                <button type="button" data-rating="4"
+                    aria-label="4 estrelas">★</button>
+                <button type="button" data-rating="5"
+                    aria-label="5 estrelas">★</button>
+            </div>
+
+            <input type="hidden" id="reviewRating" value="0">
+
+            <label for="reviewText">Sua resenha</label>
+            <textarea id="reviewText"
+                maxlength="500"
+                placeholder=""
+                required></textarea>
+
+            <div class="review-counter">
+                <span id="reviewError" role="status"></span>
+                <span id="charCount">0/500</span>
+            </div>
+
+            <label class="review-favorite">
+                <input type="checkbox" id="reviewFavorite">
+                Marcar como favorito
+            </label>
+
+            <div class="review-actions">
+                <button type="button" id="cancelReview">
+                    Cancelar
+                </button>
+                <button type="submit" class="publish-review">
+                    Publicar
+                </button>
+            </div>
+        </form>
+    </section>
+</div>
+
+    <script src="artista.js"></script>
 </body>
 
 </html>
