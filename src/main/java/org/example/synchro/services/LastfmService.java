@@ -174,7 +174,8 @@ public class LastfmService {
         return "https://www.last.fm/api/auth/?api_key="
                 + config.getApiKey()
                 + "&token="
-                + token;
+                + token
+                + "&cb=http%3A%2F%2Flocalhost%3A8080%2Flast-fm%2Fauth%2Fcallback";
     }
 
 
