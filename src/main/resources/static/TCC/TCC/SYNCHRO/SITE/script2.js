@@ -220,11 +220,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (searchInput && searchBox) {
 
-        // Área de resultados criada pelo próprio JavaScript
         const searchResults = document.createElement("div");
         searchResults.id = "lastfm-search-results";
 
-        // Estilos para não precisar modificar o CSS existente
         Object.assign(searchResults.style, {
             position: "absolute",
             top: "calc(100% + 8px)",
@@ -249,7 +247,10 @@ document.addEventListener("DOMContentLoaded", () => {
         let searchController;
         let searchVersion = 0;
 
-        // Mostrar mensagem na área de resultados
+        // =====================================================
+        // MENSAGENS DA PESQUISA
+        // =====================================================
+
         function showMessage(message) {
             searchResults.replaceChildren();
 
@@ -262,17 +263,35 @@ document.addEventListener("DOMContentLoaded", () => {
             searchResults.style.display = "block";
         }
 
-        // Cria cada item de resultado
-        function createResult(name, subtitle, url) {
-            const validUrl = typeof url === "string"
-                && /^https:\/\/(www\.)?last\.fm\//i.test(url);
+        // =====================================================
+        // CRIAR ITEM DE RESULTADO
+        // =====================================================
 
-            const item = document.createElement(validUrl ? "a" : "div");
+        function createResult(name, subtitle, url) {
+
+            const isInternalUrl =
+                typeof url === "string" &&
+                /^artista\.html\?artist=/i.test(url);
+
+            const isLastFmUrl =
+                typeof url === "string" &&
+                /^https:\/\/(www\.)?last\.fm\//i.test(url);
+
+            const validUrl = isInternalUrl || isLastFmUrl;
+
+            const item = document.createElement(
+                validUrl ? "a" : "div"
+            );
 
             if (validUrl) {
                 item.href = url;
-                item.target = "_blank";
-                item.rel = "noopener noreferrer";
+
+                // Artistas abrem no Synchro.
+                // Músicas continuam abrindo no Last.fm.
+                if (isLastFmUrl) {
+                    item.target = "_blank";
+                    item.rel = "noopener noreferrer";
+                }
             }
 
             Object.assign(item.style, {
@@ -309,8 +328,12 @@ document.addEventListener("DOMContentLoaded", () => {
             return item;
         }
 
-        // Faz uma requisição ao backend
+        // =====================================================
+        // REQUISIÇÃO AO BACKEND
+        // =====================================================
+
         async function fetchLastFmResults(endpoint, query, signal) {
+
             const response = await fetch(
                 `${endpoint}?q=${encodeURIComponent(query)}`,
                 { signal }
@@ -325,7 +348,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return response.json();
         }
 
-        // Executa as duas pesquisas
+        // =====================================================
+        // REALIZAR PESQUISA
+        // =====================================================
+
         async function performSearch(query) {
 
             if (searchController) {
@@ -333,12 +359,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             searchController = new AbortController();
+
             const signal = searchController.signal;
             const currentVersion = ++searchVersion;
 
             showMessage("Pesquisando no Last.fm...");
 
             try {
+
                 const [artistsResponse, tracksResponse] =
                     await Promise.allSettled([
                         fetchLastFmResults(
@@ -353,8 +381,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         )
                     ]);
 
-                // Ignorar resultados de pesquisas anteriores
-                if (currentVersion !== searchVersion || signal.aborted) {
+                if (
+                    currentVersion !== searchVersion ||
+                    signal.aborted
+                ) {
                     return;
                 }
 
@@ -362,8 +392,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 let totalResults = 0;
 
-                // ARTISTAS
+                // =============================================
+                // RESULTADOS DE ARTISTAS
+                // =============================================
+
                 if (artistsResponse.status === "fulfilled") {
+
                     const artists =
                         artistsResponse.value?.results
                             ?.artistmatches?.artist || [];
@@ -373,6 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         : [artists];
 
                     if (artistList.length > 0) {
+
                         const heading = document.createElement("h4");
                         heading.textContent = "Artistas";
                         heading.style.padding = "8px";
@@ -381,20 +416,30 @@ document.addEventListener("DOMContentLoaded", () => {
                         searchResults.appendChild(heading);
 
                         artistList.slice(0, 5).forEach(artist => {
+
+                            // REDIRECIONAMENTO INTERNO DO SYNCHRO
+                            const internalUrl =
+                                `artista.html?artist=${encodeURIComponent(artist.name)}`;
+
                             searchResults.appendChild(
                                 createResult(
                                     artist.name,
                                     "Artista",
-                                    artist.url
+                                    internalUrl
                                 )
                             );
+
                             totalResults++;
                         });
                     }
                 }
 
-                // MÚSICAS
+                // =============================================
+                // RESULTADOS DE MÚSICAS
+                // =============================================
+
                 if (tracksResponse.status === "fulfilled") {
+
                     const tracks =
                         tracksResponse.value?.results
                             ?.trackmatches?.track || [];
@@ -404,6 +449,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         : [tracks];
 
                     if (trackList.length > 0) {
+
                         const heading = document.createElement("h4");
                         heading.textContent = "Músicas";
                         heading.style.padding = "8px";
@@ -412,6 +458,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         searchResults.appendChild(heading);
 
                         trackList.slice(0, 5).forEach(track => {
+
                             searchResults.appendChild(
                                 createResult(
                                     track.name,
@@ -419,12 +466,18 @@ document.addEventListener("DOMContentLoaded", () => {
                                     track.url
                                 )
                             );
+
                             totalResults++;
                         });
                     }
                 }
 
+                // =============================================
+                // NENHUM RESULTADO
+                // =============================================
+
                 if (totalResults === 0) {
+
                     if (
                         artistsResponse.status === "rejected" &&
                         tracksResponse.status === "rejected"
@@ -437,14 +490,19 @@ document.addEventListener("DOMContentLoaded", () => {
                             "Nenhum resultado encontrado."
                         );
                     }
+
                 } else {
                     searchResults.style.display = "block";
                 }
 
             } catch (error) {
+
                 if (error.name !== "AbortError") {
                     console.error("Erro na pesquisa:", error);
-                    showMessage("Erro ao realizar a pesquisa.");
+
+                    showMessage(
+                        "Erro ao realizar a pesquisa."
+                    );
                 }
             }
         }
@@ -460,6 +518,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const query = searchInput.value.trim();
 
             if (query.length < 2) {
+
                 searchVersion++;
 
                 if (searchController) {
@@ -468,31 +527,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 searchResults.style.display = "none";
                 searchResults.replaceChildren();
+
                 return;
             }
 
-            // Espera 400 ms após o usuário parar de digitar
             searchTimer = setTimeout(() => {
                 performSearch(query);
             }, 400);
         });
 
-        // Fechar ao pressionar Escape
+        // FECHAR COM ESCAPE
         searchInput.addEventListener("keydown", event => {
+
             if (event.key === "Escape") {
                 searchResults.style.display = "none";
             }
         });
 
-        // Fechar ao clicar fora da pesquisa
+        // FECHAR AO CLICAR FORA
         document.addEventListener("click", event => {
+
             if (!searchBox.contains(event.target)) {
                 searchResults.style.display = "none";
             }
         });
 
-        // Reabrir resultados existentes ao focar
+        // REABRIR AO CLICAR NA PESQUISA
         searchInput.addEventListener("focus", () => {
+
             if (
                 searchInput.value.trim().length >= 2 &&
                 searchResults.childElementCount > 0
