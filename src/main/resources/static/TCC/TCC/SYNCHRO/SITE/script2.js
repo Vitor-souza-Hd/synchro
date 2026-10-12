@@ -269,10 +269,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         function createResult(name, subtitle, url) {
 
+            // Aceita páginas internas de artistas e músicas.
             const isInternalUrl =
                 typeof url === "string" &&
-                /^artista\.html\?artist=/i.test(url);
+                /^(artista|musica)\.html\?/i.test(url);
 
+            // Mantém suporte a links externos do Last.fm.
             const isLastFmUrl =
                 typeof url === "string" &&
                 /^https:\/\/(www\.)?last\.fm\//i.test(url);
@@ -286,8 +288,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (validUrl) {
                 item.href = url;
 
-                // Artistas abrem no Synchro.
-                // Músicas continuam abrindo no Last.fm.
+                // Links internos abrem na mesma aba.
+                // Links externos abrem em outra aba.
                 if (isLastFmUrl) {
                     item.target = "_blank";
                     item.rel = "noopener noreferrer";
@@ -417,7 +419,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         artistList.slice(0, 5).forEach(artist => {
 
-                            // REDIRECIONAMENTO INTERNO DO SYNCHRO
+                            if (!artist.name) {
+                                return;
+                            }
+
                             const internalUrl =
                                 `artista.html?artist=${encodeURIComponent(artist.name)}`;
 
@@ -459,11 +464,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         trackList.slice(0, 5).forEach(track => {
 
+                            // O Last.fm geralmente retorna o nome
+                            // do artista como uma string.
+                            const artistName =
+                                typeof track.artist === "string"
+                                    ? track.artist
+                                    : track.artist?.name;
+
+                            if (!track.name || !artistName) {
+                                return;
+                            }
+
+                            // NOVO: abrir a página interna da música.
+                            const internalUrl =
+                                `musica.html?artist=${encodeURIComponent(artistName)}` +
+                                `&track=${encodeURIComponent(track.name)}`;
+
                             searchResults.appendChild(
                                 createResult(
                                     track.name,
-                                    track.artist || "Música",
-                                    track.url
+                                    artistName,
+                                    internalUrl
                                 )
                             );
 
