@@ -1,0 +1,274 @@
+
+/* =========================================
+   SYNCHRO - PÁGINA DE MÚSICA
+========================================= */
+
+.music-header {
+    display: flex;
+    align-items: center;
+    gap: 35px;
+
+    margin: 35px 0 45px;
+    padding: 35px;
+
+    border-radius: 18px;
+
+    background: linear-gradient(
+            135deg,
+            #30202a,
+            #171717
+    );
+}
+
+/* CAPA DO ÁLBUM */
+
+.music-cover {
+    width: 240px;
+    height: 240px;
+    flex-shrink: 0;
+
+    border-radius: 14px;
+    overflow: hidden;
+
+    background: #272727;
+
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+}
+
+.music-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.music-cover img[hidden] {
+    display: none;
+}
+
+.music-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    color: #777;
+    font-size: 90px;
+}
+
+.music-placeholder[hidden] {
+    display: none;
+}
+
+/* INFORMAÇÕES PRINCIPAIS */
+
+.music-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    min-width: 0;
+}
+
+.music-label {
+    color: #aaa;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.music-info h1 {
+    margin: 12px 0;
+
+    color: #fff;
+    font-size: clamp(32px, 4vw, 56px);
+
+    overflow-wrap: anywhere;
+}
+
+#musicArtist {
+    color: #fff;
+    text-decoration: none;
+
+    font-size: 21px;
+    font-weight: 600;
+}
+
+#musicArtist:hover {
+    text-decoration: underline;
+}
+
+#musicAlbum {
+    margin-top: 12px;
+
+    color: #aaa;
+    font-size: 15px;
+}
+
+/* GÊNEROS */
+
+.music-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin: 20px 0;
+}
+
+.music-tags span {
+    padding: 7px 14px;
+
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+
+    color: #ccc;
+    font-size: 13px;
+}
+
+/* BOTÃO LAST.FM */
+
+.music-actions {
+    margin-top: 10px;
+}
+
+#lastfmLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 12px 20px;
+
+    border-radius: 25px;
+    background: #ff1744;
+
+    color: #fff;
+    font-weight: bold;
+    text-decoration: none;
+
+    transition: background 0.2s;
+}
+
+#lastfmLink[hidden] {
+    display: none;
+}
+
+#lastfmLink:hover {
+    background: #df1239;
+}
+
+/* SEÇÕES */
+
+.music-section {
+    margin-bottom: 45px;
+}
+
+.music-section h2 {
+    margin-bottom: 22px;
+
+    color: #fff;
+    font-size: 26px;
+}
+
+/* ESTATÍSTICAS */
+
+.music-stats {
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    padding: 25px;
+
+    border-radius: 14px;
+    background: #202020;
+}
+
+.stat-card i {
+    color: #ff1744;
+    font-size: 28px;
+}
+
+.stat-card span {
+    color: #aaa;
+    font-size: 14px;
+}
+
+.stat-card strong {
+    color: #fff;
+    font-size: 26px;
+}
+
+/* BIOGRAFIA */
+
+.music-biography {
+    max-width: 900px;
+
+    color: #bbb;
+
+    font-size: 15px;
+    line-height: 1.8;
+
+    overflow-wrap: anywhere;
+}
+
+.music-note {
+    margin: 35px 0;
+
+    color: #777;
+    font-size: 12px;
+}
+
+/* RESPONSIVIDADE */
+
+@media (max-width: 900px) {
+
+    .music-header {
+        gap: 25px;
+        padding: 25px;
+    }
+
+    .music-cover {
+        width: 180px;
+        height: 180px;
+    }
+
+    .music-placeholder {
+        font-size: 65px;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .music-header {
+        flex-direction: column;
+        align-items: flex-start;
+
+        padding: 20px;
+    }
+
+    .music-cover {
+        width: 170px;
+        height: 170px;
+    }
+
+    .music-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .music-info h1 {
+        font-size: 34px;
+    }
+
+    .music-section h2 {
+        font-size: 23px;
+    }
+}

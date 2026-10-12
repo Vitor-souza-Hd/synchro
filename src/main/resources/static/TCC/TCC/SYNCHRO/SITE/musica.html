@@ -1,0 +1,246 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Música - Synchro</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="musica.css">
+
+    <link
+            href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+            rel="stylesheet"
+    >
+
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    >
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- MENU LATERAL -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            <i class="bx bx-pulse"></i>
+            <a href="index2.html">SYNCHRO</a>
+        </div>
+
+        <div class="menu">
+            <h5>Menu</h5>
+
+            <ul>
+                <li>
+                    <i class="bx bxs-bolt-circle"></i>
+                    <a href="index2.html">Explorar</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-volume-full"></i>
+                    <a href="#">Gêneros</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-album"></i>
+                    <a href="#">Álbuns</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-microphone"></i>
+                    <a href="#">Artistas</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu">
+            <h5>Sua Biblioteca</h5>
+
+            <ul>
+                <li>
+                    <i class="bx bx-undo"></i>
+                    <a href="#">Recentes</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-photo-album"></i>
+                    <a href="#">Avaliações</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-heart"></i>
+                    <a href="#">Favoritos</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-folder"></i>
+                    <a href="#">Local</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu">
+            <h5>Playlist</h5>
+
+            <ul>
+                <li>
+                    <i class="bx bxs-plus-square"></i>
+                    <a href="#">Criar uma nova</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="#">Suas Playlists</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="#">Recomendados</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="nav-footer">
+            <a href="#">Sobre o Synchro</a>
+        </div>
+
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main>
+
+        <header class="search-bar">
+
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                        class="search"
+                        type="text"
+                        placeholder="O que você quer ouvir?"
+                        aria-label="Buscar música"
+                >
+            </div>
+
+            <div class="nav-links">
+                <button class="menu-toggle" type="button">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
+                <a href="index2.html">Início</a>
+                <a href="#">Músicas</a>
+                <a href="#">Artistas</a>
+            </div>
+
+            <a href="user.html" class="user">
+                <i class="fa-solid fa-circle-user"></i>
+            </a>
+
+        </header>
+
+        <!-- INFORMAÇÕES PRINCIPAIS -->
+        <section class="music-header">
+
+            <div class="music-cover">
+                <img
+                        id="musicImage"
+                        alt="Capa do álbum"
+                        hidden
+                >
+
+                <div id="musicPlaceholder" class="music-placeholder">
+                    <i class="bx bx-music"></i>
+                </div>
+            </div>
+
+            <div class="music-info">
+
+                <span class="music-label">MÚSICA</span>
+
+                <h1 id="musicName">Carregando...</h1>
+
+                <a id="musicArtist" href="#">
+                    Carregando artista...
+                </a>
+
+                <p id="musicAlbum"></p>
+
+                <div id="musicTags" class="music-tags"></div>
+
+                <div class="music-actions">
+                    <a
+                            id="lastfmLink"
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            hidden
+                    >
+                        <i class="bx bx-link-external"></i>
+                        Abrir no Last.fm
+                    </a>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ESTATÍSTICAS -->
+        <section class="music-section">
+
+            <h2>Estatísticas</h2>
+
+            <div class="music-stats">
+
+                <div class="stat-card">
+                    <i class="bx bx-headphone"></i>
+                    <span>Ouvintes</span>
+                    <strong id="musicListeners">—</strong>
+                </div>
+
+                <div class="stat-card">
+                    <i class="bx bx-play-circle"></i>
+                    <span>Reproduções</span>
+                    <strong id="musicPlaycount">—</strong>
+                </div>
+
+                <div class="stat-card">
+                    <i class="bx bx-time-five"></i>
+                    <span>Duração</span>
+                    <strong id="musicDuration">—</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- SOBRE A MÚSICA -->
+        <section class="music-section">
+
+            <h2>Sobre a música</h2>
+
+            <p id="musicBiography" class="music-biography">
+                Carregando informações...
+            </p>
+
+        </section>
+
+        <!-- AVISO -->
+        <p class="music-note">
+            Informações obtidas pela API do Last.fm.
+        </p>
+
+    </main>
+
+</div>
+
+<script src="musica.js"></script>
+
+</body>
+</html>
