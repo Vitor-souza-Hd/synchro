@@ -12,9 +12,8 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-
-import static tools.jackson.databind.type.LogicalType.DateTime;
 
 @Configuration
 @RequiredArgsConstructor
@@ -35,6 +34,8 @@ public class TestConfig implements CommandLineRunner {
     private final LastFmSessionRepository lastFmSessionRepository;
 
     private final ReviewRepository reviewRepository;
+
+    private final PlaylistRepository playlistRepository;
 
     @Override
     public void run(String... args)  throws  Exception{
@@ -99,6 +100,20 @@ public class TestConfig implements CommandLineRunner {
        }
 
         userRepository.saveAll(Arrays.asList(u1,u2,u3));
+
+        Playlist playlistBrenno = new Playlist(
+                "Playlist aleatória do Brenno",
+                "Músicas escolhidas aleatoriamente para o Brenno",
+                u3
+        );
+
+        List<Musica> musicasAleatorias = new ArrayList<>(Arrays.asList(m1, m2, m3, m4, m5, m6, m7));
+        Collections.shuffle(musicasAleatorias);
+        musicasAleatorias.stream()
+                .limit(4)
+                .forEach(playlistBrenno::addMusica);
+
+        playlistRepository.save(playlistBrenno);
 
        Review r1 = new Review(5,"muito louco slk",m7,u1.getData());
        Review r2 = new Review(10, "nunca vi esse album", album1,u2.getData());

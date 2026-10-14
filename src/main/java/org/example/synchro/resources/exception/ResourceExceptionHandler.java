@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.example.synchro.services.exception.BadCredentialsException;
 import org.example.synchro.services.exception.InvalidTokenException;
 import org.example.synchro.services.exception.ResourceConflictException;
+import org.example.synchro.services.exception.UnauthorizedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
@@ -42,6 +43,19 @@ public class ResourceExceptionHandler {
 		HttpStatus status = HttpStatus.UNAUTHORIZED;
 		String error = "invalid token";
 		StandardError err = new StandardError(Instant.now(),status.value(),error,e.getMessage(), request.getRequestURI());
+		return ResponseEntity.status(status).body(err);
+	}
+
+	@ExceptionHandler(UnauthorizedException.class)
+	public ResponseEntity<StandardError> Unauthorized(UnauthorizedException e, HttpServletRequest request){
+		HttpStatus status = HttpStatus.UNAUTHORIZED;
+		StandardError err = new StandardError(
+				Instant.now(),
+				status.value(),
+				"unauthorized",
+				e.getMessage(),
+				request.getRequestURI()
+		);
 		return ResponseEntity.status(status).body(err);
 	}
 	

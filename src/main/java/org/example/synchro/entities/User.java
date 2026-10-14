@@ -7,7 +7,9 @@ import lombok.Setter;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "tb_user")
@@ -31,6 +33,13 @@ public class User implements Serializable {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserData data;
+
+    @OneToMany(mappedBy = "criador", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Playlist> playlistsCriadas = new HashSet<>();
+
+    @ManyToMany(mappedBy = "usuarios")
+    private Set<Playlist> playlists = new HashSet<>();
+
     public User(){
 
     }
