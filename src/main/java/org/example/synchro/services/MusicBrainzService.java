@@ -1,4 +1,3 @@
-
 package org.example.synchro.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,12 +18,25 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class MusicBrainzService {
 
     private final WebClient musicBrainzClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final int MAX_CACHE_ENTRIES = 500;
+    private static final Duration CACHE_POSITIVO = Duration.ofHours(6);
+    private static final Duration CACHE_VAZIO = Duration.ofMinutes(30);
+    private static final long INTERVALO_REQUISICOES_NANOS =
+            Duration.ofMillis(1100).toNanos();
+
+    private final ConcurrentHashMap<String, Mono<String>> cachePesquisas =
+            new ConcurrentHashMap<>();
+
+    private final Object limiteRequisicoes = new Object();
+    private long proximoHorarioRequisicao = 0L;
 
     public MusicBrainzService() {
 
@@ -129,17 +141,63 @@ public class MusicBrainzService {
             int limite
     ) {
 
-        return musicBrainzClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(caminho)
-                        .queryParam("query", query)
-                        .queryParam("fmt", "json")
-                        .queryParam("limit", limite)
-                        .build())
-                .retrieve()
-                .bodyToMono(String.class)
-                .timeout(Duration.ofSeconds(20));
+        String chave = caminho + "|" + limite + "|" + query;
+
+        // O limite protege a memoria da aplicacao.
+        // A limpeza so afeta o cache, nunca os dados persistidos.
+        if (cachePesquisas.size() >= MAX_CACHE_ENTRIES
+                && !cachePesquisas.containsKey(chave)) {
+            cachePesquisas.clear();
+        }
+
+        return cachePesquisas.computeIfAbsent(chave, ignorada ->
+                Mono.defer(() -> aguardarVez()
+                        .then(musicBrainzClient
+                                .get()
+                                .uri(uriBuilder -> uriBuilder
+                                        .path(caminho)
+                                        .queryParam("query", query)
+                                        .queryParam("fmt", "json")
+                                        .queryParam("limit", limite)
+                                        .build())
+                                .retrieve()
+                                .bodyToMono(String.class)
+                                .timeout(Duration.ofSeconds(20))))
+                        .cache(
+                                json -> respostaVazia(json)
+                                        ? CACHE_VAZIO : CACHE_POSITIVO,
+                                erro -> Duration.ZERO,
+                                () -> Duration.ZERO
+                        )
+        );
+    }
+
+    // Uma requisicao externa por vez, com ao menos 1,1 s
+    // entre os horarios reservados neste servico.
+    private Mono<Long> aguardarVez() {
+        return Mono.defer(() -> {
+            long espera;
+            synchronized (limiteRequisicoes) {
+                long agora = System.nanoTime();
+                espera = Math.max(0L, proximoHorarioRequisicao - agora);
+                proximoHorarioRequisicao = agora + espera
+                        + INTERVALO_REQUISICOES_NANOS;
+            }
+            return Mono.delay(Duration.ofNanos(espera));
+        });
+    }
+
+    private boolean respostaVazia(String json) {
+        try {
+            JsonNode resposta = objectMapper.readTree(json);
+            JsonNode gravacoes = resposta.path("recordings");
+            JsonNode albuns = resposta.path("release-groups");
+            return (gravacoes.isArray() && gravacoes.isEmpty())
+                    || (albuns.isArray() && albuns.isEmpty());
+        } catch (JsonProcessingException error) {
+            // Resposta inesperada: nao prolongar o cache.
+            return true;
+        }
     }
 
     // =========================================
