@@ -19,15 +19,29 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class CoverArtService {
 
     private static final int MAX_EDICOES = 5;
+    private static final int MAX_CACHE_ENTRIES = 500;
+
+    private static final Duration CACHE_CAPA_ENCONTRADA =
+            Duration.ofHours(24);
+
+    private static final Duration CACHE_CAPA_NAO_ENCONTRADA =
+            Duration.ofMinutes(30);
 
     private final WebClient coverArtClient;
     private final WebClient musicBrainzClient;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    // Armazena consultas compartilhadas por releaseGroupId.
+    private final ConcurrentHashMap<
+            String, Mono<Map<String, Object>>
+            > cacheCapas = new ConcurrentHashMap<>();
 
     public CoverArtService() {
 
@@ -73,9 +87,57 @@ public class CoverArtService {
                 .build();
     }
 
-    // Primeira tentativa: capa do grupo de lancamentos.
-    // Se nao encontrar, busca nas edicoes oficiais.
+    // =========================================
+    // CONSULTA COM CACHE
+    // =========================================
+
     public Mono<Map<String, Object>> getAlbumCover(
+            String releaseGroupId
+    ) {
+
+        // Evita crescimento ilimitado do mapa.
+        // Se estiver cheio, limpa as entradas antigas
+        // e inicia um novo conjunto de consultas.
+        if (cacheCapas.size() >= MAX_CACHE_ENTRIES
+                && !cacheCapas.containsKey(releaseGroupId)) {
+            cacheCapas.clear();
+        }
+
+        return cacheCapas.computeIfAbsent(
+                releaseGroupId,
+                id -> criarConsultaCacheada(id)
+        );
+    }
+
+    private Mono<Map<String, Object>> criarConsultaCacheada(
+            String releaseGroupId
+    ) {
+
+        return Mono.defer(
+                        () -> buscarCapaSemCache(releaseGroupId)
+                )
+                .cache(
+                        resultado -> {
+
+                            if ("found".equals(
+                                    resultado.get("status")
+                            )) {
+                                return CACHE_CAPA_ENCONTRADA;
+                            }
+
+                            return CACHE_CAPA_NAO_ENCONTRADA;
+                        },
+                        // Falhas reais nao permanecem no cache.
+                        erro -> Duration.ZERO,
+                        () -> Duration.ZERO
+                );
+    }
+
+    // =========================================
+    // BUSCA ORIGINAL: GRUPO E EDICOES
+    // =========================================
+
+    private Mono<Map<String, Object>> buscarCapaSemCache(
             String releaseGroupId
     ) {
 
@@ -84,9 +146,7 @@ public class CoverArtService {
                 releaseGroupId
         )
                 .onErrorResume(error ->
-                        Mono.just(
-                                resultadoNaoEncontrado(releaseGroupId)
-                        )
+                        buscarCapaEmEdicoes(releaseGroupId)
                 )
                 .flatMap(resultado -> {
 
@@ -98,7 +158,10 @@ public class CoverArtService {
                 });
     }
 
-    // Consulta as edicoes associadas ao album.
+    // =========================================
+    // BUSCAR CAPA NAS EDICOES OFICIAIS
+    // =========================================
+
     private Mono<Map<String, Object>> buscarCapaEmEdicoes(
             String releaseGroupId
     ) {
@@ -149,16 +212,13 @@ public class CoverArtService {
                             .defaultIfEmpty(
                                     resultadoNaoEncontrado(releaseGroupId)
                             );
-                })
-                .onErrorResume(error ->
-                        Mono.just(
-                                resultadoNaoEncontrado(releaseGroupId)
-                        )
-                );
+                });
     }
 
-    // Seleciona no maximo cinco edicoes oficiais.
-    // Ignora edicoes identificadas como downloads digitais.
+    // =========================================
+    // SELECIONAR EDICOES
+    // =========================================
+
     private List<String> selecionarEdicoesOficiais(
             JsonNode data
     ) {
@@ -204,8 +264,10 @@ public class CoverArtService {
         return edicoes;
     }
 
-    // Consulta uma capa no Cover Art Archive.
-    // Funciona com release-group e release.
+    // =========================================
+    // CONSULTAR COVER ART ARCHIVE
+    // =========================================
+
     private Mono<Map<String, Object>> consultarCapa(
             String caminho,
             String releaseGroupId
@@ -237,13 +299,18 @@ public class CoverArtService {
                 .timeout(Duration.ofSeconds(20));
     }
 
-    // Converte o JSON retornado pelo MusicBrainz.
+    // =========================================
+    // PROCESSAMENTO DOS JSONS
+    // =========================================
+
     private JsonNode converterJson(String texto) {
 
         try {
+
             return objectMapper.readTree(texto);
 
         } catch (JsonProcessingException error) {
+
             throw new IllegalStateException(
                     "O MusicBrainz retornou um JSON invalido.",
                     error
@@ -251,7 +318,6 @@ public class CoverArtService {
         }
     }
 
-    // Converte a resposta do Cover Art Archive.
     private Map<String, Object> converterResposta(
             String texto,
             String releaseGroupId
@@ -284,7 +350,10 @@ public class CoverArtService {
         }
     }
 
-    // Procura uma capa frontal aprovada.
+    // =========================================
+    // SELECIONAR CAPA FRONTAL APROVADA
+    // =========================================
+
     private Map<String, Object> extrairCapa(
             JsonNode data,
             String releaseGroupId
@@ -334,7 +403,10 @@ public class CoverArtService {
                     new LinkedHashMap<>();
 
             resultado.put("status", "found");
-            resultado.put("releaseGroupId", releaseGroupId);
+            resultado.put(
+                    "releaseGroupId",
+                    releaseGroupId
+            );
             resultado.put("coverUrl", url);
 
             return resultado;
@@ -343,8 +415,10 @@ public class CoverArtService {
         return resultadoNaoEncontrado(releaseGroupId);
     }
 
-    // Aceita apenas URLs de imagens do Cover Art Archive
-    // ou do Internet Archive, sempre usando HTTPS.
+    // =========================================
+    // NORMALIZAR URL PARA HTTPS
+    // =========================================
+
     private String normalizarUrlImagem(String url) {
 
         if (url == null || url.isBlank()) {
@@ -385,12 +459,18 @@ public class CoverArtService {
                 return url;
             }
 
-            return "https://" + url.substring("http://".length());
+            return "https://" + url.substring(
+                    "http://".length()
+            );
 
         } catch (IllegalArgumentException error) {
             return "";
         }
     }
+
+    // =========================================
+    // RESPOSTA SEM CAPA
+    // =========================================
 
     private Map<String, Object> resultadoNaoEncontrado(
             String releaseGroupId
@@ -400,7 +480,10 @@ public class CoverArtService {
                 new LinkedHashMap<>();
 
         resultado.put("status", "not_found");
-        resultado.put("releaseGroupId", releaseGroupId);
+        resultado.put(
+                "releaseGroupId",
+                releaseGroupId
+        );
         resultado.put("coverUrl", null);
 
         return resultado;
