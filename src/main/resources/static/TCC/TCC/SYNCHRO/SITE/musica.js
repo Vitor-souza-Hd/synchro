@@ -19,6 +19,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const biographyElement =
         document.getElementById("musicBiography");
 
+    const albumElement =
+        document.getElementById("musicAlbum");
+
     // =========================================
     // MENU RESPONSIVO
     // =========================================
@@ -47,7 +50,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
+    // Dados do Last.fm e identificação do álbum
+    // são carregados de maneira independente.
     carregarMusica();
+    carregarAlbumMusicBrainz();
 
     // =========================================
     // CONSULTAR LAST.FM
@@ -84,7 +90,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================================
-    // CARREGAR INFORMAÇÕES
+    // CONSULTAR ENDPOINT DO SYNCHRO
+    // =========================================
+
+    async function consultarSynchro(caminho, parametros = {}) {
+
+        const url = new URL(caminho, window.location.origin);
+
+        Object.entries(parametros).forEach(([chave, valor]) => {
+            url.searchParams.set(chave, valor);
+        });
+
+        const response = await fetch(url, {
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(
+                `Erro ao consultar ${caminho}: HTTP ${response.status}`
+            );
+        }
+
+        return response.json();
+    }
+
+    // =========================================
+    // CARREGAR INFORMAÇÕES DO LAST.FM
     // =========================================
 
     async function carregarMusica() {
@@ -123,21 +156,6 @@ document.addEventListener("DOMContentLoaded", () => {
             artistElement.href =
                 `artista.html?artist=${encodeURIComponent(artista)}`;
 
-            // ÁLBUM
-            const albumElement =
-                document.getElementById("musicAlbum");
-
-            if (track.album?.title) {
-                albumElement.textContent =
-                    `Álbum: ${track.album.title}`;
-            } else {
-                albumElement.textContent =
-                    "Álbum não informado";
-            }
-
-            // CAPA
-            carregarImagem(track.album?.image);
-
             // ESTATÍSTICAS
             document.getElementById("musicListeners").textContent =
                 formatarNumero(track.listeners);
@@ -151,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // GÊNEROS
             carregarTags(track.toptags?.tag);
 
-            // BIOGRAFIA
+            // DESCRIÇÃO
             biographyElement.textContent =
                 limparTexto(track.wiki?.summary) ||
                 "O Last.fm ainda não disponibilizou uma descrição para esta música.";
@@ -168,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
 
             console.error(
-                "Erro ao carregar música:",
+                "Erro ao carregar música pelo Last.fm:",
                 error
             );
 
@@ -181,42 +199,186 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================================
-    // CARREGAR CAPA
+    // IDENTIFICAR ÁLBUM PELO MUSICBRAINZ
     // =========================================
 
-    function carregarImagem(images) {
+    async function carregarAlbumMusicBrainz() {
 
-        const img = document.getElementById("musicImage");
+        albumElement.textContent = "Identificando álbum...";
+        limparImagem();
+
+        try {
+
+            const resultado = await consultarSynchro(
+                "/musicbrainz/track/album",
+                {
+                    artist: artistName,
+                    track: trackName
+                }
+            );
+
+            if (
+                resultado.status !== "found" ||
+                !resultado.album?.releaseGroupId ||
+                !resultado.album?.title
+            ) {
+
+                albumElement.textContent =
+                    "Álbum de estúdio não identificado";
+
+                return;
+            }
+
+            const album = resultado.album;
+
+            // Exibe o álbum selecionado pelo backend.
+            albumElement.textContent =
+                `Álbum associado: ${album.title}`;
+
+            // Busca a capa pelo identificador MusicBrainz.
+            await carregarCapaCoverArtArchive(
+                album.releaseGroupId
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "Não foi possível identificar o álbum:",
+                error
+            );
+
+            // Erros externos não devem impedir
+            // a exibição das informações da música.
+            albumElement.textContent =
+                "Álbum indisponível no momento";
+        }
+    }
+
+    // =========================================
+    // BUSCAR CAPA PELO BACKEND
+    // =========================================
+
+    async function carregarCapaCoverArtArchive(releaseGroupId) {
+
+        try {
+
+            const response = await fetch(
+                `/cover-art/release-group/${encodeURIComponent(releaseGroupId)}`,
+                {
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `Erro ao buscar capa: HTTP ${response.status}`
+                );
+            }
+
+            const resultado = await response.json();
+
+            if (
+                resultado.status === "found" &&
+                urlCapaValida(resultado.coverUrl)
+            ) {
+
+                exibirImagem(resultado.coverUrl);
+
+            } else {
+
+                console.info(
+                    "Capa não disponível para:",
+                    releaseGroupId
+                );
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "Não foi possível carregar a capa:",
+                error
+            );
+        }
+    }
+
+    // =========================================
+    // VALIDAR URL DA CAPA
+    // =========================================
+
+    function urlCapaValida(url) {
+
+        if (typeof url !== "string") {
+            return false;
+        }
+
+        try {
+
+            const endereco = new URL(url);
+
+            return (
+                endereco.protocol === "https:" &&
+                (
+                    endereco.hostname === "coverartarchive.org" ||
+                    endereco.hostname === "archive.org" ||
+                    endereco.hostname.endsWith(".archive.org")
+                )
+            );
+
+        } catch {
+            return false;
+        }
+    }
+
+    // =========================================
+    // LIMPAR IMAGEM
+    // =========================================
+
+    function limparImagem() {
+
+        const img =
+            document.getElementById("musicImage");
+
         const placeholder =
             document.getElementById("musicPlaceholder");
 
-        if (!Array.isArray(images)) {
-            return;
-        }
+        img.hidden = true;
+        img.removeAttribute("src");
 
-        const imagem =
-            images.find(
-                item =>
-                    item.size === "extralarge" &&
-                    item["#text"]
-            ) ||
-            images.find(item => item["#text"]);
+        placeholder.hidden = false;
+    }
 
-        if (!imagem) {
-            return;
-        }
+    // =========================================
+    // EXIBIR CAPA DO ÁLBUM
+    // =========================================
+
+    function exibirImagem(url) {
+
+        const img =
+            document.getElementById("musicImage");
+
+        const placeholder =
+            document.getElementById("musicPlaceholder");
 
         img.onload = () => {
+
             img.hidden = false;
             placeholder.hidden = true;
         };
 
         img.onerror = () => {
+
             img.hidden = true;
             placeholder.hidden = false;
+
+            console.warn(
+                "O navegador não conseguiu carregar a capa:",
+                url
+            );
         };
 
-        img.src = imagem["#text"];
+        img.src = url;
     }
 
     // =========================================
@@ -236,9 +398,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         lista.slice(0, 5).forEach(tag => {
 
+            if (!tag.name) {
+                return;
+            }
+
             const span = document.createElement("span");
 
-            span.textContent = tag.name || "";
+            span.textContent = tag.name;
 
             container.appendChild(span);
         });
@@ -308,7 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================================
-    // VALIDAR LINK EXTERNO
+    // VALIDAR LINK DO LAST.FM
     // =========================================
 
     function urlLastFmValida(url) {
@@ -318,6 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
+
             const endereco = new URL(url);
 
             return (
