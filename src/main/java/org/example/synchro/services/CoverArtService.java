@@ -1,4 +1,3 @@
-
 package org.example.synchro.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -35,6 +34,7 @@ public class CoverArtService {
 
     private final WebClient coverArtClient;
     private final WebClient musicBrainzClient;
+    private final MusicBrainzRateLimiter rateLimiter;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -43,7 +43,9 @@ public class CoverArtService {
             String, Mono<Map<String, Object>>
             > cacheCapas = new ConcurrentHashMap<>();
 
-    public CoverArtService() {
+    public CoverArtService(MusicBrainzRateLimiter rateLimiter) {
+
+        this.rateLimiter = rateLimiter;
 
         HttpClient httpClient = HttpClient.create()
                 .followRedirect(true);
@@ -166,17 +168,19 @@ public class CoverArtService {
             String releaseGroupId
     ) {
 
-        return musicBrainzClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/ws/2/release-group/{id}")
-                        .queryParam("inc", "releases")
-                        .queryParam("fmt", "json")
-                        .build(releaseGroupId)
-                )
-                .retrieve()
-                .bodyToMono(String.class)
-                .timeout(Duration.ofSeconds(20))
+        return rateLimiter.aguardarPermissao()
+                .then(Mono.defer(() -> musicBrainzClient
+                        .get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/ws/2/release-group/{id}")
+                                .queryParam("inc", "releases")
+                                .queryParam("fmt", "json")
+                                .build(releaseGroupId)
+                        )
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .timeout(Duration.ofSeconds(20))
+                ))
                 .map(this::converterJson)
                 .flatMap(data -> {
 

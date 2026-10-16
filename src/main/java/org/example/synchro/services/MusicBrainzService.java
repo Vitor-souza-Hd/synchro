@@ -29,16 +29,15 @@ public class MusicBrainzService {
     private static final int MAX_CACHE_ENTRIES = 500;
     private static final Duration CACHE_POSITIVO = Duration.ofHours(6);
     private static final Duration CACHE_VAZIO = Duration.ofMinutes(30);
-    private static final long INTERVALO_REQUISICOES_NANOS =
-            Duration.ofMillis(1100).toNanos();
 
     private final ConcurrentHashMap<String, Mono<String>> cachePesquisas =
             new ConcurrentHashMap<>();
 
-    private final Object limiteRequisicoes = new Object();
-    private long proximoHorarioRequisicao = 0L;
+    private final MusicBrainzRateLimiter rateLimiter;
 
-    public MusicBrainzService() {
+    public MusicBrainzService(MusicBrainzRateLimiter rateLimiter) {
+
+        this.rateLimiter = rateLimiter;
 
         // Permitir respostas de até 2 MB.
         // Esta configuração afeta apenas o MusicBrainz.
@@ -151,7 +150,7 @@ public class MusicBrainzService {
         }
 
         return cachePesquisas.computeIfAbsent(chave, ignorada ->
-                Mono.defer(() -> aguardarVez()
+                Mono.defer(() -> rateLimiter.aguardarPermissao()
                         .then(musicBrainzClient
                                 .get()
                                 .uri(uriBuilder -> uriBuilder
@@ -170,21 +169,6 @@ public class MusicBrainzService {
                                 () -> Duration.ZERO
                         )
         );
-    }
-
-    // Uma requisicao externa por vez, com ao menos 1,1 s
-    // entre os horarios reservados neste servico.
-    private Mono<Long> aguardarVez() {
-        return Mono.defer(() -> {
-            long espera;
-            synchronized (limiteRequisicoes) {
-                long agora = System.nanoTime();
-                espera = Math.max(0L, proximoHorarioRequisicao - agora);
-                proximoHorarioRequisicao = agora + espera
-                        + INTERVALO_REQUISICOES_NANOS;
-            }
-            return Mono.delay(Duration.ofNanos(espera));
-        });
     }
 
     private boolean respostaVazia(String json) {
