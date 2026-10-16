@@ -26,11 +26,11 @@ public class Playlist extends Midia {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "playlist_usuarios",
+            name = "playlist_colaboradores",
             joinColumns = @JoinColumn(name = "playlist_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    private Set<User> usuarios = new HashSet<>();
+    private Set<User> colaboradores = new HashSet<>();
 
     public Playlist() {
         super();
@@ -52,12 +52,21 @@ public class Playlist extends Midia {
     }
 
     public void addUsuario(User usuario) {
-        usuarios.add(usuario);
+        colaboradores.add(usuario);
         usuario.getPlaylists().add(this);
     }
 
     public void removeUsuario(User usuario) {
-        usuarios.remove(usuario);
+        colaboradores.remove(usuario);
         usuario.getPlaylists().remove(this);
     }
+
+     public boolean colaborador(User usuario){
+        for( User colaborador : colaboradores ){
+            if( colaborador.equals(usuario) ){
+                return true;
+            }
+        }
+        return false;
+     }
 }

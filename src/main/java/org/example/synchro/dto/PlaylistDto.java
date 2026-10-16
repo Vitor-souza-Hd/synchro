@@ -36,7 +36,7 @@ public class PlaylistDto {
             );
         }
 
-        playlist.getUsuarios().forEach(usuario -> usuarios.add(
+        playlist.getColaboradores().forEach(usuario -> usuarios.add(
                 new SearchUserDTO(usuario.getId(), usuario.getUsername())
         ));
     }

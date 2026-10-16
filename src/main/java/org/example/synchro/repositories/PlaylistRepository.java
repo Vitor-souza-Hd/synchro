@@ -12,5 +12,5 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
     List<Playlist> findByCriador(User criador);
 
-    List<Playlist> findByUsuariosContaining(User usuario);
+    List<Playlist> findByColaboradoresContaining(User colaborador);
 }

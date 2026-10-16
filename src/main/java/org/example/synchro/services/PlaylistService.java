@@ -12,6 +12,8 @@ import org.example.synchro.services.exception.UnauthorizedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class PlaylistService {
@@ -31,5 +33,22 @@ public class PlaylistService {
         Playlist playlist = new Playlist(request.getTitulo(), request.getDescricao(), user);
         Playlist savedPlaylist = playlistRepository.save(playlist);
         return new PlaylistDto(savedPlaylist);
+    }
+
+    public PlaylistDto updatePlaylist(PlaylistRequestDto request, String cookie,Long id) {
+        if(!cookieService.checkCookie(cookie)){
+            throw new UnauthorizedException("Sessão inválida ou ausente");
+        }
+        Optional<Playlist> playlistOptional = playlistRepository.findById(id);
+        Playlist playlist = playlistOptional.orElseThrow(()->new ResourceNotFoundException("Playlist não encontrada"));
+        Optional<User> userOptional = userRepository.findById(cookieService.getId(cookie));
+        User user = userOptional.get();
+        if(!playlist.colaborador(user)){
+            throw new UnauthorizedException("Usuário não autorizado a modificar a playlist");
+        }
+        playlist.setTitulo(request.getTitulo());
+        playlist.setDescricao(request.getDescricao());
+        playlistRepository.save(playlist);
+        return new PlaylistDto(playlist);
     }
 }

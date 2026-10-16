@@ -37,7 +37,7 @@ public class User implements Serializable {
     @OneToMany(mappedBy = "criador", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Playlist> playlistsCriadas = new HashSet<>();
 
-    @ManyToMany(mappedBy = "usuarios")
+    @ManyToMany(mappedBy = "colaboradores")
     private Set<Playlist> playlists = new HashSet<>();
 
     public User(){
