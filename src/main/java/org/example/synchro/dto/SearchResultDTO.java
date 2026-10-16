@@ -1,28 +1,25 @@
-
 package org.example.synchro.dto;
 
-import org.example.synchro.entities.Album;
-import org.example.synchro.entities.Artista;
-import org.example.synchro.entities.Musica;
-
-import java.util.ArrayList;
 import java.util.List;
+import org.example.synchro.entities.User;
+import org.example.synchro.entities.Musica;
+import org.example.synchro.entities.Artista;
+import org.example.synchro.entities.Album;
 
 public class SearchResultDTO {
-
-    private List<SearchUserDTO> users = new ArrayList<>();
-    private List<Musica> songs = new ArrayList<>();
-    private List<Artista> artists = new ArrayList<>();
-    private List<Album> albums = new ArrayList<>();
+    private List<User> users;
+    private List<Musica> songs;
+    private List<Artista> artists;
+    private List<Album> albums;
 
     public SearchResultDTO() {
     }
 
-    public List<SearchUserDTO> getUsers() {
+    public List<User> getUsers() {
         return users;
     }
 
-    public void setUsers(List<SearchUserDTO> users) {
+    public void setUsers(List<User> users) {
         this.users = users;
     }
 

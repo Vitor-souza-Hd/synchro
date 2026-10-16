@@ -1,30 +1,19 @@
 package org.example.synchro.resources;
 
-import org.example.synchro.dto.UserDto;
-import org.example.synchro.entities.User;
-import org.example.synchro.services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "/users")
 public class UserResource {
 
-    @Autowired
-    private UserService service;
 
-    @GetMapping
-    public ResponseEntity<List<UserDto>> findAll() {
-        return ResponseEntity.ok().body(service.findAll());
+
+    @GetMapping("/{username}")
+    public ResponseEntity<?> findByUsername(@PathVariable String username) {
+        return ResponseEntity.ok().build();
     }
-
-    @GetMapping
-    @RequestMapping(value = "{username}")
-    public ResponseEntity<UserDto> findByUsername(@PathVariable String username){
-        return ResponseEntity.ok().body(service.FindByUsername(username));
-    }
-
 }

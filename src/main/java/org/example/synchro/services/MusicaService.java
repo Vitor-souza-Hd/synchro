@@ -2,11 +2,10 @@ package org.example.synchro.services;
 
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.dto.MusicaDto;
-import org.example.synchro.entities.Artista;
+import org.example.synchro.dto.Musica_AlbumDto;      // ← ADICIONE
 import org.example.synchro.entities.Musica;
 import org.example.synchro.repositories.ArtistaRepository;
 import org.example.synchro.repositories.MusicaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -31,11 +30,32 @@ public class MusicaService {
     }
 
     public List<MusicaDto> findByArtistas(String artista) {
-        List<MusicaDto>dto = new ArrayList<>();
+        List<MusicaDto> dto = new ArrayList<>();
         List<Musica> m1 = musicaRepository.findByArtistas(artistaRepository.findByNome(artista));
         for (Musica musica : m1) {
             dto.add(new MusicaDto(musica));
         }
         return dto;
+    }
+
+    public List<MusicaDto> findByTermoGeral(String query) {
+        List<Musica> resultados = musicaRepository
+                .findByTituloContainingIgnoreCaseOrArtistasNomeContainingIgnoreCase(query, query);
+
+        List<MusicaDto> dtos = new ArrayList<>();
+        for (Musica musica : resultados) {
+            dtos.add(new MusicaDto(musica));
+        }
+        return dtos;
+    }
+
+    // ==========================================
+    // LISTAR AS MÚSICAS para a home pra testar avaliação nelas
+    // ==========================================
+    public List<Musica_AlbumDto> findAll() {
+        return musicaRepository.findAll()
+                .stream()
+                .map(Musica_AlbumDto::new)
+                .toList();
     }
 }

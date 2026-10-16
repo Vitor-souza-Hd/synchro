@@ -7,17 +7,17 @@ import lombok.Setter;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 @Entity
 @Table(name = "tb_user")
 @Getter
 @Setter
 public class User implements Serializable {
+
     @Serial
     private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,17 +34,11 @@ public class User implements Serializable {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserData data;
 
-    @OneToMany(mappedBy = "criador", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Playlist> playlistsCriadas = new HashSet<>();
-
-    @ManyToMany(mappedBy = "usuarios")
-    private Set<Playlist> playlists = new HashSet<>();
-
-    public User(){
-
+    public User() {
     }
 
-    public User(Long id, String username, String email, String password, LocalDate birthDay, String lastFmUsername) {
+    public User(Long id, String username, String email, String password,
+                LocalDate birthDay, String lastFmUsername) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -53,7 +47,6 @@ public class User implements Serializable {
         this.lastFmUsername = lastFmUsername;
         this.data = new UserData(this);
     }
-
 
     @Override
     public String toString() {

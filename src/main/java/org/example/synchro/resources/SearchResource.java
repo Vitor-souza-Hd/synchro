@@ -1,7 +1,6 @@
 package org.example.synchro.resources;
 
 import org.example.synchro.dto.SearchResultDTO;
-import org.example.synchro.dto.SearchUserDTO;
 import org.example.synchro.repositories.AlbumRepository;
 import org.example.synchro.repositories.ArtistaRepository;
 import org.example.synchro.repositories.MusicaRepository;
@@ -29,43 +28,19 @@ public class SearchResource {
     private AlbumRepository albumRepository;
 
     @GetMapping
-    public SearchResultDTO search(
-            @RequestParam(name = "q", defaultValue = "") String query
-    ) {
+    public SearchResultDTO search(@RequestParam(name = "q", defaultValue = "") String query) {
         SearchResultDTO result = new SearchResultDTO();
 
-        String termo = query.trim();
-
-        if (termo.length() < 2) {
+        if (query.trim().isEmpty() || query.length() < 2) {
             return result;
         }
 
-        result.setUsers(
-                userRepository
-                        .findByUsernameContainingIgnoreCase(termo)
-                        .stream()
-                        .map(user -> new SearchUserDTO(
-                                user.getId(),
-                                user.getUsername()
-                        ))
-                        .toList()
-        );
+        String termo = query.trim();
 
-        result.setSongs(
-                musicaRepository
-                        .findByTituloContainingIgnoreCaseOrArtistasNomeContainingIgnoreCase(
-                                termo, termo
-                        )
-        );
-
-        result.setArtists(
-                artistaRepository.findByNomeContainingIgnoreCase(termo)
-        );
-
-        result.setAlbums(
-                albumRepository.findByTituloContainingIgnoreCase(termo)
-        );
-
+        result.setUsers(userRepository.findByUsernameContainingIgnoreCase(termo));
+        result.setSongs(musicaRepository.findByTituloContainingIgnoreCaseOrArtistasNomeContainingIgnoreCase(termo, termo));
+        result.setArtists(artistaRepository.findByNomeContainingIgnoreCase(termo));
+        result.setAlbums(albumRepository.findByTituloContainingIgnoreCase(termo));
         return result;
     }
 }
