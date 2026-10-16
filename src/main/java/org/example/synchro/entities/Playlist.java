@@ -62,11 +62,12 @@ public class Playlist extends Midia {
     }
 
      public boolean colaborador(User usuario){
+        boolean anwser = false;
         for( User colaborador : colaboradores ){
             if( colaborador.equals(usuario) ){
-                return true;
+                anwser = true;
             }
         }
-        return false;
+        return anwser;
      }
 }

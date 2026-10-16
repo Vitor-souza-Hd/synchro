@@ -27,12 +27,22 @@ public class PlaylistResource {
 
     @PutMapping("/update-playlist/{id}")
     public ResponseEntity<PlaylistDto>  updatePlaylist(
-            @CookieValue(name = "token_jwt", required = true) String cookie,
+            @CookieValue(name = "token_jwt") String cookie,
             @Valid @RequestBody PlaylistRequestDto request,
             @PathVariable Long id
     ) {
         PlaylistDto playlist = playlistService.updatePlaylist(request,cookie,id);
         return ResponseEntity.status(HttpStatus.OK).body(playlist);
+    }
+
+    @PutMapping("/update-playlist/{playlistId}/add-user/{userId}")
+    public ResponseEntity<Void> addUserToPlaylist(
+            @CookieValue(name = "token_jwt") String cookie,
+            @PathVariable("playlistId") Long playlistId,
+            @PathVariable("userId") Long userId
+    ) {
+        playlistService.addUserToPlaylist(cookie, playlistId, userId);
+        return ResponseEntity.ok().build();
     }
 
 }

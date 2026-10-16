@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.synchro.entities.*;
 import org.example.synchro.repositories.*;
 import org.example.synchro.services.PasswordService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 
@@ -38,7 +38,7 @@ public class TestConfig implements CommandLineRunner {
     private final PlaylistRepository playlistRepository;
 
     @Override
-    public void run(String... args)  throws  Exception{
+    public void run(String... args) {
 
         Artista a1 = new Artista("YungLixo","musico de trap brasileiro",null );
         Artista a2 = new Artista("Biffe", "produtor musical", null);
@@ -88,10 +88,9 @@ public class TestConfig implements CommandLineRunner {
         User u1 = new User(null, "vitor souza", "vitor@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2009,1,6), "jinka070");
         User u2 = new User(null, "otavio ramos", "tavio@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,7,14),null);
         User u3 = new User(null, "brenno", "brenno@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2008,10,7),null);
-        User u4 = new User(null, "vitor souza", "vitor@gmail.com", passwordService.hashPassword("1234567"), LocalDate.of(2009,1,6),null);
 
        List<User>users = new ArrayList<>();
-       users.addAll(Arrays.asList(u1,u2,u3,u4));
+       users.addAll(Arrays.asList(u1,u2,u3));
        int i = 0;
        for (User user: users){
            userDataRepository.save(user.getData());

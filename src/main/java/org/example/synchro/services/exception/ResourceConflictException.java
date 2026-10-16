@@ -4,4 +4,7 @@ public class ResourceConflictException extends RuntimeException {
     public ResourceConflictException(String value , String product) {
         super("conflito de recursos: " + value + ": " + product + " já está em uso");
     }
+    public ResourceConflictException(String mensagem){
+        super(mensagem);
+    }
 }
