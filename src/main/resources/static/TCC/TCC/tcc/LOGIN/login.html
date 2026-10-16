@@ -1,52 +1,69 @@
-<!DOCTYPE html>
 
+<!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link
-    href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
-    rel="stylesheet">
-<link rel="stylesheet" href="login.css">
-<title>Synchro - Login</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <link
+            href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+            rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="login.css">
+
+    <title>Synchro - Login</title>
 </head>
 
 <body>
+
 <main class="container">
 
     <!-- VÍDEO DE FUNDO -->
-    <video autoplay loop muted playsinline class="background-video">
-        <source src="background-blur-video.mp4" type="video/mp4">
+    <video autoplay loop muted playsinline
+           class="background-video">
+        <source src="background-blur-video.mp4"
+                type="video/mp4">
     </video>
 
-    <!-- CAMADA ESCURA SOBRE O VÍDEO -->
+    <!-- CAMADA ESCURA -->
     <div class="overlay"></div>
 
     <!-- LOGIN -->
-    <form class="login">
+    <form class="login" id="login-form">
 
         <div class="logo">
             <h1>Synchro</h1>
             <p>Entre na sua conta</p>
         </div>
 
+        <!-- E-MAIL -->
         <div class="input-box">
             <input
-                type="email"
-                placeholder="Usuário"
-                autocomplete="username"
-                required>
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    placeholder="E-mail"
+                    autocomplete="username"
+                    required
+            >
 
             <i class="bx bx-user"></i>
         </div>
 
+        <!-- SENHA -->
         <div class="input-box">
             <input
-                type="password"
-                placeholder="Senha"
-                autocomplete="current-password"
-                required>
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    placeholder="Senha"
+                    autocomplete="current-password"
+                    minlength="6"
+                    required
+            >
 
             <i class="bx bx-lock-alt"></i>
         </div>
@@ -62,7 +79,22 @@
 
         </div>
 
-        <button type="submit">
+        <!-- MENSAGEM DE ERRO -->
+        <p
+                id="login-message"
+                role="alert"
+                aria-live="polite"
+                style="
+                display: none;
+                color: #ff7777;
+                text-align: center;
+                font-size: 14px;
+                margin: 10px 0;
+            "
+        ></p>
+
+        <!-- BOTÃO ENTRAR -->
+        <button type="submit" id="login-button">
             Entrar
         </button>
 
@@ -73,6 +105,7 @@
         <div class="register-link">
             <p>
                 Não tem uma conta?
+
                 <a href="FORMULARIO/formulario.html">
                     Registrar-se
                 </a>
@@ -82,6 +115,110 @@
     </form>
 
 </main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const form = document.getElementById("login-form");
+        const emailInput = document.getElementById("login-email");
+        const passwordInput = document.getElementById("login-password");
+        const loginButton = document.getElementById("login-button");
+        const message = document.getElementById("login-message");
+
+        const PAGINA_INICIAL =
+            "/TCC/TCC/SYNCHRO/SITE/index2.html";
+
+        function mostrarErro(texto) {
+            message.textContent = texto;
+            message.style.display = "block";
+        }
+
+        function limparErro() {
+            message.textContent = "";
+            message.style.display = "none";
+        }
+
+        form.addEventListener("submit", async (event) => {
+
+            event.preventDefault();
+
+            limparErro();
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                mostrarErro("Preencha seu e-mail e sua senha.");
+                return;
+            }
+
+            if (password.length < 6) {
+                mostrarErro(
+                    "A senha deve ter pelo menos 6 caracteres."
+                );
+                return;
+            }
+
+            loginButton.disabled = true;
+            loginButton.textContent = "Entrando...";
+
+            try {
+
+                const response = await fetch("/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "same-origin",
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+
+                if (!response.ok) {
+
+                    if (response.status === 400 ||
+                        response.status === 401 ||
+                        response.status === 403) {
+
+                        throw new Error(
+                            "E-mail ou senha inválidos."
+                        );
+                    }
+
+                    throw new Error(
+                        "Não foi possível realizar o login."
+                    );
+                }
+
+                console.log("Login confirmado pelo backend.");
+
+                // O backend configura o cookie token_jwt.
+                // O navegador recebe esse cookie automaticamente,
+                // conforme seus atributos e políticas de segurança.
+
+                window.location.replace(PAGINA_INICIAL);
+
+            } catch (error) {
+
+                console.error("Erro ao realizar login:", error);
+
+                mostrarErro(
+                    error.message ||
+                    "Ocorreu um erro inesperado."
+                );
+
+            } finally {
+
+                loginButton.disabled = false;
+                loginButton.textContent = "Entrar";
+            }
+
+        });
+
+    });
+</script>
 
 </body>
 </html>
