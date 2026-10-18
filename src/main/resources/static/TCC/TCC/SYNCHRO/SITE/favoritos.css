@@ -1,0 +1,34 @@
+/* Estilos exclusivos da biblioteca de favoritos. A base vem de style.css. */
+.favorites-main { min-width: 0; width: 100%; padding-bottom: 52px; }
+.favorites-topbar { display: flex; justify-content: flex-end; align-items: center; gap: 24px; padding: 30px 4px 14px; }
+.favorites-home-link, .favorites-profile-link { text-decoration: none; color: #ddd; font-weight: 600; }
+.favorites-home-link:hover, .favorites-profile-link:hover { color: #ff315b; }
+.favorites-profile-link { font-size: 27px; }
+.favorites-menu-toggle { display: none; border: none; background: #252525; padding: 10px 13px; border-radius: 9px; color: white; cursor: pointer; }
+.favorites-heading { margin: 25px 0 27px; padding: 35px; background: linear-gradient(125deg, #321824, #171717 65%); border: 1px solid #333; border-radius: 20px; }
+.favorites-eyebrow { color: #e9a6b8; font-size: 12px; font-weight: bold; letter-spacing: 2px; }
+.favorites-heading h1 { color: #fff; margin: 12px 0 10px; font-size: clamp(28px, 4vw, 46px); }
+.favorites-heading h1 i { color: #ff315b; vertical-align: middle; }
+.favorites-heading p { color: #bdbdbd; margin-top: 8px; }
+.favorites-count { font-size: 14px; }
+.favorites-feedback { color: #bdbdbd; padding: 22px 0; }
+.favorites-feedback a { color: #ff6585; text-decoration: underline; }
+.favorites-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 20px; }
+.favorite-card { min-width: 0; border-radius: 14px; background: #202020; overflow: hidden; border: 1px solid #333; transition: transform .2s, border-color .2s; }
+.favorite-card:hover { transform: translateY(-4px); border-color: #b44864; }
+.favorite-card-link { text-decoration: none; color: #fff; display: block; }
+.favorite-card-photo { aspect-ratio: 1 / 1; width: 100%; object-fit: cover; display: block; background: #303030; }
+.favorite-card-info { padding: 15px; }
+.favorite-card-info h2 { font-size: 18px; overflow-wrap: anywhere; margin: 0 0 8px; }
+.favorite-card-info p { color: #a8a8a8; font-size: 13px; }
+.fav-menu-active a, .fav-menu-active i { color: #ff557a !important; }
+@media (max-width: 900px) {
+  .favorites-heading { padding: 24px; }
+  .favorites-topbar { justify-content: space-between; }
+  .favorites-menu-toggle { display: inline-flex; }
+}
+@media (max-width: 600px) {
+  .favorites-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .favorite-card-info { padding: 12px; }
+  .favorite-card-info h2 { font-size: 16px; }
+}

@@ -29,6 +29,42 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         lastFmUser = data.user;
 
+        // Exibir o status somente quando o backend
+        // confirmar os dados da conta Last.fm.
+
+        if (lastFmUser && lastFmUser.name) {
+
+            const conectarBotao =
+                document.getElementById("lastfm-connect");
+
+            if (conectarBotao) {
+
+                const conectado = document.createElement("div");
+
+                conectado.id = "lastfm-status";
+                conectado.setAttribute("role", "status");
+                conectado.textContent = "Last.fm conectado!";
+
+                conectado.style.cssText = [
+                    "display: inline-flex",
+                    "align-items: center",
+                    "width: fit-content",
+                    "margin-top: 18px",
+                    "padding: 11px 18px",
+                    "border: 1px solid rgba(86, 211, 130, 0.42)",
+                    "border-radius: 12px",
+                    "background: rgba(86, 211, 130, 0.12)",
+                    "color: #d4ffe1",
+                    "font-family: inherit",
+                    "font-size: 14px",
+                    "font-weight: 600"
+                ].join("; ");
+
+                conectarBotao.replaceWith(conectado);
+            }
+        }
+
+
         console.log("DADOS DO LAST.FM:", lastFmUser);
 
     } catch (error) {

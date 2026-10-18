@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artistas favoritos - Synchro</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="favoritos.css">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  <script src="favoritos.js" defer></script>
+</head>
+<body>
+<div class="container">
+  <aside class="sidebar">
+    <div class="logo"><i class="bx bx-pulse"></i><a href="index2.html">SYNCHRO</a></div>
+    <div class="menu">
+      <h5>Menu</h5>
+      <ul>
+        <li><i class="bx bxs-bolt-circle"></i><a href="index2.html">Explorar</a></li>
+        <li><i class="bx bxs-volume-full"></i><a href="#" aria-disabled="true">Gêneros</a></li>
+        <li><i class="bx bxs-album"></i><a href="#" aria-disabled="true">Álbuns</a></li>
+        <li><i class="bx bxs-microphone"></i><a href="#" aria-disabled="true">Artistas</a></li>
+      </ul>
+    </div>
+    <div class="menu">
+      <h5>Sua Biblioteca</h5>
+      <ul>
+        <li><i class="bx bx-undo"></i><a href="#" aria-disabled="true">Recentes</a></li>
+        <li><i class="bx bxs-photo-album"></i><a href="#" aria-disabled="true">Avaliações</a></li>
+        <li class="fav-menu-active"><i class="bx bxs-heart"></i><a href="favoritos.html" aria-current="page">Favoritos</a></li>
+        <li><i class="bx bxs-folder"></i><a href="#" aria-disabled="true">Local</a></li>
+        <li><i class="fa-solid fa-ticket"></i><a href="#" aria-disabled="true">Shows perto de você</a></li>
+      </ul>
+    </div>
+    <div class="menu">
+      <h5>Playlist</h5>
+      <ul>
+        <li><i class="bx bxs-plus-square"></i><a href="#" aria-disabled="true">Criar uma nova</a></li>
+        <li><i class="bx bxs-caret-right-circle"></i><a href="#" aria-disabled="true">Suas Playlists</a></li>
+        <li><i class="bx bxs-caret-right-circle"></i><a href="#" aria-disabled="true">Recomendados</a></li>
+        <li><i class="bx bxs-caret-right-circle"></i><a href="#" aria-disabled="true">Playlists do Synchro</a></li>
+      </ul>
+    </div>
+  </aside>
+  <main class="favorites-main">
+    <header class="favorites-topbar">
+      <button id="sidebarToggle" class="favorites-menu-toggle" type="button" aria-label="Abrir ou fechar menu"><i class="fa-solid fa-bars"></i></button>
+      <a href="index2.html" class="favorites-home-link"><i class="fa-solid fa-house"></i> Início</a>
+      <a href="user.html" class="favorites-profile-link" aria-label="Meu perfil"><i class="fa-solid fa-circle-user"></i></a>
+    </header>
+    <section class="favorites-heading">
+      <span class="favorites-eyebrow">SUA BIBLIOTECA</span>
+      <h1><i class="bx bxs-heart"></i> Artistas favoritos</h1>
+      <p>Seus artistas salvos no Synchro, todos em um só lugar.</p>
+      <p id="favoritesCount" class="favorites-count" aria-live="polite"></p>
+    </section>
+    <div id="favoritesFeedback" class="favorites-feedback" role="status" aria-live="polite">Carregando seus artistas favoritos...</div>
+    <section id="favoritesGrid" class="favorites-grid" aria-label="Lista de artistas favoritos"></section>
+  </main>
+</div>
+</body>
+</html>
