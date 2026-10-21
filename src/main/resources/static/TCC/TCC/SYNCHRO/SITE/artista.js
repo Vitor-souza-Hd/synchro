@@ -315,6 +315,12 @@ function urlImagemPermitida(url) {
     }
 }
 
+// Uma falha temporaria da Wikipedia nao deve exigir F5 do usuario.
+// Repetimos apenas erros de servidor, limite de acesso e falhas de rede.
+function esperar(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function buscarImagemWikipedia(nome, idioma) {
     const url = new URL(
         `https://${idioma}.wikipedia.org/w/api.php`
@@ -330,12 +336,28 @@ async function buscarImagemWikipedia(nome, idioma) {
     url.searchParams.set("redirects", "1");
     url.searchParams.set("origin", "*");
 
-    const response = await fetch(url);
+    let response;
 
-    if (!response.ok) {
-        throw new Error(
-            `Wikipedia respondeu HTTP ${response.status}`
-        );
+    for (let tentativa = 0; tentativa < 3; tentativa++) {
+        try {
+            response = await fetch(url);
+
+            if (response.ok) break;
+
+            const status = response.status;
+            const temporario = [429, 502, 503, 504].includes(status);
+
+            if (!temporario || tentativa === 2) {
+                throw new Error(`Wikipedia respondeu HTTP ${status}`);
+            }
+        } catch (error) {
+            // Erro de rede e temporario; erros HTTP permanentes nao sao.
+            if (!(error instanceof TypeError) || tentativa === 2) {
+                throw error;
+            }
+        }
+
+        await esperar(800 * (tentativa + 1));
     }
 
     const data = await response.json();
@@ -345,8 +367,7 @@ async function buscarImagemWikipedia(nome, idioma) {
         return null;
     }
 
-    // Evita aceitar uma pagina de nome diferente.
-    // Redirecionamentos oficiais da Wikipedia sao permitidos.
+    // So aceitar a pagina procurada ou um redirecionamento oficial.
     const nomesValidos = new Set([
         normalizarNome(nome),
         ...(data.query?.redirects || [])
@@ -361,8 +382,18 @@ async function buscarImagemWikipedia(nome, idioma) {
     }
 
     const imagem = pagina.thumbnail?.source;
-
     return urlImagemPermitida(imagem) ? imagem : null;
+}
+
+// Verifica se o navegador realmente consegue exibir a fotografia
+// antes de trocar a imagem padrao no perfil.
+function testarCarregamentoImagem(url) {
+    return new Promise(resolve => {
+        const teste = new Image();
+        teste.onload = () => resolve(true);
+        teste.onerror = () => resolve(false);
+        teste.src = url;
+    });
 }
 
 async function carregarImagemArtista(nome) {
@@ -370,43 +401,34 @@ async function carregarImagemArtista(nome) {
 
     mostrarImagemPadrao();
 
-    let urlFoto = null;
-
+    // Se a fotografia em portugues falhar, tentar a Wikipedia inglesa.
+    // A imagem padrao continua visivel enquanto a busca acontece.
     for (const idioma of ["pt", "en"]) {
         try {
-            urlFoto = await buscarImagemWikipedia(
-                nome,
-                idioma
-            );
+            const urlFoto = await buscarImagemWikipedia(nome, idioma);
+            if (!urlFoto) continue;
 
-            if (urlFoto) break;
+            let carregou = await testarCarregamentoImagem(urlFoto);
 
+            // Uma segunda tentativa curta para falhas transitorias de imagem.
+            if (!carregou) {
+                await esperar(1000);
+                carregou = await testarCarregamentoImagem(urlFoto);
+            }
+
+            if (carregou) {
+                artistImage.src = urlFoto;
+                artistImage.alt = `Fotografia de ${nome}`;
+                return;
+            }
+
+            console.warn(`Foto da Wikipedia ${idioma} nao carregou.`);
         } catch (error) {
-            console.warn(
-                `Erro ao buscar foto na Wikipedia ${idioma}:`,
-                error
-            );
+            console.warn(`Erro ao buscar foto na Wikipedia ${idioma}:`, error);
         }
     }
 
-    if (!urlFoto) {
-        return;
-    }
-
-    const imagemTeste = new Image();
-
-    imagemTeste.onload = () => {
-        artistImage.src = urlFoto;
-        artistImage.alt = `Fotografia de ${nome}`;
-    };
-
-    imagemTeste.onerror = () => {
-        console.warn(
-            "Foto indisponível. Mantendo imagem padrão."
-        );
-    };
-
-    imagemTeste.src = urlFoto;
+    console.info("Fotografia indisponivel; mantendo imagem padrao.");
 }
 
 // =========================================================
@@ -463,28 +485,54 @@ async function carregarMusicas() {
             const info = document.createElement("div");
             info.className = "track-info";
 
+            const urlMusica = new URL(
+                "musica.html",
+                window.location.href
+            );
+
+            urlMusica.searchParams.set("artist", artistName);
+            urlMusica.searchParams.set("track", track.name || "");
+
             const nome = document.createElement("strong");
-            nome.textContent = track.name || "Sem título";
+
+            const linkMusica = document.createElement("a");
+            linkMusica.href = urlMusica.toString();
+            linkMusica.textContent = track.name || "Sem título";
+            linkMusica.style.color = "inherit";
+            linkMusica.style.textDecoration = "none";
+
+            linkMusica.addEventListener("mouseenter", () => {
+                linkMusica.style.textDecoration = "underline";
+            });
+
+            linkMusica.addEventListener("mouseleave", () => {
+                linkMusica.style.textDecoration = "none";
+            });
+
+            nome.appendChild(linkMusica);
 
             const ouvintes = document.createElement("span");
+            const quantidade = Number(track.listeners);
+
             ouvintes.textContent =
-                `${track.listeners || "0"} ouvintes`;
+                track.listeners !== undefined &&
+                track.listeners !== null &&
+                track.listeners !== "" &&
+                Number.isFinite(quantidade) &&
+                quantidade >= 0
+                    ? `${quantidade.toLocaleString("pt-BR")} ouvintes`
+                    : "Ouvintes não informados";
 
             info.append(nome, ouvintes);
 
             const botao = document.createElement("button");
             botao.type = "button";
             botao.innerHTML = '<i class="bx bx-play"></i>';
-            botao.title = "Abrir música no Last.fm";
+
+            botao.title = "Ver música no Synchro";
 
             botao.addEventListener("click", () => {
-                if (track.url) {
-                    window.open(
-                        track.url,
-                        "_blank",
-                        "noopener,noreferrer"
-                    );
-                }
+                window.location.href = urlMusica.toString();
             });
 
             div.append(numero, info, botao);

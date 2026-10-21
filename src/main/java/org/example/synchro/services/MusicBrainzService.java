@@ -1,5 +1,7 @@
 package org.example.synchro.services;
 
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.util.retry.Retry;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -142,29 +144,63 @@ public class MusicBrainzService {
 
         String chave = caminho + "|" + limite + "|" + query;
 
-        // O limite protege a memoria da aplicacao.
-        // A limpeza so afeta o cache, nunca os dados persistidos.
         if (cachePesquisas.size() >= MAX_CACHE_ENTRIES
                 && !cachePesquisas.containsKey(chave)) {
             cachePesquisas.clear();
         }
 
         return cachePesquisas.computeIfAbsent(chave, ignorada ->
-                Mono.defer(() -> rateLimiter.aguardarPermissao()
-                        .then(musicBrainzClient
-                                .get()
-                                .uri(uriBuilder -> uriBuilder
-                                        .path(caminho)
-                                        .queryParam("query", query)
-                                        .queryParam("fmt", "json")
-                                        .queryParam("limit", limite)
-                                        .build())
-                                .retrieve()
-                                .bodyToMono(String.class)
-                                .timeout(Duration.ofSeconds(20))))
+
+                Mono.defer(() ->
+                                rateLimiter.aguardarPermissao()
+                                        .then(musicBrainzClient
+                                                .get()
+                                                .uri(uriBuilder -> uriBuilder
+                                                        .path(caminho)
+                                                        .queryParam("query", query)
+                                                        .queryParam("fmt", "json")
+                                                        .queryParam("limit", limite)
+                                                        .build())
+                                                .retrieve()
+                                                .bodyToMono(String.class)
+                                                .timeout(Duration.ofSeconds(20)))
+                        )
+
+                        .retryWhen(
+                                Retry.backoff(
+                                                2,
+                                                Duration.ofSeconds(2)
+                                        )
+                                        .maxBackoff(Duration.ofSeconds(6))
+                                        .jitter(0.25)
+
+                                        .doBeforeRetry(retrySignal -> {
+                                            System.out.println(
+                                                    "[SYNCHRO] Nova tentativa no MusicBrainz: "
+                                                            + (retrySignal.totalRetries() + 1)
+                                                            + " | Erro: "
+                                                            + retrySignal.failure().getMessage()
+                                            );
+                                        })
+
+                                        .filter(error -> {
+                                            if (!(error instanceof WebClientResponseException ex)) {
+                                                return false;
+                                            }
+
+                                            int status = ex.getStatusCode().value();
+
+                                            return status == 429
+                                                    || status == 502
+                                                    || status == 503
+                                                    || status == 504;
+                                        })
+                        )
+
                         .cache(
                                 json -> respostaVazia(json)
-                                        ? CACHE_VAZIO : CACHE_POSITIVO,
+                                        ? CACHE_VAZIO
+                                        : CACHE_POSITIVO,
                                 erro -> Duration.ZERO,
                                 () -> Duration.ZERO
                         )

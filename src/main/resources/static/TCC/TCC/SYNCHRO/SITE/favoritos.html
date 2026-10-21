@@ -9,6 +9,7 @@
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
   <script src="favoritos.js" defer></script>
+  <script src="busca.js" defer></script>
 </head>
 <body>
 <div class="container">
@@ -44,11 +45,32 @@
     </div>
   </aside>
   <main class="favorites-main">
+
     <header class="favorites-topbar">
-      <button id="sidebarToggle" class="favorites-menu-toggle" type="button" aria-label="Abrir ou fechar menu"><i class="fa-solid fa-bars"></i></button>
-      <a href="index2.html" class="favorites-home-link"><i class="fa-solid fa-house"></i> Início</a>
-      <a href="user.html" class="favorites-profile-link" aria-label="Meu perfil"><i class="fa-solid fa-circle-user"></i></a>
+      <button id="sidebarToggle" class="favorites-menu-toggle" type="button" aria-label="Abrir ou fechar menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <a href="index2.html" class="favorites-home-link">
+        <i class="fa-solid fa-house"></i> Início
+      </a>
+
+      <div class="search-box favorites-search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+                class="search"
+                type="text"
+                placeholder="O que você quer ouvir?"
+                aria-label="Buscar artistas e músicas"
+                autocomplete="off"
+        >
+      </div>
+
+      <a href="user.html" class="favorites-profile-link" aria-label="Meu perfil">
+        <i class="fa-solid fa-circle-user"></i>
+      </a>
     </header>
+
     <section class="favorites-heading">
       <span class="favorites-eyebrow">SUA BIBLIOTECA</span>
       <h1><i class="bx bxs-heart"></i> Artistas favoritos</h1>

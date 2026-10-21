@@ -900,3 +900,32 @@ body{
 .lastfm-button:active {
     transform: translateY(0);
 }
+
+/* ==========================================
+   CORRECAO DA PESQUISA NO PERFIL
+   ========================================== */
+
+/* Mantem o cabecalho acima do banner */
+.top-header {
+    position: relative;
+    z-index: 1000;
+    overflow: visible;
+}
+
+/* Referencia para os resultados da pesquisa */
+.top-header .search-box {
+    position: relative;
+    z-index: 1001;
+    overflow: visible;
+}
+
+/* Resultados sempre acima do conteudo do perfil */
+#lastfm-search-results {
+    z-index: 1002 !important;
+}
+
+/* Mantem o conteudo do perfil abaixo da pesquisa */
+.profile-header {
+    position: relative;
+    z-index: 1;
+}
