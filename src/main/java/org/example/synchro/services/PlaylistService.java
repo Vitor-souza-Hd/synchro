@@ -65,7 +65,6 @@ public class PlaylistService {
         Optional<User> userOptional = userRepository.findById(cookieService.getId(cookie));
         User Usuario =  userOptional.get();
         if(!playlist.colaborador(Usuario)){
-            System.out.println("aquii");
             throw new UnauthorizedException("usuário não autorizado a modificar a playlist");
 
         }
@@ -75,5 +74,28 @@ public class PlaylistService {
             throw new ResourceConflictException("usuário já é um colaborador da playlist");
         }
         playlist.addUsuario(colaborador);
+    }
+    @Transactional
+    public void removeUserToPlaylist(String cookie,Long playlistId, Long colaboradorid){
+        if(!cookieService.checkCookie(cookie)){
+            throw new UnauthorizedException("Sessão inválida ou ausente");
+        }
+        Optional<Playlist> playlistOptional = playlistRepository.findById(playlistId);
+        Playlist playlist = playlistOptional.orElseThrow(()->new ResourceNotFoundException("Playlist não encontrado"));
+        Optional<User> userOptional = userRepository.findById(cookieService.getId(cookie));
+        User Usuario =  userOptional.get();
+        if(!playlist.colaborador(Usuario)){
+            throw new UnauthorizedException("usuário não autorizado a modificar a playlist");
+
+        }
+        Optional<User> colaboradorOptional = userRepository.findById(colaboradorid);
+        User colaborador = colaboradorOptional.orElseThrow(()-> new ResourceNotFoundException("usuário não encontrado"));
+        if(!playlist.colaborador(colaborador)){
+            throw new ResourceConflictException("usuário não é um colaborador da playlist");
+        }
+        if (colaborador.equals(playlist.getCriador())) {
+            throw new ResourceConflictException("o criador não pode ser removido da playlist");
+        }
+        playlist.removeUsuario(colaborador);
     }
 }
