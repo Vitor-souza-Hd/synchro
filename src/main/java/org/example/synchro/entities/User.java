@@ -28,6 +28,9 @@ public class User implements Serializable {
     private LocalDate birthDay;
     private String lastFmUsername;
 
+    @Column(name = "imagem_perfil")
+    private byte[] imagemPerfil;
+
     @OneToOne(mappedBy = "synchroUser")
     private LastFmSession session;
 
