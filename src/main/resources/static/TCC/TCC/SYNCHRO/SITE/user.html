@@ -93,6 +93,45 @@
                             </div>
                         </div>
 
+                        <!-- FOTO DE PERFIL PERSONALIZADA -->
+                        <div class="profile-photo-editor">
+
+                            <button id="editPhotoButton" type="button">
+                                <i class="fa-solid fa-camera"></i>
+                                Alterar foto
+                            </button>
+
+                            <div id="photoEditor" hidden>
+                                <label for="photoUrlInput">
+                                    URL HTTPS da fotografia
+                                </label>
+
+                                <input
+                                        id="photoUrlInput"
+                                        type="url"
+                                        placeholder="https://exemplo.com/foto.jpg"
+                                        autocomplete="off"
+                                >
+
+                                <div class="photo-actions">
+                                    <button id="savePhotoButton" type="button">
+                                        Salvar foto
+                                    </button>
+
+                                    <button id="removePhotoButton" type="button">
+                                        Remover foto personalizada
+                                    </button>
+
+                                    <button id="cancelPhotoButton" type="button">
+                                        Cancelar
+                                    </button>
+                                </div>
+
+                                <p id="photoFeedback" role="status" aria-live="polite"></p>
+                            </div>
+                        </div>
+
+
 
                         <button id="lastfm-connect" class="lastfm-button">
                             <i class="fa-brands fa-lastfm"></i>
@@ -200,5 +239,6 @@
 </div>
 <script src="user3.js"></script>
 <script src="busca.js"></script>
+<script src="foto-perfil.js"></script>
 </body>
 </html>

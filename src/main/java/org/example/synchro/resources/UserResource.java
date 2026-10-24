@@ -12,7 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/users")
@@ -36,7 +38,7 @@ public class UserResource {
     }
 
     // =====================================================
-    // FUNCIONALIDADE EXISTENTE: LISTAR USUARIOS
+    // LISTAR USUARIOS - FUNCIONALIDADE EXISTENTE
     // =====================================================
 
     @GetMapping
@@ -45,7 +47,7 @@ public class UserResource {
     }
 
     // =====================================================
-    // IDENTIFICAR USUARIO AUTENTICADO
+    // IDENTIFICAR O USUARIO PELO COOKIE JWT
     // =====================================================
 
     private Long obterIdAutenticado(String token) {
@@ -76,7 +78,6 @@ public class UserResource {
                     required = false
             ) String token
     ) {
-
         Long userId = obterIdAutenticado(token);
 
         if (userId == null) {
@@ -107,7 +108,6 @@ public class UserResource {
                     required = false
             ) String token
     ) {
-
         Long userId = obterIdAutenticado(token);
 
         if (userId == null) {
@@ -115,22 +115,9 @@ public class UserResource {
         }
 
         return userRepository.findById(userId)
-                .map(user -> {
-                    UserData data = user.getData();
-
-                    String biography =
-                            data != null
-                                    ? data.getBiography()
-                                    : null;
-
-                    return ResponseEntity.ok(
-                            new ProfileResponse(
-                                    biography == null
-                                            ? ""
-                                            : biography
-                            )
-                    );
-                })
+                .map(user -> ResponseEntity.ok(
+                        criarRespostaPerfil(user.getData())
+                ))
                 .orElseGet(() ->
                         ResponseEntity.notFound().build()
                 );
@@ -138,6 +125,7 @@ public class UserResource {
 
     // =====================================================
     // PUT /users/me/profile
+    // SALVAR BIOGRAFIA
     // =====================================================
 
     @PutMapping("/me/profile")
@@ -149,7 +137,6 @@ public class UserResource {
             ) String token,
             @RequestBody ProfileRequest request
     ) {
-
         Long userId = obterIdAutenticado(token);
 
         if (userId == null) {
@@ -173,27 +160,158 @@ public class UserResource {
             return ResponseEntity.notFound().build();
         }
 
+        UserData data = obterOuCriarDados(user);
+
+        data.setBiography(biography);
+
+        userDataRepository.save(data);
+
+        return ResponseEntity.ok(
+                criarRespostaPerfil(data)
+        );
+    }
+
+    // =====================================================
+    // PUT /users/me/profile/image
+    // SALVAR FOTO PERSONALIZADA
+    // =====================================================
+
+    @PutMapping("/me/profile/image")
+    @Transactional
+    public ResponseEntity<ProfileResponse> updateProfileImage(
+            @CookieValue(
+                    name = "token_jwt",
+                    required = false
+            ) String token,
+            @RequestBody ImageRequest request
+    ) {
+        Long userId = obterIdAutenticado(token);
+
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        if (request == null || request.imageUrl() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String imageUrl = request.imageUrl().trim();
+
+        if (!urlImagemValida(imageUrl)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        User user = userRepository.findById(userId)
+                .orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        UserData data = obterOuCriarDados(user);
+
+        // Altera apenas a foto.
+        // A biografia permanece intacta.
+        data.setProfileImageUrl(imageUrl);
+
+        userDataRepository.save(data);
+
+        return ResponseEntity.ok(
+                criarRespostaPerfil(data)
+        );
+    }
+
+    // =====================================================
+    // DELETE /users/me/profile/image
+    // REMOVER FOTO PERSONALIZADA
+    // =====================================================
+
+    @DeleteMapping("/me/profile/image")
+    @Transactional
+    public ResponseEntity<ProfileResponse> deleteProfileImage(
+            @CookieValue(
+                    name = "token_jwt",
+                    required = false
+            ) String token
+    ) {
+        Long userId = obterIdAutenticado(token);
+
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        User user = userRepository.findById(userId)
+                .orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        UserData data = obterOuCriarDados(user);
+
+        data.setProfileImageUrl(null);
+
+        userDataRepository.save(data);
+
+        return ResponseEntity.ok(
+                criarRespostaPerfil(data)
+        );
+    }
+
+    // =====================================================
+    // AUXILIARES DO PERFIL
+    // =====================================================
+
+    private UserData obterOuCriarDados(User user) {
         UserData data = user.getData();
 
-        // Compatibilidade com usuarios que ainda
-        // nao possuem um registro UserData.
         if (data == null) {
             data = new UserData(user);
             user.setData(data);
         }
 
-        data.setBiography(biography);
+        return data;
+    }
 
-        // Salva a biografia associada ao usuario.
-        userDataRepository.save(data);
+    private ProfileResponse criarRespostaPerfil(UserData data) {
+        if (data == null) {
+            return new ProfileResponse("", null);
+        }
 
-        return ResponseEntity.ok(
-                new ProfileResponse(biography)
+        String biography = data.getBiography();
+
+        return new ProfileResponse(
+                biography == null ? "" : biography,
+                data.getProfileImageUrl()
         );
     }
 
+    // Aceita links HTTPS de imagens hospedadas externamente.
+    // Nao aceita HTTP, URLs relativas ou enderecos com credenciais.
+    private boolean urlImagemValida(String endereco) {
+        if (endereco.isBlank() || endereco.length() > 2000) {
+            return false;
+        }
+
+        try {
+            URI uri = URI.create(endereco);
+
+            return "https".equals(
+                    uri.getScheme() == null
+                            ? ""
+                            : uri.getScheme().toLowerCase(Locale.ROOT)
+            )
+                    && uri.getHost() != null
+                    && !uri.getHost().isBlank()
+                    && uri.getRawUserInfo() == null;
+
+        } catch (IllegalArgumentException error) {
+            return false;
+        }
+    }
+
     // =====================================================
-    // FUNCIONALIDADE EXISTENTE: BUSCAR POR USERNAME
+    // BUSCAR USUARIO POR NOME - FUNCIONALIDADE EXISTENTE
     // =====================================================
 
     @GetMapping("/{username}")
@@ -206,7 +324,7 @@ public class UserResource {
     }
 
     // =====================================================
-    // DTOs DE RESPOSTA E EDICAO
+    // DTOs
     // =====================================================
 
     public record MeResponse(
@@ -216,12 +334,18 @@ public class UserResource {
     }
 
     public record ProfileResponse(
-            String biography
+            String biography,
+            String profileImageUrl
     ) {
     }
 
     public record ProfileRequest(
             String biography
+    ) {
+    }
+
+    public record ImageRequest(
+            String imageUrl
     ) {
     }
 }

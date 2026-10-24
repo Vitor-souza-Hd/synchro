@@ -26,10 +26,14 @@ public class UserData implements Serializable {
 
     private String username;
 
-    // Biografia personalizada do perfil Synchro.
-    // Comeca vazia e podera ser editada pelo usuario.
+    // Biografia personalizada do Synchro.
     @Column(name = "biography", length = 2000)
     private String biography;
+
+    // URL da fotografia escolhida pelo usuario.
+    // Null significa que nao existe foto personalizada.
+    @Column(name = "profile_image_url", length = 2000)
+    private String profileImageUrl;
 
     @OneToMany(
             cascade = CascadeType.ALL,
@@ -49,6 +53,7 @@ public class UserData implements Serializable {
         this.user = user;
         this.username = user.getUsername();
         this.biography = null;
+        this.profileImageUrl = null;
     }
 
     public void addReview(Review review) {
