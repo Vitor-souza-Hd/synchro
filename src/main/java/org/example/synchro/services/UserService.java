@@ -36,6 +36,16 @@ public class UserService {
         return new UserDto(repository.findByUsername(username));
     }
 
+    public UserDto findMe(String cookie) {
+        if (!cookieService.checkCookie(cookie)) {
+            throw new UnauthorizedException("Sessão inválida ou ausente");
+        }
+
+        User user = repository.findById(cookieService.getId(cookie))
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+        return new UserDto(user);
+    }
+
     @Transactional
     public UserDto updateUser(String cookie, UpdateUsernameRequest request) {
         if (!cookieService.checkCookie(cookie)) {

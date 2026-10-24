@@ -39,7 +39,7 @@ public class UserDto implements Serializable {
         this.email = user.getEmail();
         this.birthDay = user.getBirthDay();
         this.lastFmUsername = user.getLastFmUsername();
-        this.data = new UserDataDto(user.getData());
+        this.data = user.getData() == null ? new UserDataDto() : new UserDataDto(user.getData());
     }
 
 

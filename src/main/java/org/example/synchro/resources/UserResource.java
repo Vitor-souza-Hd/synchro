@@ -30,6 +30,13 @@ public class UserResource {
         return ResponseEntity.ok().body(service.FindByUsername(username));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> findMe(
+            @CookieValue(name = "token_jwt", required = false) String cookie
+    ) {
+        return ResponseEntity.ok(service.findMe(cookie));
+    }
+
     @PutMapping("/me/username")
     public ResponseEntity<UserDto> updateUser(
             @CookieValue(name = "token_jwt", required = false) String cookie,

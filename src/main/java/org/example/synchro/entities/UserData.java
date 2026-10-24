@@ -21,6 +21,9 @@ public class UserData implements Serializable {
     private Integer scrobbles;
     private Integer artistas;
     private String username;
+    @Column(name = "full_name")
+    private String fullName;
+    private String gender;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "author")
     private Set<Review> reviews = new HashSet<>();

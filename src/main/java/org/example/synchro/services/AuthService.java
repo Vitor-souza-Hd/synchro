@@ -38,6 +38,8 @@ public class AuthService {
         if(!userRepository.existsByEmail(obj.getEmail())){
             if(obj.getPassword().equals(obj.getConfirmPassword())){
                 User user = new User(null,obj.getUsername(),obj.getEmail(), passwordService.hashPassword(obj.getPassword()),obj.getBirthDay(),obj.getLastFmUsername());
+                user.getData().setFullName(obj.getFullName());
+                user.getData().setGender(obj.getGender());
                 userDataService.atualizarUserData(user);
                 User userSalvo = userRepository.save(user);
                 return token(userSalvo);
@@ -49,15 +51,23 @@ public class AuthService {
 
     public String login(LoginRequest obj){
         try {
-            User user = userRepository.findByEmail(obj.getEmail());
-            if(passwordService.hashPassword(obj.getPassword()).equals(user.getPassword())){
+            String identifier = obj.getUsername().trim();
+            User user = userRepository.findByEmail(identifier);
+            if (user == null) {
+                user = userRepository.findByUsernameIgnoringCaseAndSpaces(identifier)
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            if (user != null && passwordService.hashPassword(obj.getPassword()).equals(user.getPassword())) {
                 return token(user);
-            }else  {
+            } else {
                 throw new RuntimeException();
             }
         }
         catch (RuntimeException e){
-            throw new BadCredentialsException("email ou senha inválido");
+            throw new BadCredentialsException("usuário, e-mail ou senha inválidos");
         }
     }
     private String token(User user){

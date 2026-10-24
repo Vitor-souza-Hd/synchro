@@ -1,6 +1,6 @@
 package org.example.synchro.dto;
 
-import jakarta.validation.constraints.Email;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -8,20 +8,20 @@ import lombok.Data;
 @Data
 public class LoginRequest {
 
-    @NotBlank(message = "o email não deve ser vazio")
-    @Email(message = "o email deve ser valido")
-    private String email;
+    @JsonAlias("email")
+    @NotBlank(message = "o usuário ou e-mail não deve ser vazio")
+    private String username;
 
     @NotBlank(message = "a senha não pode ser vazia")
     @Size(min = 6, message = "a senha deve ter no mínimo 6 caracteres")
     private String password;
 
-    public String getEmail() {
-        return email;
+    public String getUsername() {
+        return username;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SYNCHRO</title>
+
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/artista.css">
+
+    <link
+        href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+        rel="stylesheet"
+    >
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- ================= SIDEBAR ================= -->
+
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <i class='bx bx-pulse'></i>
+
+                <a href="../../index.html">
+                    SYNCHRO
+                </a>
+
+            </div>
+
+
+            <div class="menu">
+
+                <h5>Menu</h5>
+
+                <ul>
+
+                    <li>
+                        <i class='bx bxs-bolt-circle'></i>
+                        <a href="../../index.html">Explorar</a>
+                    </li>
+
+                    <li>
+                        <i class='bx bxs-volume-full'></i>
+                        <a href="#">Gêneros</a>
+                    </li>
+
+                    <li>
+                        <i class='bx bxs-album'></i>
+                        <a href="#">Álbuns</a>
+                    </li>
+
+                    <li>
+                        <i class='bx bxs-microphone'></i>
+                        <a href="#">Artistas</a>
+                    </li>
+
+                </ul>
+
+            </div>
+
+
+            <div class="menu">
+
+                <h5>Sua Biblioteca</h5>
+
+                <ul>
+
+                    <li>
+                        <i class='bx bx-undo'></i>
+                        <a href="#">Recentes</a>
+                    </li>
+
+                    <li>
+                        <i class='bx bxs-photo-album'></i>
+                        <a href="#">Avaliações</a>
+                    </li>
+
+                    <li>
+                        <i class='bx bxs-heart'></i>
+                        <a href="#">Favoritos</a>
+                    </li>
+
+                    <li>
+                        <i class='bx bxs-folder'></i>
+                        <a href="#">Local</a>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-ticket"></i>
+                        <a href="#">Shows perto de você</a>
+                    </li>
+
+                </ul>
+
+            </div>
+
+
+            <div class="menu">
+
+                <h5>Playlist</h5>
+
+                <ul>
+
+                    <li>
+                        <i class='bx bxs-plus-square'></i>
+                        <a href="#">Criar uma nova</a>
+                    </li>
+
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="#">Suas Playlists</a>
+                    </li>
+
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="#">Recomendados</a>
+                    </li>
+
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="#">Playlists do Synchro</a>
+                    </li>
+
+                </ul>
+
+            </div>
+
+
+            <div class="nav-footer">
+
+                <a href="#">Legal</a>
+
+                <a href="#">Centro de Privacidade</a>
+
+                <a href="#">Política de Privacidade</a>
+
+                <a href="#">Cookies</a>
+
+                <a href="#">Sobre Anúncios</a>
+
+                <a href="#">Acessibilidades</a>
+
+            </div>
+
+
+            <button class="nav-language-button">
+
+                <i class="fa-solid fa-globe"></i>
+
+                Português do Brasil
+
+            </button>
+
+        </aside>
+
+
+
+        <!-- ================= MAIN ================= -->
+
+        <main>
+
+
+            <!-- MENU MOBILE -->
+
+            <button class="menu-toggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+
+            <!-- ================= HEADER ================= -->
+
+            <header class="search-bar">
+
+                <div class="search-box">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        class="search"
+                        type="text"
+                        placeholder="O que você quer ouvir?"
+                        aria-label="Buscar música"
+                    >
+                </div>
+
+                <div class="nav-links">
+
+                    <i class="fa-solid fa-users"></i>
+
+                    <i class="fa-solid fa-gear"></i>
+
+                    <a href="#">Músicas</a>
+
+                    <a href="#">Artistas</a>
+
+                    <a href="#">Revisões</a>
+
+                </div>
+
+                <a href="user.html" class="user">
+
+                    <i class="fa-solid fa-circle-user"></i>
+
+                </a>
+            </header>
+
+
+            <!-- ================= ARTISTA ================= -->
+
+            <section class="artist-header">
+
+
+                <div class="artist-image">
+
+                    <img
+                        id="artistImage"
+                        src=""
+                        alt="Imagem do artista"
+                    >
+
+                </div>
+
+
+                <div class="artist-info">
+
+                    <span class="artist-label">
+                        ARTISTA
+                    </span>
+
+
+                    <h1 id="artistName">
+                        Carregando...
+                    </h1>
+
+
+                    <div
+                        id="artistTags"
+                        class="tags">
+                    </div>
+
+                <div class="button">
+                    <button id="favoriteBtn">
+                        <i class='bx bx-heart'></i>
+                        Favoritar
+                    </button>
+
+                    <button class="open-review" type="button">
+                        <i class='bx bx-plus'></i>
+                        Resenha
+                    </button>
+                </div>
+
+                </div>
+            </section>
+
+            <!-- ================= MÚSICAS ================= -->
+
+            <section class="artist-section">
+                <h2>
+                    Músicas populares
+                </h2>
+
+                <div
+                    id="tracks"
+                    class="tracks">
+                    <!-- JavaScript -->
+                </div>
+
+            </section>
+
+            <!-- ================= ÁLBUNS ================= -->
+
+            <section class="artist-section">
+
+                <h2>
+                    Álbuns populares
+                </h2>
+                <div
+                    id="albums"
+                    class="albums">
+
+                    <!-- JavaScript -->
+                </div>
+
+            </section>
+
+
+            <section class="artist-section biography">
+
+                <h2>
+                    Sobre o artista
+                </h2>
+
+                <p id="biography">Carregando informações...</p>
+            </section>
+        </main>
+    </div>
+
+
+<!-- Janela de review -->
+<div class="review-overlay" id="reviewModal" aria-hidden="true">
+    <section class="review-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reviewTitle">
+
+        <button class="review-close" id="closeReview"
+            type="button" aria-label="Fechar janela">&times;
+        </button>
+
+        <h2 id="reviewTitle">Avaliar artista</h2>
+        <p class="review-artist" id="reviewArtist"></p>
+
+        <form id="reviewForm">
+            <label>Sua nota</label>
+
+            <div class="star-rating" role="group"
+                aria-label="Escolha uma nota de 1 a 5">
+                <button type="button" data-rating="1"
+                    aria-label="1 estrela">★</button>
+                <button type="button" data-rating="2"
+                    aria-label="2 estrelas">★</button>
+                <button type="button" data-rating="3"
+                    aria-label="3 estrelas">★</button>
+                <button type="button" data-rating="4"
+                    aria-label="4 estrelas">★</button>
+                <button type="button" data-rating="5"
+                    aria-label="5 estrelas">★</button>
+            </div>
+
+            <input type="hidden" id="reviewRating" value="0">
+
+            <label for="reviewText">Sua resenha</label>
+            <textarea id="reviewText"
+                maxlength="500"
+                placeholder=""
+                required></textarea>
+
+            <div class="review-counter">
+                <span id="reviewError" role="status"></span>
+                <span id="charCount">0/500</span>
+            </div>
+
+            <label class="review-favorite">
+                <input type="checkbox" id="reviewFavorite">
+                Marcar como favorito
+            </label>
+
+            <div class="review-actions">
+                <button type="button" id="cancelReview">
+                    Cancelar
+                </button>
+                <button type="submit" class="publish-review">
+                    Publicar
+                </button>
+            </div>
+        </form>
+    </section>
+</div>
+
+    <script src="../assets/js/artista.js"></script>
+</body>
+
+</html>

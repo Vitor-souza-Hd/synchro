@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         userCard.classList.add('user-card');
 
-        let userImage = "./img/user/userphoto.jpg";
+        let userImage = "../../../../frontend/assets/images/user/userphoto.jpg";
 
         // Tenta usar a imagem do Last.fm.
         // Se estiver vazia, mantém a imagem padrão.
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
 
             <img
-                src="./img/user/userphoto.jpg"
+                src="../../../../frontend/assets/images/user/userphoto.jpg"
                 alt="Usuário"
             >
         `;
@@ -147,37 +147,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         {
             name: 'Carissas Wierd',
-            image: './img/user/carissas.jpg',
+            image: '../../../../frontend/assets/images/user/carissas.jpg',
             link: 'https://open.spotify.com/intl-pt/artist/5VnYwYnG7QmpzQtxyubIwh?si=QhpZD-msQa2oR0AS-bSMYg'
         },
 
         {
             name: 'FM-Cinco',
-            image: './img/user/fm-cinco.jpg',
+            image: '../../../../frontend/assets/images/user/fm-cinco.jpg',
             link: 'https://open.spotify.com/intl-pt/artist/6Cx7tvzhROth2WcdTEI32Z?si=-8t_swP7QO23S2PYhgkE7g'
         },
 
         {
             name: 'Car Seat Headrest',
-            image: './img/user/csh.jpg',
+            image: '../../../../frontend/assets/images/user/csh.jpg',
             link: 'https://open.spotify.com/intl-pt/artist/5PbpKlxQE0Ktl5lcNABoFf?si=DJiXHyF7SaG1lg4Cx4_HJg'
         },
 
         {
             name: 'Magnólia',
-            image: './img/user/magnolia.jpg',
+            image: '../../../../frontend/assets/images/user/magnolia.jpg',
             link: 'https://open.spotify.com/intl-pt/artist/1UeVL6kabga2Gxp6TfoyUs?si=SY1mATHbQ4KRKLp3kGbrvw'
         },
 
         {
             name: 'Jeff Buckley',
-            image: './img/user/jeffbuckley.jpg',
+            image: '../../../../frontend/assets/images/user/jeffbuckley.jpg',
             link: 'https://open.spotify.com/intl-pt/artist/3nnQpaTvKb5jCQabZefACI?si=77RWn_qnQTusGWXB-UR3Rw'
         },
 
         {
             name: 'Jorge Ben Jor',
-            image: './img/user/jorge.jpg',
+            image: '../../../../frontend/assets/images/user/jorge.jpg',
             link: 'https://open.spotify.com/intl-pt/artist/5JYtpnUKxAzXfHEYpOeeit?si=hes1fQqfRtanGi5ailJAhA'
         }
 
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: 'Twin Fantasy',
             subname: 'Car Seat Headrest',
             review: '"O clássico da discografia de CSH, melancólico e eufórico, é um álbum perfeitamente solitário."',
-            image: './img/user/twin.jpg',
+            image: '../../../../frontend/assets/images/user/twin.jpg',
             rating: '10/10',
             link: 'https://open.spotify.com/intl-pt/album/6gDtROOIYa6OQxwhDNkDRM?si=c0ce719ff3ce4276'
         },
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: 'Juturna',
             subname: 'Circa Survive',
             review: '"Simplesmente um dos, se não O melhor vocalista emo do post-hardcore. É intenso e belo."',
-            image: './img/user/circa.jpg',
+            image: '../../../../frontend/assets/images/user/circa.jpg',
             rating: '8.5/10',
             link: 'https://open.spotify.com/intl-pt/album/0huXZPw7bhK5vTv7CMYOmP?si=3c856ac0e07e42bc'
         },
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: 'Deathconsciousness',
             subname: 'Have A Nice Life',
             review: '"Um grande álbum com um grande significado, é para mim, o melhor do pós-punk e noise."',
-            image: './img/user/death.jpg',
+            image: '../../../../frontend/assets/images/user/death.jpg',
             rating: '10/10',
             link: 'https://open.spotify.com/intl-pt/album/6MH3CAXp8AN8ELrbex18dM?si=c95f6f4e1b4047ce'
         },
@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: 'Blonde',
             subname: 'Frank Ocean',
             review: '"I would never cry to a Frank Ocean song. I am a MAN!"',
-            image: './img/user/blonde.jpg',
+            image: '../../../../frontend/assets/images/user/blonde.jpg',
             rating: '8/10',
             link: 'https://open.spotify.com/intl-pt/album/3mH6qwIy9crq0I9YQbOuDf?si=046157ba2560409b'
         },
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: 'Souvlaki',
             subname: 'Slowdive',
             review: '"Simplesmente os maiores do Shoegaze"',
-            image: './img/user/souvlaki.jpg',
+            image: '../../../../frontend/assets/images/user/souvlaki.jpg',
             rating: '8.5/10',
             link: 'https://open.spotify.com/intl-pt/album/53eHm1f3sFiSzWMaKOl98Z?si=64c525c9411b4647'
         },
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: 'Recreio',
             subname: 'Lupe de Lupe',
             review: '"Uma das minhas favoritas do Lupe, é o 1º álbum, por isso, tão real com letras sentimentais e reais demais"',
-            image: './img/user/recreio.jpg',
+            image: '../../../../frontend/assets/images/user/recreio.jpg',
             rating: '9/10',
             link: 'https://open.spotify.com/intl-pt/album/2Tb2i6PX5lr9SBUQqyvBbf?si=f483beffa8814ee3'
         }
@@ -256,42 +256,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
             name: 'emohc e screamo br',
             description: 'mix das melhores bandas e artistas br do emocore/screamo',
-            image: './img/user/emobr.png',
+            image: '../../../../frontend/assets/images/user/emobr.png',
             link: 'https://open.spotify.com/playlist/5R3IJXfh2Labijk9DZFD2d?si=9d41576a0068424e'
         },
 
         {
             name: 'Pagode Russo',
             description: 'xote nordestino e sertanejo raiz, para minha iguana nordestina, classicos da russia, para meu interior dostoievskano',
-            image: './img/user/xoterusso.png',
+            image: '../../../../frontend/assets/images/user/xoterusso.png',
             link: 'https://open.spotify.com/playlist/4R3brzt610WnomqGWDNXD6?si=de93bb460aef4d67'
         },
 
         {
             name: 'mix romântico',
             description: 'do mais melancólico para os mais fofos',
-            image: './img/user/mixromantico.png',
+            image: '../../../../frontend/assets/images/user/mixromantico.png',
             link: 'https://open.spotify.com/playlist/3J6tTIfrtPQ3gHiTLrhaba?si=76829909f6a1406a'
         },
 
         {
             name: '02/05',
             description: 'art pop e música experimental',
-            image: './img/user/artpop.png',
+            image: '../../../../frontend/assets/images/user/artpop.png',
             link: 'https://open.spotify.com/playlist/6Jls0dnu2MeeqpZsoke2yl?si=0808510d00994c2a'
         },
 
         {
             name: '2018core',
             description: 'majoritariamente indie, os mais nostáligicos de 2018',
-            image: './img/user/2018.png',
+            image: '../../../../frontend/assets/images/user/2018.png',
             link: 'https://open.spotify.com/playlist/3IxQ1BlBIZlAiJrRNkcYBv?si=6157570a5e93474f'
         },
 
         {
             name: 'nublado',
             description: 'midwest emo e emo caipira',
-            image: './img/user/midwest.png',
+            image: '../../../../frontend/assets/images/user/midwest.png',
             link: 'https://open.spotify.com/playlist/2jFG3G8jDHSN4E6hgiPrGG?si=364691fd18624337'
         }
 
