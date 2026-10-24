@@ -172,15 +172,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 formatarEstatistica(lastFmUser.playcount);
         }
 
+
+        // Os totais de artistas e albuns serao obtidos
+        // pelos rankings gerais do Last.fm.
+        // Mantemos o valor neutro ate receber a resposta.
+
         if (artistsElement) {
-            artistsElement.textContent =
-                formatarEstatistica(lastFmUser.artist_count);
+            artistsElement.textContent = "—";
         }
 
         if (albumsElement) {
-            albumsElement.textContent =
-                formatarEstatistica(lastFmUser.album_count);
+            albumsElement.textContent = "—";
         }
+
 
     } else {
 
@@ -623,12 +627,78 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // =====================================================
+    // TOTAIS REAIS DE ARTISTAS E ALBUNS
+    // =====================================================
+
+    async function carregarTotaisMusicais() {
+
+        if (!lastFmUser) {
+            return;
+        }
+
+        const artistsCounter =
+            document.getElementById("profileArtists");
+
+        const albumsCounter =
+            document.getElementById("profileAlbums");
+
+        // "overall" consulta todo o historico,
+        // independentemente do periodo selecionado
+        // para o relatorio semanal.
+
+        const resultados = await Promise.allSettled([
+            fetchRanking("artists", "overall"),
+            fetchRanking("albums", "overall")
+        ]);
+
+        const artistas = resultados[0];
+        const albuns = resultados[1];
+
+        if (artistas.status === "fulfilled") {
+
+            const totalArtistas =
+                artistas.value?.topartists?.["@attr"]?.total;
+
+            if (artistsCounter) {
+                artistsCounter.textContent =
+                    numberText(totalArtistas);
+            }
+
+        } else {
+            console.error(
+                "Erro ao obter total de artistas:",
+                artistas.reason
+            );
+        }
+
+        if (albuns.status === "fulfilled") {
+
+            const totalAlbuns =
+                albuns.value?.topalbums?.["@attr"]?.total;
+
+            if (albumsCounter) {
+                albumsCounter.textContent =
+                    numberText(totalAlbuns);
+            }
+
+        } else {
+            console.error(
+                "Erro ao obter total de albuns:",
+                albuns.reason
+            );
+        }
+    }
+
     periodSelect?.addEventListener(
         'change',
         carregarRankings
     );
 
-    await carregarRankings();
+    await Promise.all([
+        carregarRankings(),
+        carregarTotaisMusicais()
+    ]);
 
 });
 
