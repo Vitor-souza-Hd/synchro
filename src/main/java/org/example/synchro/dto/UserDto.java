@@ -13,11 +13,11 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @JsonPropertyOrder({
-  "username",
-  "email",
-  "birthDay",
-  "lastFmUsername",
-  "data"
+        "username",
+        "email",
+        "birthDay",
+        "lastFmUsername",
+        "data"
 })
 public class UserDto implements Serializable {
 

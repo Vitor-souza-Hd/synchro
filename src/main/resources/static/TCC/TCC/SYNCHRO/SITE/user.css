@@ -929,3 +929,68 @@ body{
     position: relative;
     z-index: 1;
 }
+
+/* BIOGRAFIA EDITAVEL */
+
+.profile-biography {
+    margin-bottom: 18px;
+    max-width: 460px;
+}
+
+#profileBiography {
+    margin: 0 0 12px;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+
+#editBiographyButton,
+.biography-actions button {
+    background: #242424;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font: inherit;
+}
+
+#editBiographyButton:hover,
+.biography-actions button:hover {
+    border-color: #ff2a60;
+}
+
+#biographyEditor {
+    margin-top: 12px;
+}
+
+#biographyEditor[hidden] {
+    display: none;
+}
+
+#biographyEditor label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+#biographyInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #555;
+    border-radius: 10px;
+    background: #181818;
+    color: #fff;
+    font: inherit;
+    resize: vertical;
+}
+
+.biography-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#biographyFeedback {
+    font-size: 13px;
+    margin-top: 8px;
+}

@@ -1,3 +1,4 @@
+
 package org.example.synchro.entities;
 
 import jakarta.persistence.*;
@@ -18,36 +19,54 @@ public class UserData implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
     private Integer scrobbles;
+
     private Integer artistas;
+
     private String username;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "author")
+    // Biografia personalizada do perfil Synchro.
+    // Comeca vazia e podera ser editada pelo usuario.
+    @Column(name = "biography", length = 2000)
+    private String biography;
+
+    @OneToMany(
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            mappedBy = "author"
+    )
     private Set<Review> reviews = new HashSet<>();
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
 
-    public UserData(){}
+    public UserData() {
+    }
 
     public UserData(User user) {
         this.user = user;
-        username = user.getUsername();
+        this.username = user.getUsername();
+        this.biography = null;
     }
 
-    public void addReview(Review review){
+    public void addReview(Review review) {
         reviews.add(review);
         review.setAuthor(this);
     }
-    public void removeReview(Review review){
+
+    public void removeReview(Review review) {
         reviews.remove(review);
         review.setAuthor(null);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
         UserData userData = (UserData) o;
         return id == userData.id;
     }
@@ -56,5 +75,4 @@ public class UserData implements Serializable {
     public int hashCode() {
         return Objects.hashCode(id);
     }
-
 }

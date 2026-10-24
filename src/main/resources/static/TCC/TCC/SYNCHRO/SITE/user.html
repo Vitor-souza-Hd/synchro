@@ -58,8 +58,41 @@
                     <div class="banner-info">
 
 
-                        <p>Eu gosto de música^^ • Etec de Itaquera • </p>
-                        <p>FrontDev do Synchro</p>
+
+                        <div class="profile-biography">
+                            <p id="profileBiography" style="white-space: pre-wrap;"></p>
+
+                            <button
+                                    id="editBiographyButton"
+                                    type="button">
+                                <i class="fa-solid fa-pen"></i>
+                                Editar biografia
+                            </button>
+
+                            <div id="biographyEditor" hidden>
+                                <label for="biographyInput">Sua biografia</label>
+
+                                <textarea
+                                        id="biographyInput"
+                                        maxlength="2000"
+                                        rows="4"
+                                        placeholder="Conte um pouco sobre você e seus gostos musicais..."
+                                ></textarea>
+
+                                <div class="biography-actions">
+                                    <button id="saveBiographyButton" type="button">
+                                        Salvar
+                                    </button>
+
+                                    <button id="cancelBiographyButton" type="button">
+                                        Cancelar
+                                    </button>
+                                </div>
+
+                                <p id="biographyFeedback" role="status" aria-live="polite"></p>
+                            </div>
+                        </div>
+
 
                         <button id="lastfm-connect" class="lastfm-button">
                             <i class="fa-brands fa-lastfm"></i>

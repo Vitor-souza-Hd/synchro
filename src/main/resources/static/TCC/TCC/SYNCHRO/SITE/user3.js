@@ -1,6 +1,36 @@
+
 document.addEventListener('DOMContentLoaded', async () => {
 
     console.log("USER.JS NOVO CARREGADO!!!");
+
+    // Buscar o nome cadastrado no Synchro.
+    let synchroUsername = "Usuário Synchro";
+
+    try {
+        const response = await fetch("/users/me", {
+            credentials: "same-origin"
+        });
+
+        if (response.ok) {
+            const user = await response.json();
+
+            if (typeof user.username === "string" &&
+                user.username.trim()) {
+                synchroUsername = user.username.trim();
+            }
+        } else {
+            console.warn(
+                "Não foi possível consultar o usuário Synchro:",
+                response.status
+            );
+        }
+    } catch (error) {
+        console.error(
+            "Erro ao buscar usuário Synchro:",
+            error
+        );
+    }
+
 
     // =====================================================
     // DADOS DO USUÁRIO - LAST.FM
@@ -152,27 +182,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } else {
 
-        // Caso não seja possível carregar o Last.fm
+        // Perfil Synchro sem Last.fm conectado.
+        const userCard = document.createElement("div");
+        userCard.classList.add("user-card");
 
-        const userCard =
-            document.createElement('div');
+        const userInfo = document.createElement("div");
 
-        userCard.classList.add('user-card');
+        const usernameElement = document.createElement("h3");
+        usernameElement.textContent = synchroUsername;
 
-        userCard.innerHTML = `
-            <div>
-                <h3>Usuário Synchro</h3>
-                <p>Last.fm não conectado</p>
-            </div>
+        const statusElement = document.createElement("p");
+        statusElement.textContent = "Last.fm não conectado";
 
-            <img
-                src="./img/user/userphoto.jpg"
-                alt="Usuário"
-            >
-        `;
+        userInfo.append(usernameElement, statusElement);
 
-        userGrid.appendChild(userCard);
+        // Avatar neutro enquanto o usuario nao
+        // escolhe uma fotografia.
+        const userImage = document.createElement("img");
+        userImage.alt = "Avatar padrão do usuário";
+
+        const avatarSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg"
+             viewBox="0 0 200 200">
+            <rect width="200" height="200" fill="#292929"/>
+            <circle cx="100" cy="74" r="34" fill="#777"/>
+            <path d="M34 184c0-38 30-65 66-65s66 27 66 65"
+                  fill="#777"/>
+        </svg>
+    `;
+
+        userImage.src =
+            "data:image/svg+xml;charset=utf-8," +
+            encodeURIComponent(avatarSvg);
+
+        userCard.append(userInfo, userImage);
+
+        if (userGrid) {
+            userGrid.replaceChildren(userCard);
+        }
     }
+
 
 
     // =====================================================
@@ -712,3 +761,117 @@ if (lastfmButton) {
         }
     );
 }
+
+// =========================================================
+// BIOGRAFIA EDITAVEL DO SYNCHRO
+// =========================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const biography = document.getElementById("profileBiography");
+    const editButton = document.getElementById("editBiographyButton");
+    const editor = document.getElementById("biographyEditor");
+    const input = document.getElementById("biographyInput");
+    const saveButton = document.getElementById("saveBiographyButton");
+    const cancelButton = document.getElementById("cancelBiographyButton");
+    const feedback = document.getElementById("biographyFeedback");
+
+    if (
+        !biography ||
+        !editButton ||
+        !editor ||
+        !input ||
+        !saveButton ||
+        !cancelButton ||
+        !feedback
+    ) {
+        return;
+    }
+
+    let savedBiography = "";
+
+    async function carregarBiografia() {
+        try {
+            const response = await fetch("/users/me/profile", {
+                credentials: "same-origin",
+                headers: {
+                    Accept: "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            savedBiography = data.biography || "";
+            biography.textContent = savedBiography;
+
+        } catch (error) {
+            console.error("Erro ao carregar biografia:", error);
+            biography.textContent = "";
+            feedback.textContent =
+                "Não foi possível carregar sua biografia.";
+        }
+    }
+
+    editButton.addEventListener("click", () => {
+        input.value = savedBiography;
+        feedback.textContent = "";
+        editor.hidden = false;
+        editButton.hidden = true;
+        input.focus();
+    });
+
+    cancelButton.addEventListener("click", () => {
+        input.value = savedBiography;
+        feedback.textContent = "";
+        editor.hidden = true;
+        editButton.hidden = false;
+    });
+
+    saveButton.addEventListener("click", async () => {
+        const newBiography = input.value.trim();
+
+        saveButton.disabled = true;
+        feedback.textContent = "Salvando...";
+
+        try {
+            const response = await fetch("/users/me/profile", {
+                method: "PUT",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json"
+                },
+                body: JSON.stringify({
+                    biography: newBiography
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            savedBiography = data.biography || "";
+            biography.textContent = savedBiography;
+
+            feedback.textContent = "";
+            editor.hidden = true;
+            editButton.hidden = false;
+
+        } catch (error) {
+            console.error("Erro ao salvar biografia:", error);
+            feedback.textContent =
+                "Não foi possível salvar. Tente novamente.";
+
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+
+    carregarBiografia();
+});
