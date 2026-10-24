@@ -4,238 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SYNCHRO</title>
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="user.css">
 </head>
 <body>
-
 <div class="container">
-
     <header class="top-header">
-
-        <div class="logo">
-            <i class='bx bx-pulse'></i>
-            <a href="index2.html">SYNCHRO</a>
-        </div>
-
+        <div class="logo"><i class="bx bx-pulse"></i><a href="index2.html">SYNCHRO</a></div>
         <div class="search-box">
-
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input
-                    class="search"
-                    type="text"
-                    placeholder="O que você quer ouvir?"
-                    aria-label="Buscar música">
+            <input class="search" type="text" placeholder="O que você quer ouvir?" aria-label="Buscar música">
         </div>
-
         <div class="nav-links">
-            <a href="index2.html">
-                <i class="fa-solid fa-house"></i>
-            </a>
-            </a>
+            <a href="index2.html" aria-label="Início"><i class="fa-solid fa-house"></i></a>
             <i class="fa-solid fa-bars"></i>
             <i class="fa-solid fa-users"></i>
             <i class="fa-solid fa-gear"></i>
-            <a href="#">Templates</a>
-            <a href="#">Eventos</a>
-            <a href="#">Comunidade</a>
+            <a href="#">Templates</a><a href="#">Eventos</a><a href="#">Comunidade</a>
         </div>
-
     </header>
-
     <main>
         <header>
             <section class="profile-header">
-
                 <div class="banner-background"></div>
                 <div class="banner-content">
-
-                    <div class="user">
-                        <!--INSERIR DADOS COM JS-->
-                    </div>
-
+                    <div class="user"><!-- Preenchido por user3.js --></div>
                     <div class="banner-info">
-
-
-
                         <div class="profile-biography">
                             <p id="profileBiography" style="white-space: pre-wrap;"></p>
-
-                            <button
-                                    id="editBiographyButton"
-                                    type="button">
-                                <i class="fa-solid fa-pen"></i>
-                                Editar biografia
-                            </button>
-
+                            <button id="editBiographyButton" type="button"><i class="fa-solid fa-pen"></i> Editar biografia</button>
                             <div id="biographyEditor" hidden>
                                 <label for="biographyInput">Sua biografia</label>
-
-                                <textarea
-                                        id="biographyInput"
-                                        maxlength="2000"
-                                        rows="4"
-                                        placeholder="Conte um pouco sobre você e seus gostos musicais..."
-                                ></textarea>
-
+                                <textarea id="biographyInput" maxlength="2000" rows="4" placeholder="Conte um pouco sobre você e seus gostos musicais..."></textarea>
                                 <div class="biography-actions">
-                                    <button id="saveBiographyButton" type="button">
-                                        Salvar
-                                    </button>
-
-                                    <button id="cancelBiographyButton" type="button">
-                                        Cancelar
-                                    </button>
+                                    <button id="saveBiographyButton" type="button">Salvar</button>
+                                    <button id="cancelBiographyButton" type="button">Cancelar</button>
                                 </div>
-
                                 <p id="biographyFeedback" role="status" aria-live="polite"></p>
                             </div>
                         </div>
-
-                        <!-- FOTO DE PERFIL PERSONALIZADA -->
                         <div class="profile-photo-editor">
-
-                            <button id="editPhotoButton" type="button">
-                                <i class="fa-solid fa-camera"></i>
-                                Alterar foto
-                            </button>
-
+                            <button id="editPhotoButton" type="button"><i class="fa-solid fa-camera"></i> Alterar foto</button>
                             <div id="photoEditor" hidden>
-                                <label for="photoUrlInput">
-                                    URL HTTPS da fotografia
-                                </label>
-
-                                <input
-                                        id="photoUrlInput"
-                                        type="url"
-                                        placeholder="https://exemplo.com/foto.jpg"
-                                        autocomplete="off"
-                                >
-
+                                <label for="photoUrlInput">URL HTTPS da fotografia</label>
+                                <input id="photoUrlInput" type="url" placeholder="https://exemplo.com/foto.jpg" autocomplete="off">
                                 <div class="photo-actions">
-                                    <button id="savePhotoButton" type="button">
-                                        Salvar foto
-                                    </button>
-
-                                    <button id="removePhotoButton" type="button">
-                                        Remover foto personalizada
-                                    </button>
-
-                                    <button id="cancelPhotoButton" type="button">
-                                        Cancelar
-                                    </button>
+                                    <button id="savePhotoButton" type="button">Salvar foto</button>
+                                    <button id="removePhotoButton" type="button">Remover foto personalizada</button>
+                                    <button id="cancelPhotoButton" type="button">Cancelar</button>
                                 </div>
-
                                 <p id="photoFeedback" role="status" aria-live="polite"></p>
                             </div>
                         </div>
-
-
-
-                        <button id="lastfm-connect" class="lastfm-button">
-                            <i class="fa-brands fa-lastfm"></i>
-                            <span>Conectar seu Last.fm</span>
+                        <button id="lastfm-connect" class="lastfm-button" type="button">
+                            <i class="fa-brands fa-lastfm"></i><span>Conectar seu Last.fm</span>
                         </button>
-
                         <div class="profile-stats">
-                            <div>
-                                <h3>245,665</h3>
-                                <p>Synchs</p>
-                            </div>
-
-                            <div>
-                                <h3>4,425</h3>
-                                <p>Artistas</p>
-                            </div>
-
-                            <div>
-                                <h3>6,881</h3>
-                                <p>Álbuns</p>
-                            </div>
-
+                            <div><h3 id="profileScrobbles">—</h3><p>Synchs</p></div>
+                            <div><h3 id="profileArtists">—</h3><p>Artistas</p></div>
+                            <div><h3 id="profileAlbums">—</h3><p>Álbuns</p></div>
                         </div>
                         <span>PERFIL</span>
                     </div>
-
-
-
                 </div>
             </section>
         </header>
-
         <section class="top-artists">
             <h2>Seus Artistas Favoritos do Momento</h2>
-            <div class="artist">
-                <!--INSERIR DADOS COM JS-->
-            </div>
+            <div class="artist"><!-- Last.fm --></div>
         </section>
-
         <section class="user-review">
             <h2>Suas Avaliações Recentes</h2>
-            <div class="review">
-                <!--INSERIR DADOS COM JS-->
-            </div>
+            <div class="review"><!-- Dados da conta Synchro, futuramente --></div>
         </section>
-
         <section class="user-playlist">
             <h2>Playlists Criadas</h2>
-            <div class="playlist">
-                <!--INSERIR DADOS COM JS-->
-            </div>
+            <div class="playlist"><!-- Dados da conta Synchro, futuramente --></div>
         </section>
-
-        <h2>Relatório Semanal</h2>
+        <div class="ranking-controls" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0;">
+            <h2 style="margin:0;">Relatório Musical</h2>
+            <label for="rankingPeriod">Período:</label>
+            <select id="rankingPeriod" aria-label="Período dos rankings">
+                <option value="7day">Últimos 7 dias</option>
+                <option value="1month">Último mês</option>
+                <option value="3month">Últimos 3 meses</option>
+                <option value="6month">Últimos 6 meses</option>
+                <option value="12month">Últimos 12 meses</option>
+                <option value="overall">Todo o histórico</option>
+            </select>
+            <span id="rankingStatus" role="status" aria-live="polite"></span>
+        </div>
         <section class="weekly-report">
-
             <div class="weekly-card">
                 <h5 class="h-artists">Top Artistas</h5>
-                <p class="p-artists">237 artistas</p>
-                <img src="./img/user/magnolia.jpg" alt="">
-
-                <div class="report-artists">
-
-                    <!--INSERIR DADOS COM JS-->
-                </div>
+                <p class="p-artists">Ranking de reproduções</p>
+                <div class="report-artists"><!-- Last.fm --></div>
             </div>
-
             <div class="weekly-card">
                 <h5 class="h-albums">Top Álbuns</h5>
-                <p class="p-albums">317 álbuns</p>
-                <img src="./img/user/chart.png" alt="">
-
-                <div class="report-albums">
-
-                    <!--INSERIR DADOS COM JS-->
-                </div>
+                <p class="p-albums">Ranking de reproduções</p>
+                <div class="report-albums"><!-- Last.fm --></div>
             </div>
-
             <div class="weekly-card">
                 <h5 class="h-musics">Top Músicas</h5>
-                <p class="p-musics">448 músicas</p>
-                <img src="./img/user/broadcast.png" alt="">
-
-                <div class="report-musics">
-
-                    <!--INSERIR DADOS COM JS-->
-                </div>
+                <p class="p-musics">Ranking de reproduções</p>
+                <div class="report-musics"><!-- Last.fm --></div>
             </div>
-
             <div class="weekly-card">
                 <h5 class="h-genre">Top Gêneros</h5>
-                <p class="p-genres">478 gêneros</p>
-                <img src="./img/user/yaamc.png" alt="">
-
-                <div class="report-genres">
-
-                    <!--INSERIR DADOS COM JS-->
-                </div>
+                <p class="p-genres">Em desenvolvimento</p>
+                <div class="report-genres"><!-- Será calculado de tags --></div>
             </div>
         </section>
-
-
     </main>
-
 </div>
 <script src="user3.js"></script>
 <script src="busca.js"></script>

@@ -151,6 +151,138 @@ public class LastFmResource {
     }
 
     // =========================================================
+    // RANKINGS DO USUARIO SYNCHRO AUTENTICADO
+    // =========================================================
+
+    @GetMapping(
+            value = "/me/top/{type}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<ResponseEntity<String>> getMyTop(
+            @CookieValue(
+                    name = "token_jwt",
+                    required = false
+            ) String cookie,
+
+            @PathVariable String type,
+
+            @RequestParam(
+                    defaultValue = "7day"
+            ) String period
+    ) {
+
+        // Valida o login Synchro.
+        if (!cookieService.checkCookie(cookie)) {
+            return Mono.just(
+                    ResponseEntity
+                            .status(401)
+                            .body(
+                                    "{\"error\":\"Sessao Synchro invalida\"}"
+                            )
+            );
+        }
+
+        // Valida antes de chamar o servico.
+        if (!java.util.Set.of(
+                "artists",
+                "albums",
+                "tracks"
+        ).contains(type)) {
+
+            return Mono.just(
+                    ResponseEntity
+                            .badRequest()
+                            .body(
+                                    "{\"error\":\"Tipo de ranking invalido\"}"
+                            )
+            );
+        }
+
+        if (!java.util.Set.of(
+                "overall",
+                "7day",
+                "1month",
+                "3month",
+                "6month",
+                "12month"
+        ).contains(period)) {
+
+            return Mono.just(
+                    ResponseEntity
+                            .badRequest()
+                            .body(
+                                    "{\"error\":\"Periodo invalido\"}"
+                            )
+            );
+        }
+
+        Long userId;
+
+        try {
+            userId = cookieService.getId(cookie);
+        } catch (RuntimeException error) {
+            return Mono.just(
+                    ResponseEntity
+                            .status(401)
+                            .body(
+                                    "{\"error\":\"Sessao Synchro invalida\"}"
+                            )
+            );
+        }
+
+        return lastfmService
+                .getTopBySynchroId(
+                        userId,
+                        type,
+                        period
+                )
+                .map(json ->
+                        ResponseEntity
+                                .ok()
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .body(json)
+                )
+                .onErrorResume(
+                        IllegalStateException.class,
+                        error -> Mono.just(
+                                ResponseEntity
+                                        .status(409)
+                                        .body(
+                                                "{\"error\":\"Conta Last.fm nao conectada\"}"
+                                        )
+                        )
+                )
+                .onErrorResume(
+                        IllegalArgumentException.class,
+                        error -> Mono.just(
+                                ResponseEntity
+                                        .badRequest()
+                                        .body(
+                                                "{\"error\":\"Consulta invalida\"}"
+                                        )
+                        )
+                )
+                .onErrorResume(
+                        error -> {
+                            System.err.println(
+                                    "Erro ao consultar ranking Last.fm: "
+                                            + error.getMessage()
+                            );
+
+                            return Mono.just(
+                                    ResponseEntity
+                                            .status(502)
+                                            .body(
+                                                    "{\"error\":\"Falha ao consultar Last.fm\"}"
+                                            )
+                            );
+                        }
+                );
+    }
+
+    // =========================================================
     // ESCAPAR TEXTO PARA JSON
     // =========================================================
 

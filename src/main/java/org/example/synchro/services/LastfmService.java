@@ -325,6 +325,100 @@ public class LastfmService {
 
 
     // =========================================================
+    // RANKINGS REAIS DO USUARIO LAST.FM
+    // =========================================================
+
+    public Mono<String> getTopBySynchroId(
+            Long userId,
+            String type,
+            String period
+    ) {
+
+        // Identifica o usuario autenticado no Synchro.
+        Optional<User> user = userRepository.findById(userId);
+
+        if (user.isEmpty()) {
+            return Mono.error(
+                    new IllegalArgumentException(
+                            "Usuario Synchro nao encontrado"
+                    )
+            );
+        }
+
+        String lastFmUsername =
+                user.get().getLastFmUsername();
+
+        if (lastFmUsername == null
+                || lastFmUsername.isBlank()) {
+
+            return Mono.error(
+                    new IllegalStateException(
+                            "Conta Last.fm nao conectada"
+                    )
+            );
+        }
+
+        // Somente os tres tipos de ranking permitidos.
+        String method;
+
+        switch (type) {
+            case "artists":
+                method = "user.gettopartists";
+                break;
+
+            case "albums":
+                method = "user.gettopalbums";
+                break;
+
+            case "tracks":
+                method = "user.gettoptracks";
+                break;
+
+            default:
+                return Mono.error(
+                        new IllegalArgumentException(
+                                "Tipo de ranking invalido"
+                        )
+                );
+        }
+
+        // Periodos aceitos pela API do Last.fm.
+        if (!java.util.Set.of(
+                "overall",
+                "7day",
+                "1month",
+                "3month",
+                "6month",
+                "12month"
+        ).contains(period)) {
+
+            return Mono.error(
+                    new IllegalArgumentException(
+                            "Periodo invalido"
+                    )
+            );
+        }
+
+        return webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .queryParam("method", method)
+                        .queryParam("user", lastFmUsername)
+                        .queryParam(
+                                "api_key",
+                                config.getApiKey()
+                        )
+                        .queryParam("period", period)
+                        .queryParam("limit", 10)
+                        .queryParam("format", "json")
+                        .build()
+                )
+                .retrieve()
+                .bodyToMono(String.class)
+                .timeout(Duration.ofSeconds(15));
+    }
+
+    // =========================================================
     // GERAR ASSINATURA DA API LAST.FM
     // =========================================================
 

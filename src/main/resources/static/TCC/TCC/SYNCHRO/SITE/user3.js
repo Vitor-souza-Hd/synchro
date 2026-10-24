@@ -94,7 +94,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-
         console.log("DADOS DO LAST.FM:", lastFmUser);
 
     } catch (error) {
@@ -116,39 +115,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         userCard.classList.add('user-card');
 
-        let userImage = "./img/user/userphoto.jpg";
+        // Avatar neutro se o Last.fm nao retornar foto.
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#292929"/><circle cx="100" cy="74" r="34" fill="#777"/><path d="M34 184c0-38 30-65 66-65s66 27 66 65" fill="#777"/></svg>`;
+        let userImage = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+        const images = Array.isArray(lastFmUser.image) ? lastFmUser.image : [];
+        const availableImage = images.map(img => img?.["#text"]).filter(Boolean).pop();
+        if (availableImage && /^https:\/\//i.test(availableImage)) userImage = availableImage;
 
-        // Tenta usar a imagem do Last.fm.
-        // Se estiver vazia, mantém a imagem padrão.
-        if (
-            lastFmUser.image &&
-            lastFmUser.image.length > 0
-        ) {
-
-            const lastImage =
-                lastFmUser.image[lastFmUser.image.length - 1];
-
-            if (
-                lastImage["#text"] &&
-                lastImage["#text"].trim() !== ""
-            ) {
-
-                userImage = lastImage["#text"];
-            }
-        }
-
-        userCard.innerHTML = `
-            <div>
-                <h3>${lastFmUser.name}</h3>
-                <p>Usuário Last.fm</p>
-            </div>
-
-            <img
-                src="${userImage}"
-                alt="${lastFmUser.name}"
-            >
-        `;
-
+        const userInfo = document.createElement('div');
+        const nameElement = document.createElement('h3');
+        nameElement.textContent = lastFmUser.name || synchroUsername;
+        const sourceElement = document.createElement('p');
+        sourceElement.textContent = 'Usuário Last.fm';
+        userInfo.append(nameElement, sourceElement);
+        const avatarElement = document.createElement('img');
+        avatarElement.src = userImage;
+        avatarElement.alt = 'Foto de ' + (lastFmUser.name || synchroUsername);
+        userCard.append(userInfo, avatarElement);
         userGrid.appendChild(userCard);
 
 
@@ -156,28 +139,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         // ESTATÍSTICAS REAIS DO LAST.FM
         // =================================================
 
-        const stats =
-            document.querySelectorAll('.profile-stats h3');
+        const scrobblesElement =
+            document.getElementById("profileScrobbles");
 
-        if (stats.length >= 3) {
+        const artistsElement =
+            document.getElementById("profileArtists");
 
-            // Synchs / Scrobbles
-            stats[0].textContent =
-                Number(
-                    lastFmUser.playcount || 0
-                ).toLocaleString('pt-BR');
+        const albumsElement =
+            document.getElementById("profileAlbums");
 
-            // Artistas
-            stats[1].textContent =
-                Number(
-                    lastFmUser.artist_count || 0
-                ).toLocaleString('pt-BR');
+        // Exibe apenas valores realmente fornecidos pela API.
+        function formatarEstatistica(valor) {
+            if (
+                valor === undefined ||
+                valor === null ||
+                valor === ""
+            ) {
+                return "—";
+            }
 
-            // Álbuns
-            stats[2].textContent =
-                Number(
-                    lastFmUser.album_count || 0
-                ).toLocaleString('pt-BR');
+            const numero = Number(valor);
+
+            if (!Number.isFinite(numero) || numero < 0) {
+                return "—";
+            }
+
+            return numero.toLocaleString("pt-BR");
+        }
+
+        if (scrobblesElement) {
+            scrobblesElement.textContent =
+                formatarEstatistica(lastFmUser.playcount);
+        }
+
+        if (artistsElement) {
+            artistsElement.textContent =
+                formatarEstatistica(lastFmUser.artist_count);
+        }
+
+        if (albumsElement) {
+            albumsElement.textContent =
+                formatarEstatistica(lastFmUser.album_count);
         }
 
     } else {
@@ -223,492 +225,410 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 
-
     // =====================================================
-    // ARTISTAS - TEMPORARIAMENTE FIXOS
+    // RANKINGS REAIS - LAST.FM
     // =====================================================
 
-    const artistsData = [
+    const artistGrid = document.querySelector('.artist');
+    const reviewGrid = document.querySelector('.review');
+    const playlistGrid = document.querySelector('.playlist');
+    const reportArtistGrid = document.querySelector('.report-artists');
+    const reportAlbumGrid = document.querySelector('.report-albums');
+    const reportMusicGrid = document.querySelector('.report-musics');
+    const reportGenreGrid = document.querySelector('.report-genres');
+    const periodSelect = document.getElementById('rankingPeriod');
+    const rankingStatus = document.getElementById('rankingStatus');
 
-        {
-            name: 'Carissas Wierd',
-            image: './img/user/carissas.jpg',
-            link: 'https://open.spotify.com/intl-pt/artist/5VnYwYnG7QmpzQtxyubIwh?si=QhpZD-msQa2oR0AS-bSMYg'
-        },
+    function empty(container, message) {
+        if (!container) return;
 
-        {
-            name: 'FM-Cinco',
-            image: './img/user/fm-cinco.jpg',
-            link: 'https://open.spotify.com/intl-pt/artist/6Cx7tvzhROth2WcdTEI32Z?si=-8t_swP7QO23S2PYhgkE7g'
-        },
+        container.replaceChildren();
 
-        {
-            name: 'Car Seat Headrest',
-            image: './img/user/csh.jpg',
-            link: 'https://open.spotify.com/intl-pt/artist/5PbpKlxQE0Ktl5lcNABoFf?si=DJiXHyF7SaG1lg4Cx4_HJg'
-        },
+        const p = document.createElement('p');
+        p.className = 'profile-empty';
+        p.textContent = message;
 
-        {
-            name: 'Magnólia',
-            image: './img/user/magnolia.jpg',
-            link: 'https://open.spotify.com/intl-pt/artist/1UeVL6kabga2Gxp6TfoyUs?si=SY1mATHbQ4KRKLp3kGbrvw'
-        },
+        container.appendChild(p);
+    }
 
-        {
-            name: 'Jeff Buckley',
-            image: './img/user/jeffbuckley.jpg',
-            link: 'https://open.spotify.com/intl-pt/artist/3nnQpaTvKb5jCQabZefACI?si=77RWn_qnQTusGWXB-UR3Rw'
-        },
+    // Avaliacoes e playlists devem pertencer ao usuario Synchro.
+    // Nao apresentar exemplos como se fossem dados pessoais.
+    empty(
+        reviewGrid,
+        'Você ainda não publicou avaliações no Synchro.'
+    );
 
-        {
-            name: 'Jorge Ben Jor',
-            image: './img/user/jorge.jpg',
-            link: 'https://open.spotify.com/intl-pt/artist/5JYtpnUKxAzXfHEYpOeeit?si=hes1fQqfRtanGi5ailJAhA'
+    empty(
+        playlistGrid,
+        'Você ainda não criou playlists no Synchro.'
+    );
+
+    empty(
+        reportGenreGrid,
+        'Os gêneros serão calculados em uma próxima etapa.'
+    );
+
+    const numberText = value => {
+        const number = Number(value);
+
+        return value !== undefined &&
+        value !== null &&
+        value !== '' &&
+        Number.isFinite(number) &&
+        number >= 0
+            ? number.toLocaleString('pt-BR')
+            : '—';
+    };
+
+    function artistLink(name) {
+        return 'artista.html?artist=' +
+            encodeURIComponent(name);
+    }
+
+    function trackLink(artist, track) {
+        return 'musica.html?artist=' +
+            encodeURIComponent(artist) +
+            '&track=' +
+            encodeURIComponent(track);
+    }
+
+    function makeRankItem(rank, title, subtitle, count, href) {
+        const card = document.createElement('div');
+        card.className = 'weekly-card';
+
+        const line = document.createElement('div');
+        line.className = 'rank-item';
+
+        const place = document.createElement('h3');
+        place.textContent = '#' + (rank + 1);
+
+        const name = document.createElement('h3');
+
+        if (href) {
+            const link = document.createElement('a');
+            link.href = href;
+            link.textContent = title;
+            name.appendChild(link);
+        } else {
+            name.textContent = title;
         }
 
-    ];
+        line.append(place, name);
 
-
-    // =====================================================
-    // AVALIAÇÕES
-    // =====================================================
-
-    const reviewData = [
-
-        {
-            name: 'Twin Fantasy',
-            subname: 'Car Seat Headrest',
-            review: '"O clássico da discografia de CSH, melancólico e eufórico, é um álbum perfeitamente solitário."',
-            image: './img/user/twin.jpg',
-            rating: '10/10',
-            link: 'https://open.spotify.com/intl-pt/album/6gDtROOIYa6OQxwhDNkDRM?si=c0ce719ff3ce4276'
-        },
-
-        {
-            name: 'Juturna',
-            subname: 'Circa Survive',
-            review: '"Simplesmente um dos, se não O melhor vocalista emo do post-hardcore. É intenso e belo."',
-            image: './img/user/circa.jpg',
-            rating: '8.5/10',
-            link: 'https://open.spotify.com/intl-pt/album/0huXZPw7bhK5vTv7CMYOmP?si=3c856ac0e07e42bc'
-        },
-
-        {
-            name: 'Deathconsciousness',
-            subname: 'Have A Nice Life',
-            review: '"Um grande álbum com um grande significado, é para mim, o melhor do pós-punk e noise."',
-            image: './img/user/death.jpg',
-            rating: '10/10',
-            link: 'https://open.spotify.com/intl-pt/album/6MH3CAXp8AN8ELrbex18dM?si=c95f6f4e1b4047ce'
-        },
-
-        {
-            name: 'Blonde',
-            subname: 'Frank Ocean',
-            review: '"I would never cry to a Frank Ocean song. I am a MAN!"',
-            image: './img/user/blonde.jpg',
-            rating: '8/10',
-            link: 'https://open.spotify.com/intl-pt/album/3mH6qwIy9crq0I9YQbOuDf?si=046157ba2560409b'
-        },
-
-        {
-            name: 'Souvlaki',
-            subname: 'Slowdive',
-            review: '"Simplesmente os maiores do Shoegaze"',
-            image: './img/user/souvlaki.jpg',
-            rating: '8.5/10',
-            link: 'https://open.spotify.com/intl-pt/album/53eHm1f3sFiSzWMaKOl98Z?si=64c525c9411b4647'
-        },
-
-        {
-            name: 'Recreio',
-            subname: 'Lupe de Lupe',
-            review: '"Uma das minhas favoritas do Lupe, é o 1º álbum, por isso, tão real com letras sentimentais e reais demais"',
-            image: './img/user/recreio.jpg',
-            rating: '9/10',
-            link: 'https://open.spotify.com/intl-pt/album/2Tb2i6PX5lr9SBUQqyvBbf?si=f483beffa8814ee3'
+        if (subtitle) {
+            const artist = document.createElement('p');
+            artist.textContent = subtitle;
+            line.appendChild(artist);
         }
 
-    ];
+        const plays = document.createElement('p');
+        plays.textContent =
+            numberText(count) + ' Synchs';
 
+        line.appendChild(plays);
+        card.appendChild(line);
 
-    // =====================================================
-    // PLAYLISTS
-    // =====================================================
+        return card;
+    }
 
-    const playlistData = [
+    function topArray(payload, key, itemKey) {
+        const result = payload?.[key]?.[itemKey];
 
-        {
-            name: 'emohc e screamo br',
-            description: 'mix das melhores bandas e artistas br do emocore/screamo',
-            image: './img/user/emobr.png',
-            link: 'https://open.spotify.com/playlist/5R3IJXfh2Labijk9DZFD2d?si=9d41576a0068424e'
-        },
-
-        {
-            name: 'Pagode Russo',
-            description: 'xote nordestino e sertanejo raiz, para minha iguana nordestina, classicos da russia, para meu interior dostoievskano',
-            image: './img/user/xoterusso.png',
-            link: 'https://open.spotify.com/playlist/4R3brzt610WnomqGWDNXD6?si=de93bb460aef4d67'
-        },
-
-        {
-            name: 'mix romântico',
-            description: 'do mais melancólico para os mais fofos',
-            image: './img/user/mixromantico.png',
-            link: 'https://open.spotify.com/playlist/3J6tTIfrtPQ3gHiTLrhaba?si=76829909f6a1406a'
-        },
-
-        {
-            name: '02/05',
-            description: 'art pop e música experimental',
-            image: './img/user/artpop.png',
-            link: 'https://open.spotify.com/playlist/6Jls0dnu2MeeqpZsoke2yl?si=0808510d00994c2a'
-        },
-
-        {
-            name: '2018core',
-            description: 'majoritariamente indie, os mais nostáligicos de 2018',
-            image: './img/user/2018.png',
-            link: 'https://open.spotify.com/playlist/3IxQ1BlBIZlAiJrRNkcYBv?si=6157570a5e93474f'
-        },
-
-        {
-            name: 'nublado',
-            description: 'midwest emo e emo caipira',
-            image: './img/user/midwest.png',
-            link: 'https://open.spotify.com/playlist/2jFG3G8jDHSN4E6hgiPrGG?si=364691fd18624337'
+        if (!result) {
+            return [];
         }
 
-    ];
+        return Array.isArray(result)
+            ? result
+            : [result];
+    }
 
+    async function fetchRanking(type, period) {
+        const response = await fetch(
+            '/last-fm/me/top/' +
+            type +
+            '?period=' +
+            encodeURIComponent(period),
+            {
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json'
+                }
+            }
+        );
 
-    // =====================================================
-    // RELATÓRIO SEMANAL - TEMPORARIAMENTE FIXO
-    // =====================================================
-
-    const weeklyReportArtistData = [
-
-        { place: '#1', name: 'Magnólia', times: '40 Synchs' },
-        { place: '#2', name: 'Car Seat Headrest', times: '30 Synchs' },
-        { place: '#3', name: 'Jorge Ben Jor', times: '14 Synchs' },
-        { place: '#4', name: 'Cap n Jazz', times: '8 Synchs' },
-        { place: '#5', name: 'Panchinko', times: '8 Synchs' }
-
-    ];
-
-
-    const weeklyReportAlbumData = [
-
-        {
-            place: '#1',
-            name: 'alma e pipo',
-            artist: 'Magnólia',
-            times: '11 Synchs'
-        },
-
-        {
-            place: '#2',
-            name: 'a maré carregou nossos corpos',
-            artist: 'Magnólia',
-            times: '9 Synchs'
-        },
-
-        {
-            place: '#3',
-            name: 'Analphabeta',
-            artist: 'Cap n Jazz',
-            times: '8 Synchs'
-        },
-
-        {
-            place: '#4',
-            name: 'caru e os bixinhos de seu coração',
-            artist: 'Magnólia',
-            times: '8 Synchs'
-        },
-
-        {
-            place: '#5',
-            name: 'Sambas De Baden E Vinícius',
-            artist: 'Baden Powell',
-            times: '7 Synchs'
+        if (!response.ok) {
+            throw new Error(
+                'Ranking ' +
+                type +
+                ': HTTP ' +
+                response.status
+            );
         }
 
-    ];
+        return response.json();
+    }
 
+    function renderArtists(items) {
+        reportArtistGrid?.replaceChildren();
+        artistGrid?.replaceChildren();
 
-    const weeklyReportMusicData = [
+        if (!items.length) {
+            empty(
+                reportArtistGrid,
+                'Nenhum artista ouvido neste período.'
+            );
 
-        {
-            place: '#1',
-            name: 'The Book Lover',
-            artist: 'Broadcast',
-            times: '5 Synchs'
-        },
+            empty(
+                artistGrid,
+                'Nenhum artista ouvido neste período.'
+            );
 
-        {
-            place: '#2',
-            name: 'memories last longer',
-            artist: 'Noragami',
-            times: '4 Synchs'
-        },
-
-        {
-            place: '#3',
-            name: 'When Im Small',
-            artist: 'Phantogram',
-            times: '4 Synchs'
-        },
-
-        {
-            place: '#4',
-            name: 'Utter Silence Is Fragile',
-            artist: 'Suis La Lune',
-            times: '4 Synchs'
-        },
-
-        {
-            place: '#5',
-            name: 'Beautiful Things Are Better Left Dead',
-            artist: 'Aprils Love Affair',
-            times: '3 Synchs'
+            return;
         }
 
-    ];
-
-
-    const weeklyReportGenreData = [
-
-        { place: '#1', genre: 'Emo', times: '55 Synchs' },
-        { place: '#2', genre: 'Screamo', times: '40 Synchs' },
-        { place: '#3', genre: 'MPB', times: '28 Synchs' },
-        { place: '#4', genre: 'Emo rap', times: '20 Synchs' },
-        { place: '#5', genre: 'Indie', times: '19 Synchs' }
-
-    ];
-
-
-    // =====================================================
-    // ELEMENTOS DO HTML
-    // =====================================================
-
-    const artistGrid =
-        document.querySelector('.artist');
-
-    const reviewGrid =
-        document.querySelector('.review');
-
-    const playlistGrid =
-        document.querySelector('.playlist');
-
-    const reportArtistGrid =
-        document.querySelector('.report-artists');
-
-    const reportAlbumGrid =
-        document.querySelector('.report-albums');
-
-    const reportMusicGrid =
-        document.querySelector('.report-musics');
-
-    const reportGenreGrid =
-        document.querySelector('.report-genres');
-
-
-    // =====================================================
-    // MOSTRAR ARTISTAS
-    // =====================================================
-
-    artistsData.forEach(artist => {
-
-        const artistCard =
-            document.createElement('div');
-
-        artistCard.classList.add('artist-card');
-
-        artistCard.innerHTML = `
-            <a href="${artist.link}" target="_blank">
-
-                <img
-                    src="${artist.image}"
-                    alt="imagem do ${artist.name}"
-                >
-
-                <div>
-                    <h3>${artist.name}</h3>
-                    <p>Artista</p>
-                </div>
-
-            </a>
-        `;
-
-        artistGrid.appendChild(artistCard);
-
-    });
-
-
-    // =====================================================
-    // MOSTRAR AVALIAÇÕES
-    // =====================================================
-
-    reviewData.forEach(review => {
-
-        const reviewCard =
-            document.createElement('div');
-
-        reviewCard.classList.add('review-card');
-
-        reviewCard.innerHTML = `
-            <a href="${review.link}" target="_blank">
-
-                <img
-                    src="${review.image}"
-                    alt="imagem do ${review.name}"
-                >
-
-                <div>
-                    <h3>${review.name}</h3>
-                    <h5>${review.subname}</h5>
-                    <p>${review.review}</p>
-                    <h3>${review.rating}</h3>
-                </div>
-
-            </a>
-        `;
-
-        reviewGrid.appendChild(reviewCard);
-
-    });
-
-
-    // =====================================================
-    // MOSTRAR PLAYLISTS
-    // =====================================================
-
-    playlistData.forEach(playlist => {
-
-        const playlistCard =
-            document.createElement('div');
-
-        playlistCard.classList.add('playlist-card');
-
-        playlistCard.innerHTML = `
-            <a href="${playlist.link}" target="_blank">
-
-                <img
-                    src="${playlist.image}"
-                    alt="imagem do ${playlist.name}"
-                >
-
-                <div>
-                    <h3>${playlist.name}</h3>
-                    <p>${playlist.description}</p>
-                </div>
-
-            </a>
-        `;
-
-        playlistGrid.appendChild(playlistCard);
-
-    });
-
-
-    // =====================================================
-    // MOSTRAR TOP ARTISTAS
-    // =====================================================
-
-    weeklyReportArtistData.forEach(reportArtist => {
-
-        const card =
-            document.createElement('div');
-
-        card.classList.add('weekly-card');
-
-        card.innerHTML = `
-            <div class="rank-item">
-                <h3>${reportArtist.place}</h3>
-                <h3>${reportArtist.name}</h3>
-                <p>${reportArtist.times}</p>
-            </div>
-        `;
-
-        reportArtistGrid.appendChild(card);
-
-    });
-
-
-    // =====================================================
-    // MOSTRAR TOP ÁLBUNS
-    // =====================================================
-
-    weeklyReportAlbumData.forEach(reportAlbum => {
-
-        const card =
-            document.createElement('div');
-
-        card.classList.add('weekly-card');
-
-        card.innerHTML = `
-            <div class="rank-item">
-                <h3>${reportAlbum.place}</h3>
-                <h3>${reportAlbum.name}</h3>
-                <p>${reportAlbum.artist}</p>
-                <p>${reportAlbum.times}</p>
-            </div>
-        `;
-
-        reportAlbumGrid.appendChild(card);
-
-    });
-
-
-    // =====================================================
-    // MOSTRAR TOP MÚSICAS
-    // =====================================================
-
-    weeklyReportMusicData.forEach(reportMusic => {
-
-        const card =
-            document.createElement('div');
-
-        card.classList.add('weekly-card');
-
-        card.innerHTML = `
-            <div class="rank-item">
-                <h3>${reportMusic.place}</h3>
-                <h3>${reportMusic.name}</h3>
-                <p>${reportMusic.artist}</p>
-                <p>${reportMusic.times}</p>
-            </div>
-        `;
-
-        reportMusicGrid.appendChild(card);
-
-    });
-
-
-    // =====================================================
-    // MOSTRAR TOP GÊNEROS
-    // =====================================================
-
-    weeklyReportGenreData.forEach(reportGenre => {
-
-        const card =
-            document.createElement('div');
-
-        card.classList.add('weekly-card');
-
-        card.innerHTML = `
-            <div class="rank-item">
-                <h3>${reportGenre.place}</h3>
-                <h3>${reportGenre.genre}</h3>
-                <p>${reportGenre.times}</p>
-            </div>
-        `;
-
-        reportGenreGrid.appendChild(card);
-
-    });
+        items.forEach((item, index) => {
+            if (!item?.name) {
+                return;
+            }
+
+            reportArtistGrid?.appendChild(
+                makeRankItem(
+                    index,
+                    item.name,
+                    '',
+                    item.playcount,
+                    artistLink(item.name)
+                )
+            );
+
+            if (!artistGrid || index >= 6) {
+                return;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'artist-card';
+
+            const link = document.createElement('a');
+            link.href = artistLink(item.name);
+
+            const info = document.createElement('div');
+
+            const title = document.createElement('h3');
+            title.textContent = item.name;
+
+            const desc = document.createElement('p');
+            desc.textContent =
+                numberText(item.playcount) + ' Synchs';
+
+            info.append(title, desc);
+
+            const imageUrl =
+                Array.isArray(item.image) &&
+                item.image
+                    .map(i => i?.['#text'])
+                    .filter(Boolean)
+                    .pop();
+
+            if (
+                imageUrl &&
+                /^https:\/\//i.test(imageUrl)
+            ) {
+                const image = document.createElement('img');
+                image.src = imageUrl;
+                image.alt = 'Foto de ' + item.name;
+                image.loading = 'lazy';
+
+                link.appendChild(image);
+            }
+
+            link.appendChild(info);
+            card.appendChild(link);
+            artistGrid.appendChild(card);
+        });
+    }
+
+    function renderAlbums(items) {
+        reportAlbumGrid?.replaceChildren();
+
+        if (!items.length) {
+            empty(
+                reportAlbumGrid,
+                'Nenhum álbum ouvido neste período.'
+            );
+
+            return;
+        }
+
+        items.forEach((item, index) => {
+            if (!item?.name) {
+                return;
+            }
+
+            const artist =
+                typeof item.artist === 'string'
+                    ? item.artist
+                    : item.artist?.name || '';
+
+            reportAlbumGrid?.appendChild(
+                makeRankItem(
+                    index,
+                    item.name,
+                    artist,
+                    item.playcount,
+                    null
+                )
+            );
+        });
+    }
+
+    function renderTracks(items) {
+        reportMusicGrid?.replaceChildren();
+
+        if (!items.length) {
+            empty(
+                reportMusicGrid,
+                'Nenhuma música ouvida neste período.'
+            );
+
+            return;
+        }
+
+        items.forEach((item, index) => {
+            if (!item?.name) {
+                return;
+            }
+
+            const artist =
+                typeof item.artist === 'string'
+                    ? item.artist
+                    : item.artist?.name || '';
+
+            reportMusicGrid?.appendChild(
+                makeRankItem(
+                    index,
+                    item.name,
+                    artist,
+                    item.playcount,
+                    artist
+                        ? trackLink(artist, item.name)
+                        : null
+                )
+            );
+        });
+    }
+
+    async function carregarRankings() {
+        const period = periodSelect?.value || '7day';
+
+        if (!lastFmUser) {
+            empty(
+                artistGrid,
+                'Conecte seu Last.fm para ver seus artistas.'
+            );
+
+            empty(
+                reportArtistGrid,
+                'Conecte seu Last.fm para ver seu ranking.'
+            );
+
+            empty(
+                reportAlbumGrid,
+                'Conecte seu Last.fm para ver seu ranking.'
+            );
+
+            empty(
+                reportMusicGrid,
+                'Conecte seu Last.fm para ver seu ranking.'
+            );
+
+            if (rankingStatus) {
+                rankingStatus.textContent =
+                    'Last.fm não conectado.';
+            }
+
+            return;
+        }
+
+        if (rankingStatus) {
+            rankingStatus.textContent =
+                'Carregando rankings...';
+        }
+
+        const results = await Promise.allSettled([
+            fetchRanking('artists', period),
+            fetchRanking('albums', period),
+            fetchRanking('tracks', period)
+        ]);
+
+        const [artists, albums, tracks] = results;
+
+        if (artists.status === 'fulfilled') {
+            renderArtists(
+                topArray(
+                    artists.value,
+                    'topartists',
+                    'artist'
+                )
+            );
+        } else {
+            empty(
+                artistGrid,
+                'Não foi possível consultar os artistas.'
+            );
+
+            empty(
+                reportArtistGrid,
+                'Não foi possível consultar os artistas.'
+            );
+        }
+
+        if (albums.status === 'fulfilled') {
+            renderAlbums(
+                topArray(
+                    albums.value,
+                    'topalbums',
+                    'album'
+                )
+            );
+        } else {
+            empty(
+                reportAlbumGrid,
+                'Não foi possível consultar os álbuns.'
+            );
+        }
+
+        if (tracks.status === 'fulfilled') {
+            renderTracks(
+                topArray(
+                    tracks.value,
+                    'toptracks',
+                    'track'
+                )
+            );
+        } else {
+            empty(
+                reportMusicGrid,
+                'Não foi possível consultar as músicas.'
+            );
+        }
+
+        if (rankingStatus) {
+            rankingStatus.textContent =
+                results.every(
+                    r => r.status === 'fulfilled'
+                )
+                    ? ''
+                    : 'Alguns rankings não puderam ser carregados.';
+        }
+    }
+
+    periodSelect?.addEventListener(
+        'change',
+        carregarRankings
+    );
+
+    await carregarRankings();
 
 });
 
@@ -762,19 +682,33 @@ if (lastfmButton) {
     );
 }
 
+
 // =========================================================
 // BIOGRAFIA EDITAVEL DO SYNCHRO
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    const biography = document.getElementById("profileBiography");
-    const editButton = document.getElementById("editBiographyButton");
-    const editor = document.getElementById("biographyEditor");
-    const input = document.getElementById("biographyInput");
-    const saveButton = document.getElementById("saveBiographyButton");
-    const cancelButton = document.getElementById("cancelBiographyButton");
-    const feedback = document.getElementById("biographyFeedback");
+    const biography =
+        document.getElementById("profileBiography");
+
+    const editButton =
+        document.getElementById("editBiographyButton");
+
+    const editor =
+        document.getElementById("biographyEditor");
+
+    const input =
+        document.getElementById("biographyInput");
+
+    const saveButton =
+        document.getElementById("saveBiographyButton");
+
+    const cancelButton =
+        document.getElementById("cancelBiographyButton");
+
+    const feedback =
+        document.getElementById("biographyFeedback");
 
     if (
         !biography ||
@@ -792,15 +726,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function carregarBiografia() {
         try {
-            const response = await fetch("/users/me/profile", {
-                credentials: "same-origin",
-                headers: {
-                    Accept: "application/json"
+            const response = await fetch(
+                "/users/me/profile",
+                {
+                    credentials: "same-origin",
+                    headers: {
+                        Accept: "application/json"
+                    }
                 }
-            });
+            );
 
             if (!response.ok) {
-                throw new Error(`Erro HTTP ${response.status}`);
+                throw new Error(
+                    `Erro HTTP ${response.status}`
+                );
             }
 
             const data = await response.json();
@@ -809,8 +748,13 @@ document.addEventListener("DOMContentLoaded", () => {
             biography.textContent = savedBiography;
 
         } catch (error) {
-            console.error("Erro ao carregar biografia:", error);
+            console.error(
+                "Erro ao carregar biografia:",
+                error
+            );
+
             biography.textContent = "";
+
             feedback.textContent =
                 "Não foi possível carregar sua biografia.";
         }
@@ -838,20 +782,25 @@ document.addEventListener("DOMContentLoaded", () => {
         feedback.textContent = "Salvando...";
 
         try {
-            const response = await fetch("/users/me/profile", {
-                method: "PUT",
-                credentials: "same-origin",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json"
-                },
-                body: JSON.stringify({
-                    biography: newBiography
-                })
-            });
+            const response = await fetch(
+                "/users/me/profile",
+                {
+                    method: "PUT",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json"
+                    },
+                    body: JSON.stringify({
+                        biography: newBiography
+                    })
+                }
+            );
 
             if (!response.ok) {
-                throw new Error(`Erro HTTP ${response.status}`);
+                throw new Error(
+                    `Erro HTTP ${response.status}`
+                );
             }
 
             const data = await response.json();
@@ -864,7 +813,11 @@ document.addEventListener("DOMContentLoaded", () => {
             editButton.hidden = false;
 
         } catch (error) {
-            console.error("Erro ao salvar biografia:", error);
+            console.error(
+                "Erro ao salvar biografia:",
+                error
+            );
+
             feedback.textContent =
                 "Não foi possível salvar. Tente novamente.";
 
