@@ -283,6 +283,57 @@ public class LastFmResource {
     }
 
     // =========================================================
+    // CONSULTAR TAGS DE UM ARTISTA
+    // =========================================================
+
+    @GetMapping(
+            value = "/artist/tags",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<ResponseEntity<String>> getArtistTags(
+            @RequestParam String artist
+    ) {
+
+        if (artist == null
+                || artist.isBlank()
+                || artist.length() > 200) {
+
+            return Mono.just(
+                    ResponseEntity
+                            .badRequest()
+                            .body(
+                                    "{\"error\":\"Nome do artista invalido\"}"
+                            )
+            );
+        }
+
+        return lastfmService
+                .getArtistTopTags(artist)
+                .map(json ->
+                        ResponseEntity
+                                .ok()
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .body(json)
+                )
+                .onErrorResume(error -> {
+                    System.err.println(
+                            "Erro ao consultar tags do artista: "
+                                    + error.getMessage()
+                    );
+
+                    return Mono.just(
+                            ResponseEntity
+                                    .status(502)
+                                    .body(
+                                            "{\"error\":\"Falha ao consultar tags no Last.fm\"}"
+                                    )
+                    );
+                });
+    }
+
+    // =========================================================
     // ESCAPAR TEXTO PARA JSON
     // =========================================================
 

@@ -267,10 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Você ainda não criou playlists no Synchro.'
     );
 
-    empty(
-        reportGenreGrid,
-        'Os gêneros serão calculados em uma próxima etapa.'
-    );
+
 
     const numberText = value => {
         const number = Number(value);

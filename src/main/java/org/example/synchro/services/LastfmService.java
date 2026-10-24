@@ -419,6 +419,56 @@ public class LastfmService {
     }
 
     // =========================================================
+    // CONSULTAR TAGS MUSICAIS DE UM ARTISTA
+    // =========================================================
+
+    public Mono<String> getArtistTopTags(String artist) {
+
+        if (artist == null || artist.isBlank()) {
+            return Mono.error(
+                    new IllegalArgumentException(
+                            "Nome do artista obrigatorio"
+                    )
+            );
+        }
+
+        String artistName = artist.trim();
+
+        if (artistName.length() > 200) {
+            return Mono.error(
+                    new IllegalArgumentException(
+                            "Nome do artista muito longo"
+                    )
+            );
+        }
+
+        return webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .queryParam(
+                                "method",
+                                "artist.gettoptags"
+                        )
+                        .queryParam(
+                                "artist",
+                                artistName
+                        )
+                        .queryParam(
+                                "api_key",
+                                config.getApiKey()
+                        )
+                        .queryParam(
+                                "format",
+                                "json"
+                        )
+                        .build()
+                )
+                .retrieve()
+                .bodyToMono(String.class)
+                .timeout(Duration.ofSeconds(15));
+    }
+
+    // =========================================================
     // GERAR ASSINATURA DA API LAST.FM
     // =========================================================
 
