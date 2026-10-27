@@ -257,10 +257,96 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Avaliacoes e playlists devem pertencer ao usuario Synchro.
     // Nao apresentar exemplos como se fossem dados pessoais.
-    empty(
-        reviewGrid,
-        'Você ainda não publicou avaliações no Synchro.'
-    );
+
+    // =====================================================
+    // AVALIACOES REAIS DO USUARIO SYNCHRO
+    // =====================================================
+
+    async function carregarMinhasAvaliacoes() {
+
+        if (!reviewGrid) {
+            return;
+        }
+
+        empty(reviewGrid, "Carregando suas avaliações...");
+
+        try {
+            const response = await fetch("/review/me", {
+                credentials: "same-origin",
+                headers: {
+                    Accept: "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(
+                    `Erro ao consultar avaliações: ${response.status}`
+                );
+            }
+
+            const reviews = await response.json();
+
+            if (!Array.isArray(reviews) || reviews.length === 0) {
+                empty(
+                    reviewGrid,
+                    "Você ainda não publicou avaliações no Synchro."
+                );
+                return;
+            }
+
+            reviewGrid.replaceChildren();
+
+            reviews.forEach(review => {
+
+                const card = document.createElement("div");
+                card.className = "review-card";
+
+                const content = document.createElement("div");
+
+                const title = document.createElement("h3");
+                title.textContent =
+                    review.midiaTitulo || "Mídia sem título";
+
+                const type = document.createElement("h5");
+                type.textContent =
+                    review.midiatype === "Musica"
+                        ? "Música"
+                        : review.midiatype === "Album"
+                            ? "Álbum"
+                            : "Mídia";
+
+                const comment = document.createElement("p");
+                comment.textContent = review.review || "";
+
+                const rating = document.createElement("h3");
+
+                rating.textContent =
+                    review.rating !== null &&
+                    review.rating !== undefined
+                        ? `${review.rating}/10`
+                        : "Sem nota";
+
+                content.append(title, type, comment, rating);
+                card.appendChild(content);
+
+                reviewGrid.appendChild(card);
+            });
+
+        } catch (error) {
+            console.error(
+                "Erro ao carregar avaliações do perfil:",
+                error
+            );
+
+            empty(
+                reviewGrid,
+                "Não foi possível carregar suas avaliações."
+            );
+        }
+    }
+
+    carregarMinhasAvaliacoes();
+
 
     empty(
         playlistGrid,

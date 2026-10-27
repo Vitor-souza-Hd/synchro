@@ -231,6 +231,73 @@
 
         </section>
 
+        <!-- AVALIACOES DA COMUNIDADE -->
+        <section class="music-section" id="musicReviewSection">
+
+            <h2>Avaliações da comunidade</h2>
+
+            <p id="musicReviewStatus" role="status">
+                Verificando se esta música está cadastrada no Synchro...
+            </p>
+
+            <div id="musicReviewControls" hidden>
+
+                <p id="musicReviewAverage"></p>
+
+                <button
+                        id="openMusicReview"
+                        class="music-review-button"
+                        type="button">
+                    <i class="fa-solid fa-star"></i>
+                    Avaliar música
+                </button>
+
+                <div id="musicReviewEditor" hidden>
+                    <h3>Sua avaliação</h3>
+
+                    <label for="musicReviewRating">
+                        Nota de 0 a 10
+                    </label>
+
+                    <input
+                            id="musicReviewRating"
+                            type="number"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="8"
+                    >
+
+                    <label for="musicReviewText">
+                        Comentário
+                    </label>
+
+                    <textarea
+                            id="musicReviewText"
+                            rows="4"
+                            maxlength="1000"
+                            placeholder="O que você achou desta música?"
+                    ></textarea>
+
+                    <div class="music-review-actions">
+                        <button id="saveMusicReview" type="button">
+                            Publicar avaliação
+                        </button>
+
+                        <button id="cancelMusicReview" type="button">
+                            Cancelar
+                        </button>
+                    </div>
+
+                    <p id="musicReviewFeedback" role="status"></p>
+                </div>
+
+            </div>
+
+            <div id="musicReviewList"></div>
+
+        </section>
+
         <!-- AVISO -->
         <p class="music-note">
             Informações obtidas pela API do Last.fm.
@@ -242,6 +309,7 @@
 
 <script src="musica.js"></script>
 <script src="busca.js"></script>
+<script src="avaliacoes-musica.js"></script>F
 
 </body>
 </html>

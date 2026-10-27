@@ -272,3 +272,151 @@
         font-size: 23px;
     }
 }
+
+/* AVALIACOES DA COMUNIDADE */
+
+#musicReviewControls[hidden],
+#musicReviewEditor[hidden] {
+    display: none;
+}
+
+#musicReviewStatus,
+#musicReviewAverage,
+#musicReviewFeedback {
+    color: #b3b3b3;
+    margin: 12px 0;
+}
+
+.music-review-button,
+.music-review-actions button,
+.music-review-card button {
+    background: #282828;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    margin: 5px;
+}
+
+.music-review-button:hover,
+.music-review-actions button:hover,
+.music-review-card button:hover {
+    border-color: #ff4068;
+}
+
+#musicReviewEditor {
+    margin-top: 20px;
+    max-width: 580px;
+}
+
+#musicReviewEditor label {
+    display: block;
+    margin-top: 14px;
+    margin-bottom: 8px;
+}
+
+#musicReviewRating,
+#musicReviewText {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    background: #181818;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 10px;
+    padding: 12px;
+    font: inherit;
+}
+
+#musicReviewText {
+    resize: vertical;
+}
+
+.music-review-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.music-review-card {
+    padding: 18px;
+    margin: 14px 0;
+    background: #191919;
+    border: 1px solid #333;
+    border-radius: 12px;
+}
+
+.music-review-card h3 {
+    margin: 0 0 10px;
+}
+
+.music-review-card p {
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* =========================================
+   AVALIAÇÕES - NOVO VISUAL SYNCHRO
+   ========================================= */
+
+.music-review-card {
+    background: linear-gradient(
+            135deg,
+            #252027 0%,
+            #301f29 100%
+    );
+
+    border: 1px solid rgba(255, 65, 105, 0.25);
+    border-left: 4px solid #ff315e;
+
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin: 16px 0;
+
+    color: #f5f5f5;
+
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2);
+    transition: border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.music-review-card:hover {
+    border-color: rgba(255, 65, 105, 0.65);
+    transform: translateY(-2px);
+}
+
+.music-review-card h3 {
+    color: #ff5579;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.music-review-card p {
+    color: #e5e0e4;
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 16px;
+    overflow-wrap: anywhere;
+}
+
+.music-review-card button {
+    background: rgba(255, 255, 255, 0.07);
+    color: #f5f5f5;
+
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 9px;
+
+    padding: 10px 17px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.music-review-card button:hover {
+    background: #ff315e;
+    border-color: #ff315e;
+    color: white;
+}

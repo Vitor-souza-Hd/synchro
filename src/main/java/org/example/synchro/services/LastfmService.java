@@ -472,6 +472,95 @@ public class LastfmService {
     // GERAR ASSINATURA DA API LAST.FM
     // =========================================================
 
+    // =====================================================
+    // CONFIRMAR EXISTENCIA DE UMA MUSICA NO LAST.FM
+    // =====================================================
+
+
+    // =====================================================
+    // CONFIRMAR EXISTENCIA DE UMA MUSICA NO LAST.FM
+    // =====================================================
+
+    public Mono<Boolean> confirmarMusica(
+            String titulo,
+            String artista
+    ) {
+
+        if (titulo == null || titulo.isBlank()
+                || artista == null || artista.isBlank()) {
+
+            return Mono.just(false);
+        }
+
+        String tituloLimpo = titulo.trim();
+        String artistaLimpo = artista.trim();
+
+        return webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .queryParam("method", "track.getInfo")
+                        .queryParam("track", tituloLimpo)
+                        .queryParam("artist", artistaLimpo)
+                        .queryParam("api_key", config.getApiKey())
+                        .queryParam("format", "json")
+                        .build()
+                )
+                .retrieve()
+
+                // Recebe a resposta como texto primeiro,
+                // evitando a desserializacao direta
+                // de JsonNode pelo WebClient.
+                .bodyToMono(String.class)
+
+                .map(json -> {
+
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+
+                        var resposta = mapper.readTree(json);
+
+                        // O Last.fm pode devolver erros
+                        // dentro de um JSON HTTP 200.
+                        if (resposta.has("error")) {
+                            return false;
+                        }
+
+                        var track = resposta.path("track");
+
+                        if (track.isMissingNode()
+                                || track.isNull()) {
+                            return false;
+                        }
+
+                        String nomeConfirmado =
+                                track.path("name").asText("");
+
+                        var artistNode = track.path("artist");
+
+                        String artistaConfirmado =
+                                artistNode.isTextual()
+                                        ? artistNode.asText()
+                                        : artistNode.path("name")
+                                        .asText("");
+
+                        return nomeConfirmado.trim()
+                                .equalsIgnoreCase(tituloLimpo)
+
+                                && artistaConfirmado.trim()
+                                .equalsIgnoreCase(artistaLimpo);
+
+                    } catch (Exception error) {
+
+                        throw new IllegalStateException(
+                                "Erro ao interpretar resposta do Last.fm",
+                                error
+                        );
+                    }
+                })
+                .timeout(Duration.ofSeconds(15));
+    }
+
+
     private String generateApiSignature(
             String token
     ) {
