@@ -1,211 +1,307 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    // =====================================================
+    // FOTOS DOS ARTISTAS - WIKIDATA / WIKIMEDIA COMMONS
+    // =====================================================
+
     const container = document.querySelector(".artist");
 
     if (!container) return;
 
     const processed = new WeakSet();
-    const cache = new Map();
+    const imageCache = new Map();
 
-    const placeholderSvg = `
+    // Avatar neutro quando nao encontramos foto confiavel.
+    const avatarSvg = `
         <svg xmlns="http://www.w3.org/2000/svg"
-             width="240" height="240"
              viewBox="0 0 240 240">
             <rect width="240" height="240" fill="#252525"/>
             <circle cx="120" cy="92" r="42" fill="#777"/>
-            <path d="M39 214c0-48 35-76 81-76
-                     s81 28 81 76" fill="#777"/>
+            <path d="M39 214c0-48 35-76 81-76s81 28 81 76"
+                  fill="#777"/>
         </svg>
     `;
 
     const placeholder =
         "data:image/svg+xml;charset=utf-8," +
-        encodeURIComponent(placeholderSvg);
+        encodeURIComponent(avatarSvg);
 
-    function normalize(name) {
-        return String(name || "")
+    function normalize(text) {
+        return String(text || "")
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .replace(/_/g, " ")
-            .toLowerCase()
             .replace(/\s+/g, " ")
+            .toLowerCase()
             .trim();
     }
 
-    function validImage(url) {
-        try {
-            const parsed = new URL(url);
+    // Descricoes de pessoas e grupos musicais.
+    // Evitamos termos genericos como "artista" ou "music".
+    const musicalTerms = [
+        "singer",
+        "songwriter",
+        "musician",
+        "rapper",
+        "vocalist",
+        "record producer",
+        "musical group",
+        "music group",
+        "musical duo",
+        "rock band",
+        "pop band",
+        "metal band",
+        "punk band",
+        "indie band",
+        "hip hop group",
+        "hip-hop group",
+        "folk rock band",
+        "disc jockey",
+        "cantor",
+        "cantora",
+        "compositor",
+        "compositora",
+        "musico",
+        "musica brasileira",
+        "banda",
+        "grupo musical",
+        "dupla musical",
+        "produtor musical",
+        "produtora musical"
+    ];
 
-            return parsed.protocol === "https:" &&
-                parsed.hostname === "upload.wikimedia.org";
-        } catch {
-            return false;
-        }
+    const musicalPattern = new RegExp(
+        "(^|[^a-z0-9])(" +
+        musicalTerms
+            .map(term => normalize(term))
+            .map(term =>
+                term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+            )
+            .join("|") +
+        ")([^a-z0-9]|$)",
+        "i"
+    );
+
+    function hasMusicalDescription(description) {
+        return musicalPattern.test(normalize(description));
     }
 
+    function isMatchingName(expected, actual) {
+        const a = normalize(expected);
+        const b = normalize(actual);
 
-    async function wikipediaImage(name, language) {
+        return b === a ||
+            b.startsWith(a + " (");
+    }
 
-        const url = new URL(
-            `https://${language}.wikipedia.org/w/api.php`
-        );
-
-        url.searchParams.set("action", "query");
-        url.searchParams.set("titles", name);
-        url.searchParams.set("prop", "pageimages|extracts");
-        url.searchParams.set("piprop", "thumbnail");
-        url.searchParams.set("pithumbsize", "500");
-        url.searchParams.set("exintro", "1");
-        url.searchParams.set("explaintext", "1");
-        url.searchParams.set("exsentences", "3");
-        url.searchParams.set("format", "json");
-        url.searchParams.set("formatversion", "2");
-        url.searchParams.set("redirects", "1");
-        url.searchParams.set("origin", "*");
-
-        const response = await fetch(url);
+    async function getJson(url) {
+        const response = await fetch(url, {
+            headers: {
+                Accept: "application/json"
+            }
+        });
 
         if (!response.ok) {
-            throw new Error(
-                `Wikipedia HTTP ${response.status}`
-            );
+            throw new Error("HTTP " + response.status);
         }
 
-        const data = await response.json();
-        const pages = data?.query?.pages || [];
+        return response.json();
+    }
 
-        // Termos que indicam que a pagina
-        // descreve uma pessoa ou grupo musical.
-        const musicalTerms = [
-            "singer",
-            "musician",
-            "rapper",
-            "record producer",
-            "songwriter",
-            "musical group",
-            "music group",
-            "rock band",
-            "pop band",
-            "hip hop group",
-            "vocalist",
-            "disc jockey",
-            "dj",
-            "cantor",
-            "cantora",
-            "músico",
-            "música",
-            "banda",
-            "grupo musical",
-            "compositor",
-            "compositora",
-            "rapper",
-            "produtor musical",
-            "produtora musical",
-            "dupla musical",
-            "artista musical"
-        ];
+    // =====================================================
+    // BUSCAR ENTIDADES NO WIKIDATA
+    // =====================================================
 
-        const expected = normalize(name);
+    async function searchWikidata(name, language) {
+        const url = new URL(
+            "https://www.wikidata.org/w/api.php"
+        );
 
-        for (const page of pages) {
+        url.searchParams.set("action", "wbsearchentities");
+        url.searchParams.set("search", name);
+        url.searchParams.set("language", language);
+        url.searchParams.set("uselang", language);
+        url.searchParams.set("type", "item");
+        url.searchParams.set("limit", "10");
+        url.searchParams.set("format", "json");
+        url.searchParams.set("origin", "*");
 
-            if (page.missing) continue;
+        const data = await getJson(url);
 
-            const image = page.thumbnail?.source;
+        return Array.isArray(data.search)
+            ? data.search
+            : [];
+    }
 
-            if (!validImage(image)) continue;
+    // =====================================================
+    // CONSULTAR A ENTIDADE E SUA FOTO
+    // =====================================================
 
-            const title = normalize(page.title);
+    async function getWikidataEntity(id) {
+        const url = new URL(
+            "https://www.wikidata.org/w/api.php"
+        );
 
-            // Confirma correspondencia do nome.
-            if (
-                title !== expected &&
-                !title.startsWith(expected + " (")
-            ) {
+        url.searchParams.set("action", "wbgetentities");
+        url.searchParams.set("ids", id);
+        url.searchParams.set(
+            "props",
+            "labels|descriptions|claims"
+        );
+        url.searchParams.set("languages", "en|pt");
+        url.searchParams.set("format", "json");
+        url.searchParams.set("origin", "*");
+
+        const data = await getJson(url);
+
+        return data.entities?.[id] || null;
+    }
+
+    function getImageFilename(entity) {
+        const claims = entity?.claims?.P18;
+
+        if (!Array.isArray(claims)) return null;
+
+        const claim = claims.find(item =>
+            item.rank !== "deprecated" &&
+            typeof item.mainsnak?.datavalue?.value ===
+            "string"
+        );
+
+        return claim?.mainsnak?.datavalue?.value || null;
+    }
+
+    function commonsImage(filename) {
+        if (!filename || filename.length > 300) return null;
+
+        // Nome de arquivo vindo do Wikidata.
+        // Special:FilePath resolve a foto hospedada no Commons.
+        return (
+            "https://commons.wikimedia.org/wiki/Special:FilePath/" +
+            encodeURIComponent(filename) +
+            "?width=500"
+        );
+    }
+
+    function entityDescription(entity) {
+        return [
+            entity.descriptions?.en?.value,
+            entity.descriptions?.pt?.value
+        ].filter(Boolean).join(" ");
+    }
+
+    function validEntityForArtist(entity, name) {
+        const labels = [
+            entity.labels?.en?.value,
+            entity.labels?.pt?.value
+        ].filter(Boolean);
+
+        if (!labels.some(label =>
+            isMatchingName(name, label)
+        )) {
+            return false;
+        }
+
+        return hasMusicalDescription(
+            entityDescription(entity)
+        );
+    }
+
+    async function findWikidataPhoto(name) {
+
+        for (const language of ["en", "pt"]) {
+
+            let results;
+
+            try {
+                results = await searchWikidata(
+                    name,
+                    language
+                );
+            } catch (error) {
+                console.warn(
+                    "Erro ao buscar artista no Wikidata:",
+                    name,
+                    error
+                );
                 continue;
             }
 
-            const description = normalize(
-                page.extract || ""
+            // Examinamos candidatos com nomes correspondentes
+            // e descricoes especificamente musicais.
+            const candidates = results.filter(result =>
+                isMatchingName(name, result.label) &&
+                hasMusicalDescription(result.description)
             );
 
-            // Nao aceita paginas sem descricao suficiente
-            // para confirmar que se trata de musica.
-            if (!description) continue;
+            for (const candidate of candidates.slice(0, 4)) {
 
-            const isMusical = musicalTerms.some(term => {
+                try {
+                    const entity = await getWikidataEntity(
+                        candidate.id
+                    );
 
-                const normalizedTerm = normalize(term);
+                    if (!entity ||
+                        !validEntityForArtist(entity, name)) {
+                        continue;
+                    }
 
-                // Evita falsos positivos com palavras curtas,
-                // como "dj", dentro de outras palavras.
-                const escaped = normalizedTerm.replace(
-                    /[.*+?^${}()|[\]\\]/g,
-                    "\\$&"
-                );
+                    const filename = getImageFilename(entity);
 
-                const regex = new RegExp(
-                    `(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`,
-                    "i"
-                );
+                    if (filename) {
+                        return commonsImage(filename);
+                    }
 
-                return regex.test(description);
-            });
-
-            if (!isMusical) {
-                console.info(
-                    "Imagem descartada: página não confirmada como musical.",
-                    name,
-                    page.title
-                );
-
-                continue;
+                } catch (error) {
+                    console.warn(
+                        "Erro ao consultar entidade musical:",
+                        candidate.id,
+                        error
+                    );
+                }
             }
-
-            return image;
         }
 
         return null;
     }
 
+    // =====================================================
+    // CACHE DAS FOTOS
+    // =====================================================
 
-    async function findImage(name) {
-        if (cache.has(name)) {
-            return cache.get(name);
+    async function findPhoto(name) {
+        const key = normalize(name);
+
+        if (!imageCache.has(key)) {
+            imageCache.set(
+                key,
+                findWikidataPhoto(name)
+                    .catch(error => {
+                        console.warn(
+                            "Foto indisponivel:",
+                            name,
+                            error
+                        );
+                        return null;
+                    })
+            );
         }
 
-        const pending = (async () => {
-            for (const language of ["pt", "en"]) {
-                try {
-                    const url = await wikipediaImage(
-                        name,
-                        language
-                    );
-
-                    if (url) return url;
-                } catch (error) {
-                    console.warn(
-                        `Foto indisponível (${language}):`,
-                        name,
-                        error
-                    );
-                }
-            }
-
-            return null;
-        })();
-
-        cache.set(name, pending);
-        return pending;
+        return imageCache.get(key);
     }
 
-    function checkCards() {
+    // =====================================================
+    // APLICAR FOTOS NOS CARTOES
+    // =====================================================
+
+    function updateArtistCards() {
         const cards = container.querySelectorAll(
             ".artist-card"
         );
 
         cards.forEach(card => {
+
             if (processed.has(card)) return;
             processed.add(card);
 
@@ -224,33 +320,45 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             img.src = placeholder;
-            img.alt = "Artista: " + name;
+            img.alt = "Imagem do artista " + name;
             img.loading = "lazy";
+            img.decoding = "async";
 
-            const target = img;
+            const currentImg = img;
 
-            findImage(name).then(url => {
-                if (!target.isConnected) return;
+            findPhoto(name).then(url => {
 
-                if (url) {
-                    target.onerror = () => {
-                        target.onerror = null;
-                        target.src = placeholder;
-                    };
+                if (!currentImg.isConnected) return;
 
-                    target.src = url;
+                if (!url) {
+                    currentImg.src = placeholder;
+                    return;
                 }
+
+                currentImg.onerror = () => {
+                    currentImg.onerror = null;
+                    currentImg.src = placeholder;
+
+                    console.info(
+                        "Imagem indisponivel no Commons:",
+                        name
+                    );
+                };
+
+                currentImg.src = url;
             });
         });
     }
 
-    // O user3.js carrega rankings de forma assincrona.
-    // O observador identifica os cards novos.
-    const observer = new MutationObserver(checkCards);
+    // O ranking e carregado de forma assincrona
+    // e pode mudar quando o periodo e alterado.
+    const observer = new MutationObserver(
+        updateArtistCards
+    );
 
     observer.observe(container, {
         childList: true
     });
 
-    checkCards();
+    updateArtistCards();
 });
