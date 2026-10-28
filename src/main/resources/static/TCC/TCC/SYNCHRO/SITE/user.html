@@ -57,6 +57,50 @@
                                 <p id="photoFeedback" role="status" aria-live="polite"></p>
                             </div>
                         </div>
+
+                        <!-- PERSONALIZACAO DO BANNER -->
+                        <div class="profile-banner-editor">
+
+                            <button id="editBannerButton" type="button">
+                                <i class="fa-solid fa-image"></i>
+                                Alterar banner
+                            </button>
+
+                            <div id="bannerEditor" hidden>
+
+                                <label for="bannerUrlInput">
+                                    URL HTTPS da imagem de capa
+                                </label>
+
+                                <input
+                                        id="bannerUrlInput"
+                                        type="url"
+                                        maxlength="2000"
+                                        placeholder="https://exemplo.com/banner.jpg"
+                                >
+
+                                <div class="banner-actions">
+
+                                    <button id="saveBannerButton" type="button">
+                                        Salvar banner
+                                    </button>
+
+                                    <button id="removeBannerButton" type="button">
+                                        Remover banner
+                                    </button>
+
+                                    <button id="cancelBannerButton" type="button">
+                                        Cancelar
+                                    </button>
+
+                                </div>
+
+                                <p id="bannerFeedback" role="status"></p>
+
+                            </div>
+
+                        </div>
+
                         <button id="lastfm-connect" class="lastfm-button" type="button">
                             <i class="fa-brands fa-lastfm"></i><span>Conectar seu Last.fm</span>
                         </button>
@@ -124,5 +168,7 @@
 <script src="busca.js"></script>
 <script src="foto-perfil.js"></script>
 <script src="generos-perfil.js"></script>
+<script src="banner-perfil.js"></script>
+<script src="fotos-artistas-perfil.js"></script>
 </body>
 </html>

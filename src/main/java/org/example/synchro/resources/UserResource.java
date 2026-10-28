@@ -259,6 +259,94 @@ public class UserResource {
     }
 
     // =====================================================
+    // BANNER PERSONALIZADO DO USUARIO
+    // =====================================================
+
+    @GetMapping("/me/banner")
+    @Transactional(readOnly = true)
+    public ResponseEntity<BannerResponse> getBanner(
+            @CookieValue(
+                    name = "token_jwt",
+                    required = false
+            ) String token
+    ) {
+        Long userId = obterIdAutenticado(token);
+
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return userRepository.findById(userId)
+                .map(user -> {
+                    UserData data = user.getData();
+
+                    String url = data == null
+                            ? null
+                            : data.getBannerImageUrl();
+
+                    return ResponseEntity.ok(
+                            new BannerResponse(url)
+                    );
+                })
+                .orElseGet(() ->
+                        ResponseEntity.notFound().build()
+                );
+    }
+
+    @PutMapping("/me/banner")
+    @Transactional
+    public ResponseEntity<BannerResponse> updateBanner(
+            @CookieValue(
+                    name = "token_jwt",
+                    required = false
+            ) String token,
+
+            @RequestBody BannerRequest request
+    ) {
+        Long userId = obterIdAutenticado(token);
+
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        if (request == null || request.imageUrl() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String url = request.imageUrl().trim();
+
+        // Uma string vazia remove a personalizacao.
+        if (!url.isEmpty() && !urlImagemValida(url)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        User user = userRepository.findById(userId)
+                .orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        UserData data = obterOuCriarDados(user);
+
+        data.setBannerImageUrl(
+                url.isEmpty() ? null : url
+        );
+
+        userDataRepository.save(data);
+
+        return ResponseEntity.ok(
+                new BannerResponse(data.getBannerImageUrl())
+        );
+    }
+
+    public record BannerRequest(String imageUrl) {
+    }
+
+    public record BannerResponse(String bannerImageUrl) {
+    }
+
+    // =====================================================
     // AUXILIARES DO PERFIL
     // =====================================================
 
