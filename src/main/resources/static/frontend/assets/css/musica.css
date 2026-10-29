@@ -1,0 +1,67 @@
+/* Gerado por IA */
+.song-page { color: #f5f5f5; }
+.song-page .container { grid-template-columns: 250px minmax(0, 1fr); gap: 16px; max-width: 1800px; }
+.song-page .container main { padding: 20px 28px 48px 20px; min-width: 0; }
+.song-page .container .sidebar { min-width: 0; justify-content: flex-start; gap: 0; padding: 24px 34px; }
+.song-page .sidebar .logo { margin-bottom: 40px; }
+.song-page .sidebar .menu { margin-bottom: 64px; }
+.song-page .container .sidebar .logo a, .song-page .container .sidebar .logo i { color: #3860ff; animation: none; }
+.song-page .search-bar { padding: 10px; margin-bottom: 32px; }
+.song-page .search-box { flex: 1; width: auto; min-width: 0; }
+.song-page .nav-links { gap: 20px; flex-shrink: 0; }
+.song-page .nav-links a { font-size: 15px; }
+.song-page .nav-links i { font-size: 24px; }
+.song-page .artist-header { margin-top: 0; padding: 32px; gap: 34px; border: 0; border-radius: 18px; background: linear-gradient(110deg, #30212c, #191919); }
+.song-page .artist-image img { width: 225px; height: 225px; border-radius: 12px; box-shadow: none; }
+.song-page .artist-info h1 { font-size: clamp(36px, 4vw, 60px); line-height: 1.1; margin: 6px 0 10px; }
+.song-page .catalog-artists { margin: 0 0 10px; gap: 12px; }
+.song-page .catalog-artists a { color: #fff; font-size: 22px; font-weight: 600; text-decoration: none; }
+.song-page .catalog-artists a:hover, .song-page .catalog-meta a:hover { text-decoration: underline; }
+.song-page .catalog-meta { color: #aaa; font-size: 15px; margin: 0 0 16px; }
+.song-page .catalog-meta a { color: #c3bdc3; }
+.song-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px; }
+.song-tags span { padding: 7px 14px; background: #ffffff14; border-radius: 25px; color: #c9c4c9; font-size: 13px; }
+.song-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.lastfm-button { display: inline-flex; align-items: center; gap: 9px; background: #ff124b; color: white; padding: 13px 20px; border-radius: 24px; font-size: 15px; font-weight: 700; }
+.lastfm-button:hover { background: #ff3465; }
+.song-page #favoriteBtn { border: 1px solid #ffffff30; padding: 11px 16px; background: transparent; font-weight: 500; }
+.song-page #favoriteBtn:hover { background: #ffffff12; transform: none; }
+.song-page h2 { font-size: 26px; margin: 0 0 22px; }
+.song-statistics { margin-top: 40px; }
+.statistics-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.stat-card { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; padding: 25px 24px; border-radius: 13px; background: #222; min-width: 0; }
+.stat-card i { color: #ff174b; font-size: 23px; }
+.stat-card span { color: #aaa; font-size: 14px; }
+.stat-card strong { font-size: 26px; overflow-wrap: anywhere; }
+.statistics-source, .song-attribution { color: #969096; font-size: 13px; margin-top: 12px; }
+.song-page .biography { margin-top: 38px; }
+.song-page .biography #catalogDescription { color: #c4c0c4; max-width: 1000px; font-size: 15px; line-height: 1.9; }
+.song-page a:focus-visible, .song-page button:focus-visible { outline: 2px solid #ff829f; outline-offset: 4px; }
+@media (max-width: 1100px) {
+    .song-page .container { grid-template-columns: 220px minmax(0, 1fr); gap: 4px; }
+    .song-page .artist-header { gap: 24px; padding: 24px; }
+    .song-page .artist-image img { width: 180px; height: 180px; }
+    .song-page .nav-links { gap: 10px; }
+    .song-page .nav-links a { font-size: 12px; }
+}
+@media (max-width: 768px) {
+    .song-page .container { display: block; }
+    .song-page .container main { padding: 100px 18px 36px; }
+    .song-page .container .sidebar { width: 250px; }
+    .song-page .search-bar { padding: 14px; background: #111e; }
+    .song-page .search-box { margin-left: 40px; }
+    .song-page .nav-links a:not(:last-child) { display: none; }
+    .song-page .artist-header { align-items: flex-start; flex-direction: column; padding: 24px; }
+    .song-page .artist-image img { width: 190px; height: 190px; }
+    .song-page .artist-info h1 { font-size: 40px; }
+    .statistics-grid { gap: 10px; }
+    .stat-card { padding: 18px 12px; }
+    .stat-card strong { font-size: 20px; }
+    .stat-card span { font-size: 12px; }
+}
+@media (max-width: 400px) {
+    .statistics-grid { grid-template-columns: 1fr; }
+    .stat-card { display: grid; grid-template-columns: 28px 1fr; align-items: center; }
+    .stat-card strong { grid-column: 2; }
+}
+/* Gerado por IA */

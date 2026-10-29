@@ -16,7 +16,16 @@ public abstract class Midia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
     private String titulo;
+    @Column(columnDefinition = "text")
     private String descricao;
+
+    @Embedded
+    private LastFmMetadata lastFm = new LastFmMetadata();
+
+    public LastFmMetadata getLastFm() {
+        if (lastFm == null) lastFm = new LastFmMetadata();
+        return lastFm;
+    }
 
     @OneToMany(cascade = CascadeType.ALL,mappedBy = "midia")
     private Set<Review> review = new HashSet<>();

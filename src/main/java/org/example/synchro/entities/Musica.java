@@ -25,6 +25,7 @@ public class Musica extends Midia implements Serializable {
 
     private Duration duracao;
     private String genero;
+    private java.time.Instant generoConsultadoEm;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

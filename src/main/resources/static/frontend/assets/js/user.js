@@ -7,12 +7,13 @@ async function loadCurrentUserProfile() {
     }
 
     try {
-        const response = await fetch("/users/me", {
+        const publicUser = new URLSearchParams(window.location.search).get('user');
+        const response = await fetch(publicUser ? `/catalog/users/${encodeURIComponent(publicUser)}` : "/users/me", {
             credentials: "same-origin",
             headers: { Accept: "application/json" }
         });
 
-        if (response.status === 401 || response.status === 403 || response.status === 404) {
+        if (!publicUser && (response.status === 401 || response.status === 403 || response.status === 404)) {
             window.location.replace("login.html");
             return;
         }
@@ -23,6 +24,10 @@ async function loadCurrentUserProfile() {
 
         const user = await response.json();
         renderCurrentUser(user);
+        if (publicUser) {
+            document.querySelector('.banner-info h1').textContent = 'Perfil';
+            ['profileEmail', 'profileBirthDay', 'profileGender'].forEach(id => document.getElementById(id).hidden = true);
+        }
 
         document.getElementById("profileStatus").hidden = true;
         document.getElementById("profilePage").hidden = false;

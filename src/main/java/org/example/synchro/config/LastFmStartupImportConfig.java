@@ -3,6 +3,8 @@ package org.example.synchro.config;
 import org.example.synchro.importer.LastFmHistoryClient;
 import org.example.synchro.importer.LastFmHistoryImporter;
 import org.example.synchro.importer.LastFmImportStore;
+import org.example.synchro.importer.LastFmGenreImporter;
+import org.example.synchro.importer.LastFmGenreStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +18,8 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 @Profile("!test & !lastfm-import")
 @ConditionalOnProperty(name = "lastfm.import.on-startup", havingValue = "true")
-@Import({LastFmHistoryClient.class, LastFmHistoryImporter.class, LastFmImportStore.class})
+@Import({LastFmHistoryClient.class, LastFmHistoryImporter.class, LastFmImportStore.class,
+        LastFmGenreImporter.class, LastFmGenreStore.class})
 public class LastFmStartupImportConfig {
     private static final Logger log = LoggerFactory.getLogger(LastFmStartupImportConfig.class);
 

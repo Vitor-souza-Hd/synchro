@@ -198,10 +198,75 @@ const artistsData = {
 // =====================================================
 
 const params = new URLSearchParams(window.location.search);
+document.querySelector('.menu-toggle')?.addEventListener('click', () => {
+    document.querySelector('.sidebar')?.classList.toggle('active');
+});
 
-const artistNameFromUrl = params.get("artist");
+const artistNameFromUrl = (params.get("artist") || '').trim();
+let artistName = artistNameFromUrl || '';
 
-const artist = artistsData[artistNameFromUrl];
+let artist = Object.values(artistsData).find(item => item.name.toLowerCase() === artistNameFromUrl.toLowerCase());
+const artistStatus = document.createElement('p');
+artistStatus.setAttribute('role', 'status');
+artistStatus.style.color = '#cbc4d6';
+document.querySelector('.artist-header').before(artistStatus);
+
+function setArtistLoading(loading) {
+    document.querySelector('.artist-header').setAttribute('aria-busy', String(loading));
+    document.querySelectorAll('.artist-section').forEach(section => { section.hidden = loading; });
+    document.getElementById('favoriteBtn').disabled = loading;
+    document.querySelectorAll('.open-review').forEach(button => { button.disabled = loading; });
+}
+
+async function loadCatalogArtist() {
+    const id = params.get('id');
+    if (!id && !artistNameFromUrl) {
+        artistStatus.textContent = 'Selecione um artista nos resultados da pesquisa.';
+        return;
+    }
+    setArtistLoading(true);
+    artistStatus.textContent = 'Carregando informações do artista…';
+    document.getElementById('artistName').textContent = 'Carregando...';
+    document.getElementById('artistImage').src = '../assets/images/catalog-placeholder.svg';
+    try {
+        if (id) await fetch(`/catalog/artists/${encodeURIComponent(id)}/refresh`, { method: 'POST' }).catch(() => {});
+        const endpoint = id ? `/catalog/artists/${encodeURIComponent(id)}`
+            : `/catalog/artists/by-name?name=${encodeURIComponent(artistNameFromUrl)}`;
+        const response = await fetch(endpoint, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+        if (response.status === 404 && artist && !id) {
+            carregarPaginaArtista(artist);
+            setArtistLoading(false);
+            artistStatus.textContent = '';
+            return;
+        }
+        if (!response.ok) throw new Error(response.status === 404 ? 'Artista não encontrado' : 'Não foi possível carregar o artista.');
+        const data = await response.json();
+        const saved = data.artist;
+        artistName = saved.nome;
+        artist = {
+            name: saved.nome,
+            image: saved.imgUrl || artistsData[saved.nome]?.image || '../assets/images/catalog-placeholder.svg',
+            bio: new DOMParser().parseFromString(saved.biografia || 'Biografia não disponível no catálogo.', 'text/html').body.textContent,
+            genre: saved.lastFm?.tags || [],
+            tracks: data.musicas.map(item => ({ id: item.id, name: item.titulo })),
+            albums: data.albums.map(item => ({ id: item.id, name: item.titulo, image: item.lastFm?.imageUrl || '../assets/images/catalog-placeholder.svg' }))
+        };
+        carregarPaginaArtista(artist);
+        setArtistLoading(false);
+        artistStatus.textContent = '';
+        atualizarBotaoFavorito();
+        artistLabel.textContent = artistName;
+    } catch (error) {
+        document.querySelector('.artist-header').setAttribute('aria-busy', 'false');
+        document.getElementById('artistName').textContent = error.message;
+        artistStatus.textContent = error.message === 'Artista não encontrado'
+            ? 'Este artista não está disponível. Volte à pesquisa e selecione um resultado atualizado.'
+            : 'Ocorreu uma falha ao carregar o artista. Recarregue a página para tentar novamente.';
+    }
+}
+// Run after the rest of the page's event handlers and labels have been initialized.
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadCatalogArtist);
+else queueMicrotask(loadCatalogArtist);
 
 
 // =====================================================
@@ -210,12 +275,12 @@ const artist = artistsData[artistNameFromUrl];
 
 if (!artist) {
 
-    const artistNameElement =
+        const artistNameElement =
         document.getElementById("artistName");
 
     if (artistNameElement) {
         artistNameElement.textContent =
-            "Artista não encontrado";
+            params.has('id') || artistNameFromUrl ? "Carregando..." : "Selecione um artista";
     }
 
 } else {
@@ -260,6 +325,7 @@ function carregarPaginaArtista(artist) {
 
         artistImage.alt =
             artist.name;
+        artistImage.onerror = () => { artistImage.onerror = null; artistImage.src = '../assets/images/catalog-placeholder.svg'; };
 
     }
 
@@ -350,6 +416,14 @@ function carregarMusicas(tracks, artistName) {
 
 
     tracks.forEach((track, index) => {
+        if (typeof track === 'object') {
+            const link = document.createElement('a');
+            link.className = 'track catalog-link';
+            link.href = `musica.html?id=${encodeURIComponent(track.id)}`;
+            link.textContent = `${String(index + 1).padStart(2, '0')} · ${track.name}`;
+            container.append(link);
+            return;
+        }
 
         const div =
             document.createElement("div");
@@ -392,6 +466,7 @@ function carregarMusicas(tracks, artistName) {
         container.appendChild(div);
 
     });
+    if (!tracks.length) container.textContent = 'Nenhuma música cadastrada para este artista.';
 
 }
 
@@ -413,6 +488,19 @@ function carregarAlbuns(albums, artistName) {
 
 
     albums.forEach(album => {
+        if (album.id != null) {
+            const link = document.createElement('a');
+            link.className = 'album-card catalog-link';
+            link.href = `album.html?id=${encodeURIComponent(album.id)}`;
+            const image = document.createElement('img');
+            image.src = album.image;
+            image.alt = '';
+            const title = document.createElement('h3');
+            title.textContent = album.name;
+            link.append(image, title);
+            container.append(link);
+            return;
+        }
 
         const div =
             document.createElement("div");
@@ -443,6 +531,7 @@ function carregarAlbuns(albums, artistName) {
         container.appendChild(div);
 
     });
+    if (!albums.length) container.textContent = 'Nenhum álbum cadastrado para este artista.';
 
 }
 
@@ -453,12 +542,13 @@ function carregarAlbuns(albums, artistName) {
 const favoriteBtn =
     document.getElementById("favoriteBtn");
 
-if (favoriteBtn && artist) {
+if (favoriteBtn) {
 
     atualizarBotaoFavorito();
 
 
     favoriteBtn.addEventListener("click", () => {
+        if (!artist) return;
 
         let favorites =
             JSON.parse(

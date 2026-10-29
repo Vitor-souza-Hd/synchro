@@ -7,10 +7,12 @@ public class LastFmHistoryImporter {
     private static final Logger log = LoggerFactory.getLogger(LastFmHistoryImporter.class);
     private final LastFmHistoryClient client;
     private final LastFmImportStore store;
+    private final LastFmGenreImporter genres;
 
-    public LastFmHistoryImporter(LastFmHistoryClient client, LastFmImportStore store) {
+    public LastFmHistoryImporter(LastFmHistoryClient client, LastFmImportStore store, LastFmGenreImporter genres) {
         this.client = client;
         this.store = store;
+        this.genres = genres;
     }
 
     public void run(String username) throws Exception {
@@ -26,5 +28,6 @@ public class LastFmHistoryImporter {
                     username, state.getNextPage() - 1, state.getImported(), state.isComplete());
             if (!state.isComplete()) Thread.sleep(350);
         }
+        genres.run(username);
     }
 }

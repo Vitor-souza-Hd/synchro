@@ -17,7 +17,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EntityScan("org.example.synchro.entities")
 @EnableJpaRepositories("org.example.synchro.repositories")
 @EnableConfigurationProperties(LastFmConfig.class)
-@Import({LastFmImportRunner.class, LastFmHistoryImporter.class, LastFmImportStore.class, LastFmHistoryClient.class, CatalogNameMigration.class})
+@Import({LastFmImportRunner.class, LastFmHistoryImporter.class, LastFmImportStore.class, LastFmHistoryClient.class,
+        CatalogNameMigration.class, LastFmGenreImporter.class, LastFmGenreStore.class})
 public class LastFmImportApplication {
     public static void main(String[] args) {
         try (var context = SpringApplication.run(LastFmImportApplication.class, args)) {

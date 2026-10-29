@@ -12,7 +12,7 @@ class LastFmStartupImportTests {
     @Test
     void startupImportsConfiguredUser() throws Exception {
         var importedUser = new AtomicReference<String>();
-        var importer = new LastFmHistoryImporter(null, null) {
+        var importer = new LastFmHistoryImporter(null, null, null) {
             @Override
             public void run(String username) { importedUser.set(username); }
         };
@@ -22,7 +22,7 @@ class LastFmStartupImportTests {
 
     @Test
     void unavailableLastFmDoesNotPreventApplicationStartup() {
-        var importer = new LastFmHistoryImporter(null, null) {
+        var importer = new LastFmHistoryImporter(null, null, null) {
             @Override
             public void run(String username) { throw new IllegalStateException("Last.fm indisponível"); }
         };

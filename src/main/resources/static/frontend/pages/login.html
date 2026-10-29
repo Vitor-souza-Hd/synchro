@@ -1,90 +1,51 @@
 <!DOCTYPE html>
-
-<html lang="pt-br">
-
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link
-    href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
-    rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/login.css?v=20261023-1">
-<title>Synchro - Login</title>
+    <link rel="stylesheet" href="../assets/css/login.css?v=20261029-1">
+    <title>Synchro - Login</title>
 </head>
-
 <body>
 <main class="container">
-
-    <!-- VÍDEO DE FUNDO -->
-    <video autoplay loop muted playsinline class="background-video">
+    <video autoplay loop muted playsinline class="background-video" aria-hidden="true" tabindex="-1">
         <source src="../assets/videos/background-blur-video.mp4" type="video/mp4">
     </video>
-
-    <!-- CAMADA ESCURA SOBRE O VÍDEO -->
-    <div class="overlay"></div>
-
-    <!-- LOGIN -->
-    <form class="login">
-
+    <div class="overlay" aria-hidden="true"></div>
+    <form class="login" aria-labelledby="login-title">
+        <a class="back-link" href="../../index.html">← Voltar ao início</a>
         <div class="logo">
-            <h1>Synchro</h1>
+            <h1 id="login-title">Synchro</h1>
             <p>Entre na sua conta</p>
         </div>
-
         <div class="input-box">
-            <input
-                type="text"
-                name="username"
-                placeholder="Usuário ou e-mail"
-                autocomplete="username"
-                required>
-
-            <i class="bx bx-user"></i>
+            <label for="username">Usuário ou e-mail</label>
+            <input type="text" name="username" id="username" placeholder="Digite seu usuário ou e-mail"
+                   autocomplete="username" autocapitalize="none" spellcheck="false" required>
         </div>
-
         <div class="input-box">
-            <input
-                type="password"
-                placeholder="Senha"
-                autocomplete="current-password"
-                minlength="6"
-                required>
-
-            <i class="bx bx-lock-alt"></i>
+            <label for="password">Senha</label>
+            <div class="password-field">
+                <input type="password" name="password" id="password" placeholder="Digite sua senha"
+                       autocomplete="current-password" minlength="6" required>
+                <button class="password-toggle" type="button" aria-controls="password"
+                        aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+            </div>
         </div>
-
         <div class="remember-forgot">
-
-            <label>
+            <label for="remember-me">
                 <input type="checkbox" id="remember-me">
-                <span>Lembrar-me</span>
+                <span>Lembrar usuário</span>
             </label>
-
-            <a href="#">Esqueci minha senha</a>
-
         </div>
-
-        <button type="submit">
-            Entrar
-        </button>
-
-        <div class="divider">
-            <span>ou</span>
-        </div>
-
+        <p class="form-message" id="login-message" role="alert" hidden></p>
+        <button class="submit-button" type="submit">Entrar</button>
+        <div class="divider" aria-hidden="true"><span>ou</span></div>
         <div class="register-link">
-            <p>
-                Não tem uma conta?
-                <a href="formulario.html">
-                    Registrar-se
-                </a>
-            </p>
+            <p>Não tem uma conta? <a href="formulario.html">Registrar-se</a></p>
         </div>
-
     </form>
-
 </main>
-
-<script src="../assets/js/login.js?v=20261023-1"></script>
+<script src="../assets/js/login.js?v=20261029-1"></script>
 </body>
 </html>

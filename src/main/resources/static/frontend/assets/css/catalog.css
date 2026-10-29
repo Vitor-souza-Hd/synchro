@@ -1,0 +1,25 @@
+/* Gerado por IA */
+.catalog-link { color: #f5f3ff; text-decoration: none; }
+.catalog-link:hover { color: #d6c2ff; }
+.catalog-page .menu p { color: #bdb5ca; font-size: 13px; line-height: 1.6; }
+.catalog-link:focus-visible { outline: 2px solid #cbb5f5; outline-offset: 4px; }
+.catalog-artwork img { border-radius: 20px; }
+.catalog-meta { color: #cbc4d6; line-height: 1.8; margin-bottom: 18px; }
+.catalog-artists { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 14px; }
+.catalog-artists a { color: #d6c2ff; text-decoration: underline; text-underline-offset: 4px; }
+.catalog-page .artist-info { min-width: 0; }
+.catalog-page h1, .catalog-page .track { overflow-wrap: anywhere; }
+.catalog-page .artist-section { margin-top: 32px; }
+.catalog-page .track { color: #fff; text-decoration: none; }
+.catalog-page .track:hover, .catalog-page .track:focus-visible { background: #ffffff18; }
+.catalog-page .track-info { flex: 1; min-width: 0; }
+.catalog-page .track-info span { display: block; margin-top: 6px; color: #bdb5ca; }
+.catalog-page .biography p { white-space: pre-wrap; }
+.catalog-page [hidden] { display: none !important; }
+#catalogStatus { margin-top: 24px; color: #d0c7dd; }
+@media (max-width: 600px) {
+    .catalog-page .artist-header { padding: 24px 16px; gap: 20px; }
+    .catalog-page .artist-info h1 { font-size: clamp(28px, 8vw, 44px); line-height: 1.15; }
+    .catalog-page .artist-image img { width: 170px; height: 170px; }
+}
+/* Gerado por IA */

@@ -1,0 +1,72 @@
+<!-- Gerado por IA -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNCHRO | Álbum</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/artista.css">
+    <link rel="stylesheet" href="../assets/css/catalog.css">
+    <link rel="stylesheet" href="../assets/css/search.css">
+    <script src="../assets/js/search.js" defer></script>
+    <script src="../assets/js/media.js" defer></script>
+</head>
+<body class="catalog-page" data-media-type="album">
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo"><i class="bx bx-pulse"></i><a href="/">SYNCHRO</a></div>
+            <div class="menu">
+                <h5>Menu</h5>
+                <ul>
+                    <li><i class="bx bxs-bolt-circle"></i><a href="/">Explorar</a></li>
+                    <li><i class="bx bxs-user"></i><a href="user.html">Meu perfil</a></li>
+                </ul>
+            </div>
+            <div class="menu">
+                <h5>Sua biblioteca</h5>
+                <p>Encontre músicas, álbuns e artistas pela pesquisa.</p>
+            </div>
+        </aside>
+        <main>
+            <button class="menu-toggle" type="button" aria-label="Abrir menu"><i class="fa-solid fa-bars"></i></button>
+            <header class="search-bar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input class="search" type="search" placeholder="O que você quer ouvir?" aria-label="Buscar música">
+                </div>
+                <div class="nav-links"><a href="/">Explorar</a><a href="user.html">Meu perfil</a></div>
+            </header>
+            <p id="catalogStatus" role="status">Carregando álbum...</p>
+            <div id="catalogContent" hidden>
+                <section class="artist-header">
+                    <div class="artist-image catalog-artwork"><img src="../assets/images/catalog-placeholder.svg" id="catalogImage" alt=""></div>
+                    <div class="artist-info">
+                        <span class="artist-label">ÁLBUM</span>
+                        <h1 id="catalogTitle"></h1>
+                        <div id="catalogArtists" class="catalog-artists"></div>
+                        <p id="catalogMeta" class="catalog-meta"></p>
+                        <div class="button"><button id="favoriteBtn" type="button" aria-pressed="false">♡ Favoritar</button></div>
+                    </div>
+                </section>
+                <section class="artist-section" id="catalogAlbumSection" hidden>
+                    <h2>Álbum</h2>
+                    <div class="albums" id="catalogAlbum"></div>
+                </section>
+                <section class="artist-section" id="catalogTracksSection" hidden>
+                    <h2>Músicas no catálogo</h2>
+                    <p>Faixas disponíveis no Synchro para este álbum.</p>
+                    <div class="tracks" id="catalogTracks"></div>
+                </section>
+                <section class="artist-section biography">
+                    <h2>Sobre o álbum</h2>
+                    <p id="catalogDescription"></p>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+<!-- Gerado por IA -->

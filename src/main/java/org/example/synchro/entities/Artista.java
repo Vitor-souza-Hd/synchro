@@ -27,8 +27,18 @@ public class Artista implements Serializable {
     @PrePersist
     @PreUpdate
     private void normalizeName() { nomeKey = CatalogName.key(nome); }
+    @Column(length = 2048)
     private String imgUrl;
+    @Column(columnDefinition = "text")
     private String Biografia;
+
+    @Embedded
+    private LastFmMetadata lastFm = new LastFmMetadata();
+
+    public LastFmMetadata getLastFm() {
+        if (lastFm == null) lastFm = new LastFmMetadata();
+        return lastFm;
+    }
 
     @ManyToMany(mappedBy = "artistas", fetch = FetchType.LAZY)
     private Set<Musica> musicas = new HashSet<>();

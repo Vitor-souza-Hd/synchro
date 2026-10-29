@@ -1,0 +1,94 @@
+<!-- Gerado por IA -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNCHRO | Música</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/artista.css">
+    <link rel="stylesheet" href="../assets/css/catalog.css">
+    <link rel="stylesheet" href="../assets/css/search.css">
+    <link rel="stylesheet" href="../assets/css/musica.css">
+    <script src="../assets/js/search.js" defer></script>
+    <script src="../assets/js/media.js" defer></script>
+</head>
+<body class="catalog-page song-page" data-media-type="song">
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo"><i class="bx bx-pulse"></i><a href="/">SYNCHRO</a></div>
+            <div class="menu">
+                <h5>Menu</h5>
+                <ul>
+                    <li><i class="bx bxs-bolt-circle"></i><a href="/">Explorar</a></li>
+                    <li><i class="bx bxs-volume-full"></i><a href="/#genres">Gêneros</a></li>
+                    <li><i class="bx bxs-album"></i><a href="/#albums">Álbuns</a></li>
+                    <li><i class="bx bxs-microphone"></i><a href="/#artists">Artistas</a></li>
+                    <li><i class="bx bxs-user"></i><a href="user.html">Meu perfil</a></li>
+                </ul>
+            </div>
+            <div class="menu">
+                <h5>Sua biblioteca</h5>
+                <ul>
+                    <li><i class="bx bxs-user"></i><a href="user.html">Minha biblioteca</a></li>
+                    <li><i class="bx bxs-heart"></i><a href="#favoriteBtn">Favoritar música</a></li>
+                </ul>
+                <p>Pesquise no Last.fm e descubra novas músicas.</p>
+            </div>
+        </aside>
+        <main>
+            <button class="menu-toggle" type="button" aria-label="Abrir menu"><i class="fa-solid fa-bars"></i></button>
+            <header class="search-bar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input class="search" type="search" placeholder="O que você quer ouvir?" aria-label="Buscar música">
+                </div>
+                <nav class="nav-links" aria-label="Navegação"><a href="/">Início</a><a href="#statisticsTitle">Música</a><a href="/#artists">Artistas</a><a href="user.html" aria-label="Meu perfil"><i class="fa-solid fa-circle-user"></i></a></nav>
+            </header>
+            <p id="catalogStatus" role="status">Carregando música...</p>
+            <div id="catalogContent" hidden>
+                <section class="artist-header">
+                    <div class="artist-image catalog-artwork"><img src="../assets/images/catalog-placeholder.svg" id="catalogImage" alt=""></div>
+                    <div class="artist-info">
+                        <span class="artist-label">MÚSICA</span>
+                        <h1 id="catalogTitle"></h1>
+                        <div id="catalogArtists" class="catalog-artists"></div>
+                        <p id="catalogMeta" class="catalog-meta"></p>
+                        <div id="catalogTags" class="song-tags" aria-label="Tags do Last.fm"></div>
+                        <div class="song-actions">
+                            <a id="lastFmLink" class="lastfm-button" target="_blank" rel="noopener noreferrer" hidden><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Abrir no Last.fm</a>
+                            <button id="favoriteBtn" type="button" aria-pressed="false">♡ Favoritar</button>
+                        </div>
+                    </div>
+                </section>
+                <section class="song-statistics" aria-labelledby="statisticsTitle">
+                    <h2 id="statisticsTitle">Estatísticas</h2>
+                    <div class="statistics-grid">
+                        <article class="stat-card"><i class="fa-solid fa-headphones" aria-hidden="true"></i><span>Ouvintes</span><strong id="songListeners">Não informado</strong></article>
+                        <article class="stat-card"><i class="fa-regular fa-circle-play" aria-hidden="true"></i><span>Reproduções</span><strong id="songPlaycount">Não informado</strong></article>
+                        <article class="stat-card"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>Duração</span><strong id="songDuration">Não informado</strong></article>
+                    </div>
+                    <p class="statistics-source">Ouvintes e reproduções globais no Last.fm.</p>
+                </section>
+                <section class="artist-section" id="catalogAlbumSection" hidden>
+                    <h2>Álbum</h2>
+                    <div class="albums" id="catalogAlbum"></div>
+                </section>
+                <section class="artist-section" id="catalogTracksSection" hidden>
+                    <h2>Músicas no catálogo</h2>
+                    <p>Faixas disponíveis no Synchro para este álbum.</p>
+                    <div class="tracks" id="catalogTracks"></div>
+                </section>
+                <section class="artist-section biography">
+                    <h2>Sobre a música</h2>
+                    <p id="catalogDescription"></p>
+                    <p class="song-attribution" id="songAttribution" hidden>Informações do Last.fm. <a id="descriptionSource" target="_blank" rel="noopener noreferrer">Ler na fonte</a></p>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+<!-- Gerado por IA -->
