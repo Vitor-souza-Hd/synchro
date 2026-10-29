@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Álbum - Synchro</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="musica.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+
+    <style>
+        /* Correção do logo */
+        .sidebar { justify-content: flex-start !important; padding-top: 40px; }
+        .sidebar .logo { margin-bottom: 50px; }
+
+        /* Estilos do Formulário (já aberto) */
+        #albumReviewRating, #albumReviewText {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px;
+            background: #1f1f1f;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            margin-bottom: 15px;
+            margin-top: 5px;
+            display: block;
+        }
+        #albumReviewRating { max-width: 100px; text-align: center; }
+        #albumReviewRating:focus, #albumReviewText:focus {
+            outline: none;
+            border-color: #1db954;
+        }
+        .music-review-actions { display: flex; gap: 10px; margin-top: 10px; margin-bottom: 30px; }
+
+        #saveAlbumReview, #cancelAlbumReview {
+            padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; border: none; font-family: inherit; transition: 0.2s;
+        }
+        #saveAlbumReview { background: #333; color: #fff; border: 1px solid #555; }
+        #saveAlbumReview:hover { background: #444; transform: scale(1.02); }
+
+        #cancelAlbumReview { background: transparent; color: #b3b3b3; border: 1px solid #555; }
+        #cancelAlbumReview:hover { background: #333; color: #fff; }
+
+        #albumReviewEditor { max-width: 600px; }
+        #albumReviewEditor label { color: #b3b3b3; display: block; margin-bottom: 5px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="bx bx-pulse"></i>
+            <a href="/index.html">SYNCHRO</a>
+        </div>
+        <div class="menu">
+            <h5>Menu</h5>
+            <ul>
+                <li><i class="bx bxs-bolt-circle"></i><a href="/index.html">Explorar</a></li>
+                <li><i class="bx bxs-volume-full"></i><a href="#">Gêneros</a></li>
+                <li><i class="bx bxs-album"></i><a href="#">Álbuns</a></li>
+                <li><i class="bx bxs-microphone"></i><a href="#">Artistas</a></li>
+            </ul>
+        </div>
+        <div class="nav-footer">
+            <a href="#">Sobre o Synchro</a>
+        </div>
+    </aside>
+
+    <main>
+        <header class="search-bar">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input class="search" type="text" placeholder="O que você quer ouvir?">
+            </div>
+            <div class="nav-links">
+                <a href="/index.html">Início</a>
+            </div>
+        </header>
+
+        <section class="music-header">
+            <div class="music-cover">
+                <div id="albumPlaceholder" class="music-placeholder">
+                    <i class="bx bx-album"></i>
+                </div>
+            </div>
+            <div class="music-info">
+                <span class="music-label">ÁLBUM</span>
+                <h1 id="albumName">Carregando...</h1>
+                <p id="albumArtist" style="color: #b3b3b3; font-size: 1.2rem; margin-top: 10px;">
+                    Carregando artista...
+                </p>
+            </div>
+        </section>
+
+        <section class="music-section">
+            <h2>Músicas deste Álbum</h2>
+            <div id="trackList" style="margin-top: 20px;"></div>
+        </section>
+
+        <section class="music-section" id="albumReviewSection">
+            <h2>Avaliações da comunidade</h2>
+            <p id="albumReviewStatus" role="status" style="color: #1db954; margin-bottom: 20px;">Carregando avaliações...</p>
+
+            <div id="albumReviewControls">
+                <p id="albumReviewAverage" style="color: #b3b3b3; margin-bottom: 20px; font-size: 15px;"></p>
+
+                <!-- FORMULÁRIO JÁ ABERTO -->
+                <div id="albumReviewEditor">
+                    <label for="albumReviewRating">Sua nota (0 a 10)</label>
+                    <input id="albumReviewRating" type="number" min="0" max="10" step="1" value="8">
+
+                    <label for="albumReviewText">Seu comentário</label>
+                    <textarea id="albumReviewText" rows="3" maxlength="1000" placeholder="O que você achou deste álbum?"></textarea>
+
+                    <div class="music-review-actions">
+                        <button id="saveAlbumReview" type="button">Publicar avaliação</button>
+                        <button id="cancelAlbumReview" type="button">Limpar</button>
+                    </div>
+                    <p id="albumReviewFeedback" role="status" style="color:#ff4d4d; margin-top:10px;"></p>
+                </div>
+            </div>
+
+            <div id="albumReviewList" style="margin-top: 20px;"></div>
+        </section>
+    </main>
+</div>
+
+<script src="album.js"></script>
+</body>
+</html>
