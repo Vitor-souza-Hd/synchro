@@ -21,6 +21,12 @@ public class Artista implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nome;
+    @Column(unique = true)
+    private String nomeKey;
+
+    @PrePersist
+    @PreUpdate
+    private void normalizeName() { nomeKey = CatalogName.key(nome); }
     private String imgUrl;
     private String Biografia;
 

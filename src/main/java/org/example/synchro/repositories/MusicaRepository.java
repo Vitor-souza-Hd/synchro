@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface MusicaRepository extends JpaRepository<Musica, Long> {
+    java.util.Optional<Musica> findByTituloKey(String tituloKey);
 
     List<Musica> findByArtistas(Artista artista);
 

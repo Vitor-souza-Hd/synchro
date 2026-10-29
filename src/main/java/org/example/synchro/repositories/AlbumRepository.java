@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface AlbumRepository extends JpaRepository<Album, Long> {
+    java.util.Optional<Album> findByTituloKey(String tituloKey);
 
     List<Album> findByArtistas(Artista artista);
 

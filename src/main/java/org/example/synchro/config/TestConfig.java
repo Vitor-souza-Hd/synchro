@@ -7,6 +7,7 @@ import org.example.synchro.services.PasswordService;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Configuration
+@Profile("test")
 @RequiredArgsConstructor
 public class TestConfig implements CommandLineRunner {
 

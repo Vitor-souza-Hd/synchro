@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface ArtistaRepository extends JpaRepository<Artista, Long> {
+    java.util.Optional<Artista> findByNomeKey(String nomeKey);
 
     Artista findByNome(String nome);
 

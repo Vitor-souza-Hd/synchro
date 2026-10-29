@@ -13,6 +13,12 @@ import java.util.Set;
 @Getter
 @Setter
 public class Album extends Midia{
+    @Column(unique = true)
+    private String tituloKey;
+
+    @PrePersist
+    @PreUpdate
+    private void normalizeName() { tituloKey = CatalogName.key(getTitulo()); }
 
     private LocalDate dataLancamento;
 

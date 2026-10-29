@@ -14,6 +14,12 @@ import java.util.Set;
 @Getter
 @Setter
 public class Musica extends Midia implements Serializable {
+    @Column(unique = true)
+    private String tituloKey;
+
+    @PrePersist
+    @PreUpdate
+    private void normalizeName() { tituloKey = CatalogName.key(getTitulo()); }
     @Serial
     private static final long serialVersionUID = 1L;
 
