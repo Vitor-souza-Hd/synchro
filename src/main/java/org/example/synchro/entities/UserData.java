@@ -34,6 +34,8 @@ public class UserData implements Serializable {
     // Null significa que nao existe foto personalizada.
     @Column(name = "profile_image_url", length = 2000)
     private String profileImageUrl;
+    @Column(name = "banner_image_url", length = 2000)
+    private String bannerImageUrl;
 
     @OneToMany(
             cascade = CascadeType.ALL,

@@ -179,7 +179,7 @@ body{
     position: absolute;
     inset: 0;
 
-    background-image: url('./img/user/banner.jpg');
+
 
     background-size: cover;
     background-position: center;
@@ -1000,7 +1000,78 @@ body{
 .profile-photo-editor {
     margin: 12px 0 18px;
     max-width: 460px;
+
+<div class="profile-banner-editor">
+<button id="editBannerButton" type="button">
+<i class="fa-solid fa-image"></i>
+Alterar banner
+</button>
+
+<div id="bannerEditor" hidden>
+<label for="bannerUrlInput">
+URL HTTPS da imagem de capa
+</label>
+
+<input
+id="bannerUrlInput"
+type="url"
+maxlength="2000"
+placeholder="https://exemplo.com/banner.jpg"
+>
+
+<div class="banner-actions">
+<button id="saveBannerButton" type="button">
+Salvar banner
+</button>
+
+<button id="removeBannerButton" type="button">
+Remover
+</button>
+
+<button id="cancelBannerButton" type="button">
+Cancelar
+</button>
+</div>
+
+<p id="bannerFeedback" role="status"></p>
+</div>
+</div>
+
+    /* CORRECAO DE VISIBILIDADE DO EDITOR DO BANNER */
+
+.profile-banner-editor {
+    position: relative;
+    z-index: 5;
+    display: block;
+    margin: 12px 0 18px;
 }
+
+    #editBannerButton {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: #ffffff;
+        background: #292929;
+        border: 1px solid #555;
+        border-radius: 10px;
+        padding: 10px 15px;
+        cursor: pointer;
+    }
+
+    #editBannerButton:hover {
+        border-color: #ff315e;
+        background: #35252d;
+    }
+
+    #bannerEditor[hidden] {
+        display: none;
+    }
+
+}
+
+
+
+
 
 #photoEditor[hidden] {
     display: none;
@@ -1057,4 +1128,106 @@ body{
 #photoFeedback {
     font-size: 13px;
     margin-top: 10px;
+}
+
+/* MENSAGENS DE SECOES VAZIAS DO PERFIL */
+
+.profile-empty {
+    display: block;
+    color: #b3b3b3;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 12px 0;
+    margin: 0;
+    opacity: 1;
+    visibility: visible;
+}
+
+.artist .profile-empty,
+.review .profile-empty,
+.playlist .profile-empty,
+.report-artists .profile-empty,
+.report-albums .profile-empty,
+.report-musics .profile-empty,
+.report-genres .profile-empty {
+    width: 100%;
+}
+
+/* BANNER PERSONALIZAVEL DO PERFIL */
+
+.banner-background {
+    background-image: none;
+    background-color: #17151c;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.banner-background::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+            90deg,
+            rgba(0, 0, 0, 0.58),
+            rgba(0, 0, 0, 0.12)
+    );
+    pointer-events: none;
+}
+
+.profile-banner-editor {
+    margin: 12px 0;
+    max-width: 460px;
+}
+
+#bannerEditor[hidden] {
+    display: none;
+}
+
+#editBannerButton,
+.banner-actions button {
+    background: #29262d;
+    color: #fff;
+    border: 1px solid #64545d;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font: inherit;
+    cursor: pointer;
+}
+
+#editBannerButton:hover,
+.banner-actions button:hover {
+    border-color: #ff315e;
+}
+
+#bannerEditor {
+    margin-top: 12px;
+}
+
+#bannerEditor label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+#bannerUrlInput {
+    box-sizing: border-box;
+    width: 100%;
+    border-radius: 10px;
+    padding: 12px;
+    background: #19171b;
+    color: #fff;
+    border: 1px solid #555;
+}
+
+.banner-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+#bannerFeedback {
+    margin-top: 8px;
+    color: #e6dfe5;
+    font-size: 13px;
 }
