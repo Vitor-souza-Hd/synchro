@@ -29,6 +29,7 @@ public class UserDto implements Serializable {
     private String email;
     private LocalDate birthDay;
     private String lastFmUsername;
+    private boolean lastFmConnected;
 
     private UserDataDto data;
 
@@ -39,6 +40,7 @@ public class UserDto implements Serializable {
         this.email = user.getEmail();
         this.birthDay = user.getBirthDay();
         this.lastFmUsername = user.getLastFmUsername();
+        this.lastFmConnected = user.hasLastFmConnection();
         this.data = user.getData() == null ? new UserDataDto() : new UserDataDto(user.getData());
     }
 

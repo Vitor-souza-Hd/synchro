@@ -1,376 +1,143 @@
 package org.example.synchro.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.config.LastFmConfig;
+import org.example.synchro.dto.UserDto;
 import org.example.synchro.dto.lastFmDtos.LastFmSessionDto;
 import org.example.synchro.dto.lastFmDtos.LastFmUserDto;
-import org.example.synchro.entities.LastFmSession;
-import org.example.synchro.entities.User;
-import org.example.synchro.repositories.LastFmSessionRepository;
-import org.example.synchro.repositories.UserRepository;
-import org.example.synchro.services.exception.InvalidTokenException;
+import org.example.synchro.services.exception.LastFmApiException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class LastfmService {
-
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final Duration TIMEOUT = Duration.ofSeconds(15);
     private final WebClient webClient;
     private final LastFmConfig config;
-    private final CookieService cookieService;
-    private final LastFmSessionRepository lastFmSessionRepository;
-    private final UserRepository userRepository;
-
-
-    // =========================================================
-    // BUSCAR INFORMAÇÕES DO USUÁRIO LAST.FM
-    // =========================================================
+    private final LastFmAccountStore accounts;
 
     public Mono<String> getUserInfo(String username) {
-
-        return webClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .queryParam("method", "user.getinfo")
-                        .queryParam("user", username)
-                        .queryParam("api_key", config.getApiKey())
-                        .queryParam("format", "json")
-                        .build())
-                .retrieve()
-                .bodyToMono(LastFmUserDto.class)
-                .map(dto -> {
-
-                    try {
-
-                        ObjectMapper objectMapper =
-                                new ObjectMapper();
-
-                        return objectMapper
-                                .writeValueAsString(dto);
-
-                    } catch (Exception e) {
-
-                        throw new RuntimeException(
-                                "Erro ao converter dados do Last.fm para JSON",
-                                e
-                        );
-                    }
-                })
-                .timeout(Duration.ofSeconds(15));
+        return requestUserInfo(username).map(JsonNode::toString);
     }
 
-
-    // =========================================================
-    // BUSCAR DTO INTERNAMENTE
-    // =========================================================
-
-    private Mono<LastFmUserDto> getUserInfoDto(
-            String username
-    ) {
-
-        return webClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .queryParam("method", "user.getinfo")
-                        .queryParam("user", username)
-                        .queryParam("api_key", config.getApiKey())
-                        .queryParam("format", "json")
-                        .build())
-                .retrieve()
-                .bodyToMono(LastFmUserDto.class)
-                .timeout(Duration.ofSeconds(15));
+    private Mono<JsonNode> requestUserInfo(String username) {
+        return webClient.get()
+                .uri(builder -> builder.queryParam("method", "user.getInfo")
+                        .queryParam("user", "{username}").queryParam("api_key", config.getApiKey())
+                        .queryParam("format", "json").build(username))
+                .exchangeToMono(this::readResponse).timeout(TIMEOUT)
+                .filter(node -> node.path("user").isObject() && !node.path("user").path("name").asText().isBlank())
+                .switchIfEmpty(Mono.error(new IllegalStateException("O Last.fm não retornou os dados do perfil.")));
     }
 
-
-    // =========================================================
-    // CONTADORES
-    // =========================================================
+    private Mono<LastFmUserDto> getUserInfoDto(String username) {
+        return requestUserInfo(username).map(node -> convert(node, LastFmUserDto.class));
+    }
 
     public List<Integer> contadores(String username) {
-
-        LastFmUserDto lfu =
-                getUserInfoDto(username)
-                        .block();
-
-        if (lfu == null || lfu.getUser() == null) {
-
-            throw new RuntimeException(
-                    "Não foi possível obter os dados do usuário Last.fm"
-            );
-        }
-
-        return Arrays.asList(
-                Integer.parseInt(
-                        lfu.getUser().getPlaycount()
-                ),
-                Integer.parseInt(
-                        lfu.getUser().getArtistCount()
-                )
-        );
+        var profile = getUserInfoDto(username).block();
+        if (profile == null) throw new IllegalStateException("O Last.fm não retornou os dados do perfil.");
+        return Arrays.asList(Integer.parseInt(profile.getUser().getPlaycount()),
+                Integer.parseInt(profile.getUser().getArtistCount()));
     }
 
+    public String getAuthUrl(String callbackUrl) {
+        if (config.getApiKey() == null || config.getApiKey().isBlank()
+                || config.getSharedSecret() == null || config.getSharedSecret().isBlank()) {
+            throw new IllegalStateException("A conexão com o Last.fm ainda não foi configurada.");
+        }
+        return UriComponentsBuilder.fromUriString("https://www.last.fm/api/auth/")
+                .queryParam("api_key", "{key}").queryParam("cb", "{callback}")
+                .encode().buildAndExpand(config.getApiKey(), callbackUrl).toUriString();
+    }
 
-    // =========================================================
-    // OBTER TOKEN DO LAST.FM
-    // =========================================================
-
-    public Mono<String> getToken() {
-
-        return webClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .queryParam(
-                                "method",
-                                "auth.gettoken"
-                        )
-                        .queryParam(
-                                "api_key",
-                                config.getApiKey()
-                        )
-                        .queryParam(
-                                "format",
-                                "json"
-                        )
-                        .build())
-                .retrieve()
-                .bodyToMono(String.class)
-                .map(json -> {
-
-                    try {
-
-                        com.fasterxml.jackson.databind.JsonNode node =
-                                new ObjectMapper()
-                                        .readTree(json);
-
-                        return node
-                                .path("token")
-                                .asText();
-
-                    } catch (Exception e) {
-
-                        throw new RuntimeException(
-                                "Erro ao extrair token",
-                                e
-                        );
+    public Mono<Void> connectAccount(Long userId, String token) {
+        // Last.fm tokens are opaque: real tokens include letters beyond hexadecimal.
+        // Authorization is validated by Last.fm and the callback's browser-bound state.
+        if (token == null || token.isBlank() || token.length() > 512) {
+            return Mono.error(new IllegalArgumentException("Autorização Last.fm inválida. Tente conectar novamente."));
+        }
+        String signature = DigestUtils.md5DigestAsHex(("api_key" + config.getApiKey()
+                + "methodauth.getSessiontoken" + token + config.getSharedSecret()).getBytes(StandardCharsets.UTF_8));
+        return webClient.post().uri("")
+                .body(BodyInserters.fromFormData("method", "auth.getSession")
+                        .with("api_key", config.getApiKey()).with("token", token)
+                        .with("api_sig", signature).with("format", "json"))
+                .exchangeToMono(this::readResponse).timeout(TIMEOUT)
+                .map(node -> convert(node, LastFmSessionDto.class))
+                .switchIfEmpty(Mono.error(new IllegalStateException("O Last.fm não retornou a autorização.")))
+                .flatMap(dto -> {
+                    var session = dto.getSession();
+                    if (session == null || session.getName() == null || session.getName().isBlank()
+                            || session.getKey() == null || session.getKey().isBlank()) {
+                        return Mono.error(new IllegalStateException("O Last.fm não retornou a autorização."));
                     }
+                    // Run transactional JPA work away from the HTTP client's event loop.
+                    return Mono.fromRunnable(() -> accounts.connect(userId, session))
+                            .subscribeOn(Schedulers.boundedElastic()).then();
                 });
     }
 
-
-    // =========================================================
-    // GERAR URL DE AUTENTICAÇÃO
-    // =========================================================
-
-    public String getAuthUrl(String token) {
-
-        return "https://www.last.fm/api/auth/?api_key="
-                + config.getApiKey()
-                + "&token="
-                + token;
+    public Mono<UserDto> syncProfile(Long userId) {
+        return Mono.fromCallable(() -> accounts.connectedUsername(userId))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(username -> getUserInfoDto(username)
+                        .flatMap(dto -> Mono.fromCallable(() -> accounts.saveProfile(userId, username, dto.getUser()))
+                                .subscribeOn(Schedulers.boundedElastic())));
     }
 
+    public Mono<String> getUserInfoBySynchroId(Long userId) {
+        return Mono.fromCallable(() -> accounts.connectedUsername(userId))
+                .subscribeOn(Schedulers.boundedElastic()).flatMap(this::getUserInfo);
+    }
 
-    // =========================================================
-    // OBTER SESSÃO DO LAST.FM
-    // =========================================================
-
-    public Mono<LastFmSessionDto> getSession(
-            String cookie,
-            String token
-    ) {
-
-        try {
-
-            String apiSig =
-                    generateApiSignature(token);
-
-            if (!cookieService.checkCookie(cookie)) {
-
-                throw new InvalidTokenException(
-                        "sessão inválida"
-                );
+    private Mono<JsonNode> readResponse(ClientResponse response) {
+        // Last.fm also returns useful API error codes with HTTP 403/400 responses.
+        return response.bodyToMono(String.class).defaultIfEmpty("").map(body -> {
+            JsonNode node = readResponse(body);
+            if (response.statusCode().isError()) {
+                throw new IllegalStateException("O Last.fm não concluiu a solicitação (HTTP "
+                        + response.statusCode().value() + ").");
             }
-
-            return webClient
-                    .post()
-                    .uri("")
-                    .contentType(
-                            org.springframework.http.MediaType
-                                    .APPLICATION_FORM_URLENCODED
-                    )
-                    .bodyValue(
-                            "method=auth.getSession"
-                                    + "&api_key="
-                                    + config.getApiKey()
-                                    + "&token="
-                                    + token
-                                    + "&api_sig="
-                                    + apiSig
-                                    + "&format=json"
-                    )
-                    .retrieve()
-                    .bodyToMono(LastFmSessionDto.class)
-                    .doOnSuccess(lastFmSessionDto -> {
-
-                        Long id =
-                                cookieService.getId(cookie);
-
-                        LastFmSession lastFmSession =
-                                new LastFmSession(
-                                        lastFmSessionDto
-                                );
-
-                        Optional<User> user =
-                                userRepository.findById(id);
-
-                        user.ifPresent(user1 -> {
-
-                            if (user1.getId() == null) {
-
-                                throw new InvalidTokenException(
-                                        "sessão inválida"
-                                );
-                            }
-
-                            lastFmSession
-                                    .setSynchroUser(user1);
-
-                            user1.setLastFmUsername(
-                                    lastFmSessionDto
-                                            .getSession()
-                                            .getName()
-                            );
-
-                            /*
-                             * Salva a sessão Last.fm primeiro.
-                             */
-                            lastFmSessionRepository
-                                    .save(lastFmSession);
-
-                            /*
-                             * Associa a sessão ao usuário Synchro.
-                             */
-                            user1.setSession(
-                                    lastFmSession
-                            );
-
-                            userRepository
-                                    .save(user1);
-                        });
-                    });
-
-        } catch (InvalidTokenException e) {
-
-            System.out.println(
-                    e.getLocalizedMessage()
-            );
-
-            throw e;
-
-        } catch (Exception e) {
-
-            throw new RuntimeException(e);
-        }
+            return node;
+        });
     }
 
-
-    // =========================================================
-    // BUSCAR LAST.FM DO USUÁRIO SYNCHRO LOGADO
-    // =========================================================
-
-    public Mono<String> getUserInfoBySynchroId(
-            Long userId
-    ) {
-
-        Optional<User> user =
-                userRepository.findById(userId);
-
-        if (user.isEmpty()) {
-
-            return Mono.error(
-                    new RuntimeException(
-                            "Usuário Synchro não encontrado"
-                    )
-            );
-        }
-
-        String lastFmUsername =
-                user.get().getLastFmUsername();
-
-        if (
-                lastFmUsername == null
-                        || lastFmUsername.isBlank()
-        ) {
-
-            return Mono.error(
-                    new RuntimeException(
-                            "Usuário ainda não conectou uma conta Last.fm"
-                    )
-            );
-        }
-
-        return getUserInfo(
-                lastFmUsername
-        );
-    }
-
-
-    // =========================================================
-    // GERAR ASSINATURA DA API LAST.FM
-    // =========================================================
-
-    private String generateApiSignature(
-            String token
-    ) {
-
-        String toSign =
-                "api_key"
-                        + config.getApiKey()
-                        + "methodauth.getSession"
-                        + "token"
-                        + token
-                        + config.getSharedSecret();
-
+    private JsonNode readResponse(String body) {
         try {
-
-            java.security.MessageDigest md =
-                    java.security.MessageDigest
-                            .getInstance("MD5");
-
-            byte[] digest =
-                    md.digest(
-                            toSign.getBytes("UTF-8")
-                    );
-
-            StringBuilder sb =
-                    new StringBuilder();
-
-            for (byte b : digest) {
-
-                sb.append(
-                        String.format(
-                                "%02x",
-                                b
-                        )
-                );
+            JsonNode node = JSON.readTree(body);
+            if (node != null && node.has("error")) {
+                throw new LastFmApiException(node.path("error").asInt(-1));
             }
+            if (node == null) {
+                throw new IllegalStateException("O Last.fm não concluiu a solicitação. Tente novamente.");
+            }
+            return node;
+        } catch (com.fasterxml.jackson.core.JsonProcessingException exception) {
+            throw new IllegalStateException("O Last.fm retornou uma resposta inválida.", exception);
+        }
+    }
 
-            return sb.toString();
-
-        } catch (Exception e) {
-
-            throw new RuntimeException(
-                    "Erro ao gerar api_sig",
-                    e
-            );
+    private <T> T convert(JsonNode node, Class<T> type) {
+        try {
+            return JSON.treeToValue(node, type);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException exception) {
+            throw new IllegalStateException("O Last.fm retornou uma resposta inválida.", exception);
         }
     }
 }

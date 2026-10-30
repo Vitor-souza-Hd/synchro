@@ -38,6 +38,15 @@ public class AuthResource {
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body("login concluido");
     }
 
+    @PostMapping(value = "/logout")
+    public ResponseEntity<Void> logout() {
+        ResponseCookie cookie = cookieService.clearCookie("token_jwt");
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .build();
+    }
+
     @GetMapping(value = "/cookie")
     public ResponseEntity<String> getCookie(@CookieValue(name = "token_jwt", required = false) String token){
         if(cookieService.checkCookie(token)){

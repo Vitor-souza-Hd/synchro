@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -24,6 +25,13 @@ public class UserData implements Serializable {
     @Column(name = "full_name")
     private String fullName;
     private String gender;
+    private String lastFmRealName;
+    @Column(length = 2048)
+    private String lastFmImageUrl;
+    private String lastFmCountry;
+    private Integer lastFmTracks;
+    private Integer lastFmAlbums;
+    private Instant lastFmUpdatedAt;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "author")
     private Set<Review> reviews = new HashSet<>();

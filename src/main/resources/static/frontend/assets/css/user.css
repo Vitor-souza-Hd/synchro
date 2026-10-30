@@ -22,6 +22,38 @@ body{
 #profileError[hidden]{
     display: none !important;
 }
+[hidden]{
+    display: none !important;
+}
+.lastfm-actions{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+}
+.lastfm-button{
+    padding: 13px 18px;
+    border: 1px solid #ef4556;
+    border-radius: 12px;
+    background: #b91c32;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    line-height: 1.3;
+}
+.lastfm-button:hover{ background: #d3243d; }
+.lastfm-button:focus-visible{ outline: 3px solid #fff; outline-offset: 4px; }
+.lastfm-button:disabled{ opacity: .65; cursor: wait; }
+.lastfm-button-secondary{ background: rgba(0,0,0,.3); border-color: rgba(255,255,255,.4); }
+.lastfm-button-secondary:hover{ background: rgba(255,255,255,.15); }
+.banner-info{ min-width: 0; }
+.banner-info .lastfm-status{ max-width: 560px; line-height: 1.5; color: #b9f5cb; }
+.banner-info .lastfm-status.is-error{ color: #ffd0d0; }
+.lastfm-details{ margin-top: 16px; overflow-wrap: anywhere; }
+.lastfm-details a{ color: #ffc4cc; text-decoration: underline; text-underline-offset: 4px; }
+.banner-info #lastFmUpdatedAt{ color: rgba(255,255,255,.65); font-size: 13px; }
+.banner-info .profile-stats{ margin-top: 20px; }
 .profile-status{
     min-height: 100vh;
     display: flex;
@@ -870,60 +902,4 @@ body{
     80%{border:#c423c4;}
     90%{border:#cd2743;}
     100%{border:#cd2727;}
-}
-
-    /* =========================
-   LAST.FM
-========================= */
-
-.lastfm-button {
-    width: fit-content;
-
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    margin-top: 18px;
-
-    padding: 11px 18px;
-
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 12px;
-
-    background: rgba(255, 255, 255, 0.08);
-
-    color: white;
-
-    font-family: "Josefin Sans", sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    backdrop-filter: blur(10px);
-
-    transition:
-        background 0.25s ease,
-        border-color 0.25s ease,
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
-}
-
-.lastfm-button i {
-    font-size: 18px;
-}
-
-.lastfm-button:hover {
-    background: rgba(190, 35, 35, 0.25);
-
-    border-color: rgba(255, 80, 80, 0.5);
-
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 8px 25px rgba(190, 35, 35, 0.2);
-}
-
-.lastfm-button:active {
-    transform: translateY(0);
 }

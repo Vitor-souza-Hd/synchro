@@ -60,7 +60,7 @@ public class AuthService {
                         .orElse(null);
             }
 
-            if (user != null && passwordService.hashPassword(obj.getPassword()).equals(user.getPassword())) {
+            if (user != null && passwordService.checkPassword(user.getPassword(), obj.getPassword())) {
                 return token(user);
             } else {
                 throw new RuntimeException();

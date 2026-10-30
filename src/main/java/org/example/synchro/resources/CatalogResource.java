@@ -70,14 +70,19 @@ public class CatalogResource {
     public PublicProfile user(@PathVariable Long id) {
         var user = users.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         var data = user.getData();
-        return new PublicProfile(user.getUsername(), user.getLastFmUsername(),
+        return new PublicProfile(user.getUsername(), user.getLastFmUsername(), user.hasLastFmConnection(),
                 new PublicProfileData(data == null ? null : data.getFullName(),
-                        data == null ? null : data.getScrobbles(), data == null ? null : data.getArtistas()));
+                        data == null ? null : data.getScrobbles(), data == null ? null : data.getArtistas(),
+                        data == null ? null : data.getLastFmRealName(), data == null ? null : data.getLastFmImageUrl(),
+                        data == null ? null : data.getLastFmCountry(), data == null ? null : data.getLastFmTracks(),
+                        data == null ? null : data.getLastFmAlbums(), data == null ? null : data.getLastFmUpdatedAt()));
     }
 
     public record AlbumDetails(SearchResultDTO.AlbumResult album, List<SearchResultDTO.Song> musicas) {}
     public record ArtistDetails(SearchResultDTO.Artist artist, List<SearchResultDTO.Song> musicas,
                                 List<SearchResultDTO.AlbumResult> albums) {}
-    public record PublicProfile(String username, String lastFmUsername, PublicProfileData data) {}
-    public record PublicProfileData(String fullName, Integer scrobbles, Integer artistas) {}
+    public record PublicProfile(String username, String lastFmUsername, boolean lastFmConnected, PublicProfileData data) {}
+    public record PublicProfileData(String fullName, Integer scrobbles, Integer artistas,
+                                    String lastFmRealName, String lastFmImageUrl, String lastFmCountry,
+                                    Integer lastFmTracks, Integer lastFmAlbums, java.time.Instant lastFmUpdatedAt) {}
 }

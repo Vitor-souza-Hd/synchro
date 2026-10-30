@@ -16,6 +16,13 @@ public class PlaylistResource {
 
     private final PlaylistService playlistService;
 
+    @GetMapping("/me")
+    public ResponseEntity<java.util.List<PlaylistDto>> findMyPlaylists(
+            @CookieValue(name = "token_jwt", required = false) String cookie) {
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(playlistService.findMyPlaylists(cookie));
+    }
+
     @PostMapping("/new-playlist")
     public ResponseEntity<PlaylistDto> createPlaylist(
             @CookieValue(name = "token_jwt", required = false) String cookie,

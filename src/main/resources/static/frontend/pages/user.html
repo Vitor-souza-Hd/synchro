@@ -6,7 +6,7 @@
     <title>SYNCHRO | Meu perfil</title>
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/user.css?v=20261023-1">
+    <link rel="stylesheet" href="../assets/css/user.css?v=20261029-1">
     <style>
         .profile-status {
             min-height: 100vh;
@@ -21,6 +21,8 @@
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
     <script src="/frontend/assets/js/search.js" defer></script>
     <!-- Fim do trecho adicionado por IA -->
+    <link rel="stylesheet" href="/frontend/assets/css/auth.css?v=20261029-1">
+    <script src="/frontend/assets/js/auth.js?v=20261029-1" defer></script>
 </head>
 <body>
     <div id="profileStatus" class="profile-status" role="status">Carregando seu perfil...</div>
@@ -40,6 +42,10 @@
             <nav class="nav-links" aria-label="Navegação principal">
                 <a href="../../index.html" aria-label="Página inicial"><i class="fa-solid fa-house"></i></a>
             </nav>
+                    <div class="session-actions" hidden>
+                <button class="logout-button" type="button">Sair</button>
+                <p class="session-error" role="alert" hidden></p>
+            </div>
         </header>
 
         <main>
@@ -60,6 +66,17 @@
                         <p id="profileBirthDay"></p>
                         <p id="profileGender"></p>
                         <p id="profileLastFm"></p>
+                        <div class="lastfm-actions" id="lastFmActions" hidden>
+                            <button type="button" id="connectLastFm" class="lastfm-button" hidden>Conectar ao lastFM</button>
+                            <button type="button" id="syncLastFm" class="lastfm-button lastfm-button-secondary" hidden>Atualizar dados do Last.fm</button>
+                        </div>
+                        <p id="lastFmStatus" class="lastfm-status" role="status" aria-live="polite" hidden></p>
+                        <div id="lastFmDetails" class="lastfm-details" hidden>
+                            <a id="lastFmProfileLink" target="_blank" rel="noopener noreferrer">Ver perfil no Last.fm ↗</a>
+                            <p id="lastFmRealName" hidden></p>
+                            <p id="lastFmCountry" hidden></p>
+                            <p id="lastFmUpdatedAt" hidden></p>
+                        </div>
 
                         <div class="profile-stats">
                             <div>
@@ -70,6 +87,14 @@
                                 <h3 id="profileArtists">0</h3>
                                 <p>Artistas</p>
                             </div>
+                            <div id="lastFmTracksStat" hidden>
+                                <h3 id="profileTracks">0</h3>
+                                <p>Músicas</p>
+                            </div>
+                            <div id="lastFmAlbumsStat" hidden>
+                                <h3 id="profileAlbums">0</h3>
+                                <p>Álbuns</p>
+                            </div>
                         </div>
                         <span>PERFIL</span>
                     </div>
@@ -79,6 +104,6 @@
     </div>
 
     <div id="profileError" class="profile-status profile-error" role="alert" hidden></div>
-    <script src="../assets/js/user.js?v=20261023-2"></script>
+    <script src="../assets/js/user.js?v=20261029-2"></script>
 </body>
 </html>

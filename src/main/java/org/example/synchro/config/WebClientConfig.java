@@ -11,7 +11,7 @@ import java.time.Duration;
 public class WebClientConfig {
 
     @Bean
-    public WebClient webClient() {
+    public WebClient webClient(LastFmConfig config) {
         HttpClient httpClient = HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)   // 5 segundos
                 .responseTimeout(Duration.ofSeconds(10))              // 10 segundos
@@ -19,7 +19,7 @@ public class WebClientConfig {
 
         return WebClient.builder()
                 .clientConnector(new org.springframework.http.client.reactive.ReactorClientHttpConnector(httpClient))
-                .baseUrl("https://ws.audioscrobbler.com/2.0/")
+                .baseUrl(config.getBaseUrl())
                 .build();
     }
 }

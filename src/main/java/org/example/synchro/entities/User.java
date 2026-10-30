@@ -47,6 +47,11 @@ public class User implements Serializable {
 
     }
 
+    public boolean hasLastFmConnection() {
+        return lastFmUsername != null && !lastFmUsername.isBlank()
+                && session != null && session.getSessionKey() != null && !session.getSessionKey().isBlank();
+    }
+
     public User(Long id, String username, String email, String password, LocalDate birthDay, String lastFmUsername) {
         this.id = id;
         this.username = username;

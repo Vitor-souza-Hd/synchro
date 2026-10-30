@@ -1,0 +1,25 @@
+.session-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.session-actions[hidden], .session-error[hidden] { display: none; }
+.session-actions .logout-button {
+    min-height: 40px;
+    padding: 9px 14px;
+    border: 1px solid rgba(255, 255, 255, .3);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.session-actions .logout-button:hover { background: rgba(255, 255, 255, .16); }
+.session-actions .logout-button:focus-visible { outline: 2px solid #c8a7ff; outline-offset: 3px; }
+.session-actions .logout-button:disabled { opacity: .65; cursor: wait; }
+.session-error { margin: 0; max-width: 220px; color: #ffd6df; font-size: 13px; line-height: 1.4; }

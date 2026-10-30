@@ -16,6 +16,11 @@ import java.util.Set;
 @Getter
 @Setter
 public class Playlist extends Midia {
+    @jakarta.persistence.Column(columnDefinition = "text")
+    private String capa;
+
+    @jakarta.persistence.Column(columnDefinition = "text")
+    private String banner;
     
     @ManyToMany(fetch = FetchType.LAZY)
     private Set<Musica> musicas = new HashSet<>();
@@ -61,13 +66,11 @@ public class Playlist extends Midia {
         usuario.getPlaylists().remove(this);
     }
 
-     public boolean colaborador(User usuario){
-        boolean anwser = false;
-        for( User colaborador : colaboradores ){
-            if( colaborador.equals(usuario) ){
-                anwser = true;
-            }
-        }
-        return anwser;
-     }
+    public boolean colaborador(User usuario) {
+        if (usuario == null || usuario.getId() == null) return false;
+        // Compare identifiers through getters: Hibernate may load users as proxies.
+        Long userId = usuario.getId();
+        if (criador != null && userId.equals(criador.getId())) return true;
+        return colaboradores.stream().anyMatch(user -> userId.equals(user.getId()));
+    }
 }

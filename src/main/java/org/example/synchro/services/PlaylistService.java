@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.List;
+import java.util.LinkedHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,21 @@ public class PlaylistService {
     private final UserRepository userRepository;
     private final PlaylistRepository playlistRepository;
     private final CookieService cookieService;
+
+    @Transactional(readOnly = true)
+    public List<PlaylistDto> findMyPlaylists(String cookie) {
+        if (!cookieService.checkCookie(cookie)) {
+            throw new UnauthorizedException("Sessão inválida ou ausente");
+        }
+        User user = userRepository.findById(cookieService.getId(cookie))
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+        var playlists = new LinkedHashMap<Long, Playlist>();
+        playlistRepository.findByCriador(user).forEach(p -> playlists.put(p.getId(), p));
+        playlistRepository.findByColaboradoresContaining(user).forEach(p -> playlists.put(p.getId(), p));
+        return playlists.values().stream()
+                .sorted(java.util.Comparator.comparing(Playlist::getId).reversed())
+                .map(PlaylistDto::new).toList();
+    }
 
     @Transactional
     public PlaylistDto createPlaylist(PlaylistRequestDto request, String cookie) {
@@ -33,6 +50,8 @@ public class PlaylistService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         Playlist playlist = new Playlist(request.getTitulo(), request.getDescricao(), user);
+        playlist.setCapa(request.getCapa());
+        playlist.setBanner(request.getBanner());
         Playlist savedPlaylist = playlistRepository.save(playlist);
         return new PlaylistDto(savedPlaylist);
     }
@@ -44,13 +63,15 @@ public class PlaylistService {
         }
         Optional<Playlist> playlistOptional = playlistRepository.findById(id);
         Playlist playlist = playlistOptional.orElseThrow(()->new ResourceNotFoundException("Playlist não encontrada"));
-        Optional<User> userOptional = userRepository.findById(cookieService.getId(cookie));
-        User user = userOptional.get();
+        User user = userRepository.findById(cookieService.getId(cookie))
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         if(!playlist.colaborador(user)){
             throw new UnauthorizedException("Usuário não autorizado a modificar a playlist");
         }
         playlist.setTitulo(request.getTitulo());
         playlist.setDescricao(request.getDescricao());
+        if (request.getCapa() != null) playlist.setCapa(request.getCapa());
+        if (request.getBanner() != null) playlist.setBanner(request.getBanner());
         playlistRepository.save(playlist);
         return new PlaylistDto(playlist);
     }

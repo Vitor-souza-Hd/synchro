@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="../assets/css/musica.css">
     <script src="../assets/js/search.js" defer></script>
     <script src="../assets/js/media.js" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/auth.css?v=20261029-1">
+    <script src="/frontend/assets/js/auth.js?v=20261029-1" defer></script>
 </head>
 <body class="catalog-page song-page" data-media-type="song">
     <div class="container">
@@ -46,7 +48,11 @@
                     <input class="search" type="search" placeholder="O que você quer ouvir?" aria-label="Buscar música">
                 </div>
                 <nav class="nav-links" aria-label="Navegação"><a href="/">Início</a><a href="#statisticsTitle">Música</a><a href="/#artists">Artistas</a><a href="user.html" aria-label="Meu perfil"><i class="fa-solid fa-circle-user"></i></a></nav>
-            </header>
+                        <div class="session-actions" hidden>
+                <button class="logout-button" type="button">Sair</button>
+                <p class="session-error" role="alert" hidden></p>
+            </div>
+        </header>
             <p id="catalogStatus" role="status">Carregando música...</p>
             <div id="catalogContent" hidden>
                 <section class="artist-header">

@@ -1,24 +1,23 @@
 package org.example.synchro.services;
 
-import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class PasswordService {
-
-    private final BCrypt passwordEncoder = new BCrypt();
-
-    private final String salt = passwordEncoder.gensalt(12);
-
     public String hashPassword(String password) {
-        return passwordEncoder.hashpw(password, salt);
+        return BCrypt.hashpw(password, BCrypt.gensalt(12));
     }
 
-    public boolean checkPassword(String bDPassword, String password) {
-        return passwordEncoder.checkpw(bDPassword, password);
+    public boolean checkPassword(String storedHash, String password) {
+        if (storedHash == null || storedHash.length() != 60 || password == null) {
+            return false;
+        }
+        try {
+            return BCrypt.checkpw(password, storedHash);
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
     }
 }
 

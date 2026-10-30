@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="../assets/css/search.css">
     <script src="../assets/js/search.js" defer></script>
     <script src="../assets/js/media.js" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/auth.css?v=20261029-1">
+    <script src="/frontend/assets/js/auth.js?v=20261029-1" defer></script>
 </head>
 <body class="catalog-page" data-media-type="album">
     <div class="container">
@@ -38,7 +40,11 @@
                     <input class="search" type="search" placeholder="O que você quer ouvir?" aria-label="Buscar música">
                 </div>
                 <div class="nav-links"><a href="/">Explorar</a><a href="user.html">Meu perfil</a></div>
-            </header>
+                        <div class="session-actions" hidden>
+                <button class="logout-button" type="button">Sair</button>
+                <p class="session-error" role="alert" hidden></p>
+            </div>
+        </header>
             <p id="catalogStatus" role="status">Carregando álbum...</p>
             <div id="catalogContent" hidden>
                 <section class="artist-header">

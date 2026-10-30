@@ -20,6 +20,15 @@ public class CookieService {
             .build();
     }
 
+    public ResponseCookie clearCookie(String name) {
+        return ResponseCookie.from(name, "")
+                .path("/")
+                .httpOnly(true)
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+    }
+
     public boolean checkCookie(String token){
         if(token != null && !token.isEmpty()){
             if (jwtService.verificarToken(token)) {

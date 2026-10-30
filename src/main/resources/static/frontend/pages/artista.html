@@ -26,6 +26,13 @@
     <link rel="stylesheet" href="/frontend/assets/css/catalog.css?v=20261028-artist-contrast-2">
     <script src="/frontend/assets/js/search.js" defer></script>
     <!-- Fim do trecho adicionado por IA -->
+    <link rel="stylesheet" href="/frontend/assets/css/auth.css?v=20261029-1">
+    <script src="/frontend/assets/js/auth.js?v=20261029-1" defer></script>
+    <!-- Gerado por IA: criação de playlists. -->
+    <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
+    <!-- Gerado por IA: atualização da compactação de imagens. -->
+    <!-- Gerado por IA: correção do salvamento de alterações. -->
+    <script src="/frontend/assets/js/playlists.js?v=20261029-5" defer></script>
 </head>
 
 <body>
@@ -121,12 +128,14 @@
 
                     <li>
                         <i class='bx bxs-plus-square'></i>
-                        <a href="#">Criar uma nova</a>
+                        <!-- Gerado por IA: abre o formulário de criação de playlist. -->
+                        <a href="#" data-create-playlist aria-haspopup="dialog">Criar uma nova</a>
                     </li>
 
                     <li>
                         <i class='bx bxs-caret-right-circle'></i>
-                        <a href="#">Suas Playlists</a>
+                        <!-- Gerado por IA: lista as playlists da conta. -->
+                        <a href="#" data-my-playlists aria-haspopup="dialog">Suas Playlists</a>
                     </li>
 
                     <li>
@@ -220,7 +229,11 @@
                     <i class="fa-solid fa-circle-user"></i>
 
                 </a>
-            </header>
+                        <div class="session-actions" hidden>
+                <button class="logout-button" type="button">Sair</button>
+                <p class="session-error" role="alert" hidden></p>
+            </div>
+        </header>
 
 
             <!-- ================= ARTISTA ================= -->
