@@ -34,12 +34,19 @@ public class AlbumService {
         return  new AlbumDto(albumRepository.findByTitulo(titulo));
     }
 
+    public AlbumDto findById(Long id) {
+        Album album = albumRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Álbum não encontrado"));
+        return new AlbumDto(album);
+    }
+
     public List<AlbumDto> findByArtista(String nome){
         List<AlbumDto> albumDtos = new ArrayList<>();
         List<Album> list= albumRepository.findByArtistas(artistaService.findByNome(nome));
         for (Album album : list) {
             albumDtos.add(new AlbumDto(album));
         }
+
         return albumDtos;
     }
 }
