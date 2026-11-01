@@ -92,3 +92,106 @@
     font-size: 18px;
   }
 }
+
+/* CATEGORIAS DA BIBLIOTECA */
+
+.favorites-category {
+  margin-bottom: 45px;
+}
+
+.favorites-category-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.favorites-category-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 23px;
+  margin: 0;
+}
+
+.favorites-category-heading h2 i {
+  color: #ff557a;
+}
+
+#favoriteTracksCount {
+  color: #a9a9a9;
+  font-size: 13px;
+}
+
+/* CARTOES DE MUSICAS FAVORITAS */
+
+.favorite-track-card {
+  background: #211f24;
+}
+
+.favorite-track-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+          135deg,
+          #3b2530,
+          #211f26 65%,
+          #17171a
+  );
+}
+
+.favorite-track-cover i {
+  color: #ff6588;
+  font-size: 70px;
+}
+
+.favorite-track-type {
+  display: inline-block;
+  margin-top: 12px;
+
+  color: #ff839e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.favorite-track-card:hover {
+  border-color: #ff557a;
+}
+
+@media (max-width: 600px) {
+  .favorites-category-heading h2 {
+    font-size: 19px;
+  }
+
+  .favorite-track-cover i {
+    font-size: 52px;
+  }
+}
+
+/* CAPA DAS MUSICAS FAVORITAS */
+
+.favorite-track-cover {
+  position: relative;
+  overflow: hidden;
+}
+
+.favorite-track-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
+  transition: transform 0.3s ease;
+}
+
+.favorite-track-card:hover .favorite-track-image {
+  transform: scale(1.05);
+}

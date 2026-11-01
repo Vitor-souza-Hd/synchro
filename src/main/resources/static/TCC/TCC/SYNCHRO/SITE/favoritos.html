@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Artistas favoritos - Synchro</title>
+  <title>Favoritos - Synchro</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="favoritos.css">
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
   <script src="favoritos.js" defer></script>
   <script src="busca.js" defer></script>
+  <script src="favoritos-musicas.js" defer></script>
 </head>
 <body>
 <div class="container">
@@ -73,12 +74,63 @@
 
     <section class="favorites-heading">
       <span class="favorites-eyebrow">SUA BIBLIOTECA</span>
-      <h1><i class="bx bxs-heart"></i> Artistas favoritos</h1>
-      <p>Seus artistas salvos no Synchro, todos em um só lugar.</p>
+      <h1><i class="bx bxs-heart"></i> Seus favoritos</h1>
+      <p>Suas músicas e seus artistas preferidos, em um só lugar.</p>
       <p id="favoritesCount" class="favorites-count" aria-live="polite"></p>
     </section>
-    <div id="favoritesFeedback" class="favorites-feedback" role="status" aria-live="polite">Carregando seus artistas favoritos...</div>
-    <section id="favoritesGrid" class="favorites-grid" aria-label="Lista de artistas favoritos"></section>
+
+    <!-- ARTISTAS FAVORITOS -->
+    <section class="favorites-category">
+      <div class="favorites-category-heading">
+        <h2>
+          <i class="bx bxs-microphone"></i>
+          Artistas favoritos
+        </h2>
+      </div>
+
+      <div
+              id="favoritesFeedback"
+              class="favorites-feedback"
+              role="status"
+              aria-live="polite"
+      >
+        Carregando artistas favoritos...
+      </div>
+
+      <section
+              id="favoritesGrid"
+              class="favorites-grid"
+              aria-label="Lista de artistas favoritos"
+      ></section>
+    </section>
+
+    <!-- MUSICAS FAVORITAS -->
+    <section class="favorites-category">
+      <div class="favorites-category-heading">
+        <h2>
+          <i class="bx bxs-music"></i>
+          Músicas favoritas
+        </h2>
+
+        <span id="favoriteTracksCount"></span>
+      </div>
+
+      <div
+              id="favoriteTracksFeedback"
+              class="favorites-feedback"
+              role="status"
+              aria-live="polite"
+      >
+        Carregando músicas favoritas...
+      </div>
+
+      <section
+              id="favoriteTracksGrid"
+              class="favorites-grid"
+              aria-label="Lista de músicas favoritas"
+      ></section>
+    </section>
+
   </main>
 </div>
 </body>
