@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const editor = document.getElementById("musicReviewEditor");
     const rating = document.getElementById("musicReviewRating");
     const comment = document.getElementById("musicReviewText");
+    const ratingSelector = window.SynchroRating?.mount(rating);
     const saveButton = document.getElementById("saveMusicReview");
     const cancelButton = document.getElementById("cancelMusicReview");
     const feedback = document.getElementById("musicReviewFeedback");
@@ -132,7 +133,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             edit.textContent = "Editar";
 
             edit.addEventListener("click", () => {
-                rating.value = review.rating;
+                ratingSelector.setValue(review.rating);
                 comment.value = review.review || "";
                 editor.hidden = false;
                 openButton.hidden = true;
@@ -273,7 +274,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ]);
             }
 
-            rating.value = myReview?.rating ?? 8;
+            ratingSelector.setValue(myReview?.rating ?? 8);
             comment.value = myReview?.review || "";
 
             saveButton.disabled = false;
