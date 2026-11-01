@@ -172,6 +172,27 @@
 
                 <p id="musicAlbum"></p>
 
+                <div id="favoriteAlbumArea" hidden>
+                    <button
+                            id="favoriteAlbumBtn"
+                            class="music-favorite-button"
+                            type="button"
+                            aria-pressed="false"
+                            disabled
+                    >
+                        <i class="bx bx-heart"></i>
+                        Favoritar álbum
+                    </button>
+
+                    <p
+                            id="favoriteAlbumFeedback"
+                            class="music-favorite-feedback"
+                            role="status"
+                            aria-live="polite"
+                    ></p>
+                </div>
+
+
                 <div id="musicTags" class="music-tags"></div>
 
 
@@ -333,6 +354,6 @@
 <script src="busca.js"></script>
 <script src="avaliacoes-musica.js"></script>
 <script src="favoritos-musica.js"></script>
-
+<script src="favoritos-album.js"></script>
 </body>
 </html>

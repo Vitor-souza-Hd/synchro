@@ -195,3 +195,80 @@
 .favorite-track-card:hover .favorite-track-image {
   transform: scale(1.05);
 }
+
+/* ALBUNS FAVORITOS */
+
+#favoriteAlbumsCount {
+  color: #a9a9a9;
+  font-size: 13px;
+}
+
+.favorite-album-card {
+  background: #211f24;
+}
+
+.favorite-album-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background: linear-gradient(
+          135deg,
+          #39252f,
+          #211e26 65%,
+          #17171a
+  );
+}
+
+.favorite-album-cover > i {
+  font-size: 70px;
+  color: #ff6588;
+}
+
+.favorite-album-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+
+  transition: transform 0.3s ease;
+}
+
+.favorite-album-card:hover .favorite-album-image {
+  transform: scale(1.05);
+}
+
+.favorite-album-type {
+  display: block;
+  margin-top: 12px;
+
+  color: #ff839e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.favorite-album-link {
+  display: inline-block;
+  margin-top: 12px;
+
+  color: #d5c3cc;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.favorite-album-link:hover {
+  color: #ff6588;
+  text-decoration: underline;
+}
+
+.favorite-album-card:hover {
+  border-color: #ff557a;
+}

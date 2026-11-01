@@ -472,3 +472,26 @@
 .music-favorite-feedback:empty {
     display: none;
 }
+
+/* FAVORITOS DE ALBUNS */
+
+#favoriteAlbumArea {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+#favoriteAlbumArea[hidden] {
+    display: none;
+}
+
+#favoriteAlbumBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+}
+
+#favoriteAlbumBtn.is-favorite {
+    color: #ff6584;
+    background: #39212c;
+    border-color: #ff315e;
+}

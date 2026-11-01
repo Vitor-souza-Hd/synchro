@@ -11,6 +11,7 @@
   <script src="favoritos.js" defer></script>
   <script src="busca.js" defer></script>
   <script src="favoritos-musicas.js" defer></script>
+  <script src="favoritos-albuns.js" defer></script>
 </head>
 <body>
 <div class="container">
@@ -129,6 +130,37 @@
               class="favorites-grid"
               aria-label="Lista de músicas favoritas"
       ></section>
+
+
+      <!-- ALBUNS FAVORITOS -->
+      <section class="favorites-category">
+
+        <div class="favorites-category-heading">
+          <h2>
+            <i class="bx bxs-album"></i>
+            Álbuns favoritos
+          </h2>
+
+          <span id="favoriteAlbumsCount"></span>
+        </div>
+
+        <div
+                id="favoriteAlbumsFeedback"
+                class="favorites-feedback"
+                role="status"
+                aria-live="polite"
+        >
+          Carregando álbuns favoritos...
+        </div>
+
+        <section
+                id="favoriteAlbumsGrid"
+                class="favorites-grid"
+                aria-label="Lista de álbuns favoritos"
+        ></section>
+
+      </section>
+
     </section>
 
   </main>
