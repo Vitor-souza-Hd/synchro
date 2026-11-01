@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const playlist = await response.json();
             created = true;
+            document.dispatchEvent(new CustomEvent('playlist-saved', { detail: playlist }));
             feedback.textContent = `Playlist “${playlist.titulo}” ${editing ? 'atualizada' : 'criada'} com sucesso!`;
             if (compressed.length) feedback.textContent += ` Compactação concluída para ${compressed.join(' e ')} (até 2 MB por imagem).`;
             submit.hidden = true;
@@ -183,122 +184,10 @@ async function playlistResponseError(response) {
 }
 
 function setupMyPlaylists() {
-    const triggers = document.querySelectorAll('[data-my-playlists]');
-    if (!triggers.length) return;
-    const dialog = document.createElement('dialog');
-    dialog.className = 'playlist-dialog';
-    dialog.setAttribute('aria-labelledby', 'myPlaylistsHeading');
-    // HTML gerado por IA: lista de playlists da conta.
-    dialog.innerHTML = `
-        <div class="playlist-form">
-            <h2 id="myPlaylistsHeading">Suas Playlists</h2>
-            <p class="playlist-feedback" role="status" aria-live="polite"></p>
-            <a class="playlist-login" href="/frontend/pages/login.html" hidden>Entrar na minha conta</a>
-            <div class="my-playlists-list"></div>
-            <div class="playlist-actions">
-                <button type="button" class="playlist-retry" hidden>Tentar novamente</button>
-                <button type="button" class="playlist-close">Fechar</button>
-            </div>
-        </div>`;
-    document.body.append(dialog);
-    const status = dialog.querySelector('.playlist-feedback');
-    const list = dialog.querySelector('.my-playlists-list');
-    const login = dialog.querySelector('.playlist-login');
-    const retry = dialog.querySelector('.playlist-retry');
-    let request;
-    dialog.querySelector('.playlist-close').addEventListener('click', () => dialog.close());
-    dialog.addEventListener('close', () => request?.abort());
-
-    async function load() {
-        request?.abort();
-        const controller = new AbortController();
-        request = controller;
-        list.replaceChildren();
-        login.hidden = true;
-        retry.hidden = true;
-        status.textContent = 'Carregando suas playlists…';
-        try {
-            if (location.protocol === 'file:') throw new Error('Abra o Synchro pelo servidor para ver suas playlists.');
-            const response = await fetch('/playlists/me', {
-                credentials: 'same-origin', cache: 'no-store',
-                headers: { Accept: 'application/json' }, signal: controller.signal
-            });
-            if (controller.signal.aborted) return;
-            if (response.status === 401 || response.status === 403) {
-                login.hidden = false;
-                throw new Error('Entre na sua conta para ver suas playlists.');
-            }
-            if (!response.ok) throw new Error('Não foi possível carregar suas playlists. Tente novamente.');
-            const playlists = await response.json();
-            if (controller.signal.aborted) return;
-            status.textContent = playlists.length ? `${playlists.length} playlist(s) na sua biblioteca.`
-                : 'Você ainda não tem playlists. Use “Criar uma nova” para começar.';
-            playlists.forEach(playlist => {
-                const card = document.createElement('article');
-                card.className = 'my-playlist-card';
-                const artwork = document.createElement('div');
-                artwork.className = 'playlist-artwork';
-                ['banner', 'capa'].forEach(key => {
-                    const frame = document.createElement('div');
-                    frame.className = key === 'capa' ? 'playlist-cover' : 'playlist-banner';
-                    frame.classList.add('playlist-image-placeholder');
-                    frame.textContent = key === 'capa' ? '♫' : '';
-                    if (playlist[key]) {
-                        const image = document.createElement('img');
-                        image.src = playlist[key];
-                        image.alt = `${key === 'capa' ? 'Capa' : 'Banner'} de ${playlist.titulo}`;
-                        image.loading = 'lazy';
-                        image.addEventListener('error', () => image.remove());
-                        frame.append(image);
-                    }
-                    artwork.append(frame);
-                });
-                const heading = document.createElement('h3');
-                heading.textContent = playlist.titulo;
-                const description = document.createElement('p');
-                description.textContent = playlist.descricao || 'Sem descrição.';
-                const owner = document.createElement('p');
-                owner.textContent = `Criada por ${playlist.criador?.username || 'Usuário'}`;
-                const tracks = document.createElement('details');
-                const summary = document.createElement('summary');
-                const songs = playlist.musicas || [];
-                summary.textContent = `${songs.length} música(s)`;
-                tracks.append(summary);
-                const songList = document.createElement('ul');
-                songs.forEach(song => {
-                    const item = document.createElement('li');
-                    item.textContent = song.titulo;
-                    songList.append(item);
-                });
-                if (!songs.length) {
-                    const empty = document.createElement('p');
-                    empty.textContent = 'Esta playlist ainda não tem músicas.';
-                    tracks.append(empty);
-                }
-                tracks.append(songList);
-                const edit = document.createElement('button');
-                edit.type = 'button';
-                edit.className = 'playlist-edit';
-                edit.textContent = 'Editar capa e banner';
-                edit.addEventListener('click', () => {
-                    dialog.close();
-                    document.dispatchEvent(new CustomEvent('playlist-edit', { detail: playlist }));
-                });
-                card.append(artwork, heading, description, owner, tracks, edit);
-                list.append(card);
-            });
-        } catch (error) {
-            if (controller.signal.aborted) return;
-            status.textContent = error.message || 'Não foi possível carregar suas playlists.';
-            retry.hidden = !login.hidden;
-        }
-    }
-    triggers.forEach(trigger => trigger.addEventListener('click', event => {
-        event.preventDefault();
-        dialog.showModal();
-        load();
-    }));
-    retry.addEventListener('click', load);
+    document.querySelectorAll('[data-my-playlists]').forEach(link => {
+        link.href = '/frontend/pages/playlists.html';
+        link.removeAttribute('aria-haspopup');
+    });
 }
 
 const PLAYLIST_IMAGE_LIMIT = 2 * 1024 * 1024;

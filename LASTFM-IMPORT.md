@@ -1,12 +1,12 @@
 # Importar o histórico do Last.fm
 
 Ao iniciar `SynchroApplication` normalmente, o perfil padrão `local` abre o mesmo H2 persistente
-(`jdbc:h2:file:./data/synchro`) e importa/atualiza automaticamente `jinka070`.
-Os dados já importados ficam disponíveis imediatamente; novas execuções buscam apenas novas audições.
-Se o Last.fm estiver indisponível, a aplicação mantém os dados salvos e tenta retomar na próxima inicialização.
+(`jdbc:h2:file:./data/synchro`), com a importação automática desativada.
+Os dados já importados continuam disponíveis. O importador permanece inativo ao iniciar o site;
+para importar ou atualizar o histórico, execute manualmente o comando abaixo.
 O console está em `/h2-console`: URL JDBC `jdbc:h2:file:./data/synchro`, usuário `sa`, senha vazia.
 Execute sempre com a pasta do projeto como diretório de trabalho.
-Para desativar a atualização automática: `--lastfm.import.on-startup=false`.
+O perfil `local` define `lastfm.import.on-startup=false`.
 O perfil `test` continua usando H2 em memória, com os dados de demonstração e sem importação automática.
 
 Execute na pasta do projeto com JDK 17 ou superior em `JAVA_HOME`:
@@ -36,7 +36,7 @@ rótulos pessoais não são tratados como gêneros. Até três gêneros são sal
 Músicas sem tags musicais reconhecidas continuam sem gênero; a data da consulta é salva em
 `genero_consultado_em`, e elas podem ser consultadas novamente após sete dias. Gêneros já preenchidos são preservados.
 Se houver interrupção, os resultados já gravados são mantidos e a próxima execução retoma as músicas pendentes.
-Essa etapa também roda na inicialização normal da aplicação e pode levar alguns minutos na primeira execução.
+Essa etapa roda junto com a importação manual e pode levar alguns minutos na primeira execução.
 Para desativá-la, use `--lastfm.import.genres.enabled=false`.
 
 O banco padrão é **persistente**, em `data/synchro.mv.db`, compartilhado com o perfil `local` do site.

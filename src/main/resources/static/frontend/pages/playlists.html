@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNCHRO | Playlists</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/search.css">
+    <link rel="stylesheet" href="../assets/css/auth.css?v=20261029-1">
+    <link rel="stylesheet" href="../assets/css/playlists.css?v=20261029-2">
+    <link rel="stylesheet" href="../assets/css/playlist-page.css?v=20261101-5">
+    <script src="../assets/js/search.js" defer></script>
+    <script src="../assets/js/auth.js?v=20261029-1" defer></script>
+    <script src="../assets/js/playlists.js?v=20261101-4" defer></script>
+    <script src="../assets/js/playlist-page.js?v=20261101-5" defer></script>
+</head>
+<body class="playlists-page">
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                    <i class='bx bx-pulse'></i>
+                <a href="/#">SYNCHRO</a>
+            </div>
+
+            <div class="menu">
+                <h5>Menu</h5>
+                <ul>
+                    <li>
+                        <i class='bx bxs-bolt-circle'></i>
+                        <a href="/#">Explorar</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-volume-full'></i>
+                        <a href="/#">Gêneros</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-album'></i>
+                        <a href="/#">Álbuns</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-microphone'></i>
+                        <a href="/#">Artistas</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu">
+                <h5>Sua Biblioteca</h5>
+                <ul>
+                    <li>
+                        <i class='bx bx-undo'></i>
+                        <a href="/#">Recentes</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-photo-album'></i>
+                        <a href="/#">Avaliações</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-heart'></i>
+                        <a href="/#">Favoritos</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-folder'></i>
+                        <a href="/#">Local</a>
+                    </li>
+                    <li>
+                       <i class="fa-solid fa-ticket"></i>
+                        <a href="/#">Shows perto de você</a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="menu">
+                <h5>Playlist</h5>
+                <ul>
+                    <li>
+                        <i class='bx bxs-plus-square'></i>
+                        <!-- Gerado por IA: abre o formulário de criação de playlist. -->
+                        <a href="/#" data-create-playlist aria-haspopup="dialog">Criar uma nova</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <!-- Gerado por IA: lista as playlists da conta. -->
+                        <a href="/frontend/pages/playlists.html" data-my-playlists>Suas Playlists</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="/#">Recomendados</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="/#">Playlists do Synchro</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-footer">
+                <a href="/#">Legal</a>
+                <a href="/#">Centro de Privacidade</a>
+                <a href="/#">Política de Privacidade</a>
+                <a href="/#">Cookies</a>
+                <a href="/#">Sobre Anúncios</a>
+                <a href="/#">Acessibilidades</a>
+            </div>
+            <button class="nav-language-button">
+                <i class="fa-solid fa-globe"></i>
+                Português do Brasil
+            </button>
+
+        </aside>
+        <main>
+            <button class="menu-toggle" type="button" aria-label="Abrir menu"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
+            <header class="search-bar">
+                <div class="search-box"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input class="search" type="search" placeholder="O que você quer ouvir?" aria-label="Buscar música"></div>
+                <nav class="nav-links" aria-label="Navegação"><a href="/">Início</a><a href="user.html">Meu perfil</a></nav>
+                <div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div>
+            </header>
+            <section id="playlistLibrary" aria-labelledby="playlistLibraryHeading">
+                <div class="library-heading"><div><p class="playlist-eyebrow">SUA BIBLIOTECA</p><h1 id="playlistLibraryHeading">Suas playlists</h1><p>As músicas que você reúne. As playlists que você compartilha.</p></div><button class="playlist-primary" type="button" data-create-playlist aria-haspopup="dialog">+ Criar playlist</button></div>
+                <p id="playlistLibraryCount"></p>
+                <div id="playlistLibraryGrid" class="playlist-library-grid"></div>
+            </section>
+            <section id="playlistDetail" hidden aria-labelledby="detailPlaylistTitle">
+                <a class="playlist-back" href="playlists.html">← Suas playlists</a>
+                <div class="playlist-hero">
+                    <img id="detailPlaylistBanner" class="playlist-detail-banner" alt="" hidden>
+                    <div class="playlist-hero-content">
+                        <img id="detailPlaylistCover" class="playlist-detail-cover" src="../assets/images/catalog-placeholder.svg" alt="">
+                        <div class="playlist-hero-info"><p class="playlist-eyebrow">PLAYLIST</p><h1 id="detailPlaylistTitle"></h1><p id="detailPlaylistDescription"></p><p id="playlistMeta"></p></div>
+                    </div>
+                </div>
+                <p id="playlistParticipation" class="playlist-participation"></p>
+                <div class="playlist-toolbar"><button id="playlistEdit" class="playlist-primary" type="button" hidden>Editar playlist</button><a class="playlist-secondary" href="/">Buscar músicas</a></div>
+                <section class="playlist-songs" aria-labelledby="playlistSongsHeading"><h2 id="playlistSongsHeading">Músicas</h2><div id="playlistTracks"></div><p id="playlistTracksEmpty" hidden>Esta playlist ainda não tem músicas. Abra uma música e use “Adicionar à playlist”.</p></section>
+                <section class="playlist-people" aria-labelledby="playlistPeopleHeading"><h2 id="playlistPeopleHeading">Quem participa</h2><div id="playlistCollaborators"></div></section>
+            </section>
+            <div class="playlist-page-status"><p id="playlistPageStatus" role="status" aria-live="polite">Carregando suas playlists…</p><a id="playlistPageLogin" href="login.html" hidden>Entrar na minha conta</a><button id="playlistPageRetry" class="playlist-secondary" type="button" hidden>Tentar novamente</button></div>
+        </main>
+    </div>
+</body>
+</html>

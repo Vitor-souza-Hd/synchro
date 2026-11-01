@@ -4,8 +4,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.synchro.entities.Playlist;
+import org.example.synchro.entities.User;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -18,11 +21,17 @@ public class PlaylistDto {
     private String banner;
     private String titulo;
     private String descricao;
-    private Set<Musica_AlbumDto> musicas = new HashSet<>();
+    private List<Musica_AlbumDto> musicas = new ArrayList<>();
     private SearchUserDTO criador;
     private Set<SearchUserDTO> usuarios = new HashSet<>();
+    private boolean colaborador;
 
     public PlaylistDto() {
+    }
+
+    public PlaylistDto(Playlist playlist, User usuarioAtual) {
+        this(playlist);
+        this.colaborador = playlist.colaborador(usuarioAtual);
     }
 
     public PlaylistDto(Playlist playlist) {

@@ -68,6 +68,9 @@
         (primary ? [primary] : item.artistas || []).forEach(artist => artists.append(link('artista', artist, artist.nome)));
         if (!artists.childElementCount) artists.textContent = 'Artista não informado';
         if (type === 'song') {
+            const playlistButton = document.getElementById('addToPlaylistBtn');
+            playlistButton.dataset.midiaId = String(item.id);
+            playlistButton.disabled = false;
             const meta = document.getElementById('catalogMeta');
             meta.textContent = item.album ? 'Álbum associado: ' : 'Álbum não informado';
             if (item.album) {

@@ -11,34 +11,109 @@
     <link rel="stylesheet" href="../assets/css/artista.css">
     <link rel="stylesheet" href="../assets/css/catalog.css">
     <link rel="stylesheet" href="../assets/css/search.css">
-    <link rel="stylesheet" href="../assets/css/musica.css">
+    <link rel="stylesheet" href="../assets/css/playlists.css?v=20261029-2">
+    <link rel="stylesheet" href="../assets/css/musica.css?v=20261101-3">
     <script src="../assets/js/search.js" defer></script>
-    <script src="../assets/js/media.js" defer></script>
+    <script src="../assets/js/media.js?v=20261101-3" defer></script>
+    <script src="../assets/js/song-playlists.js?v=20261101-4" defer></script>
+    <script src="../assets/js/playlists.js?v=20261101-4" defer></script>
     <link rel="stylesheet" href="/frontend/assets/css/auth.css?v=20261029-1">
     <script src="/frontend/assets/js/auth.js?v=20261029-1" defer></script>
 </head>
 <body class="catalog-page song-page" data-media-type="song">
     <div class="container">
         <aside class="sidebar">
-            <div class="logo"><i class="bx bx-pulse"></i><a href="/">SYNCHRO</a></div>
+            <div class="logo">
+                    <i class='bx bx-pulse'></i>
+                <a href="/#">SYNCHRO</a>
+            </div>
+
             <div class="menu">
                 <h5>Menu</h5>
                 <ul>
-                    <li><i class="bx bxs-bolt-circle"></i><a href="/">Explorar</a></li>
-                    <li><i class="bx bxs-volume-full"></i><a href="/#genres">Gêneros</a></li>
-                    <li><i class="bx bxs-album"></i><a href="/#albums">Álbuns</a></li>
-                    <li><i class="bx bxs-microphone"></i><a href="/#artists">Artistas</a></li>
-                    <li><i class="bx bxs-user"></i><a href="user.html">Meu perfil</a></li>
+                    <li>
+                        <i class='bx bxs-bolt-circle'></i>
+                        <a href="/#">Explorar</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-volume-full'></i>
+                        <a href="/#">Gêneros</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-album'></i>
+                        <a href="/#">Álbuns</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-microphone'></i>
+                        <a href="/#">Artistas</a>
+                    </li>
                 </ul>
             </div>
+
             <div class="menu">
-                <h5>Sua biblioteca</h5>
+                <h5>Sua Biblioteca</h5>
                 <ul>
-                    <li><i class="bx bxs-user"></i><a href="user.html">Minha biblioteca</a></li>
-                    <li><i class="bx bxs-heart"></i><a href="#favoriteBtn">Favoritar música</a></li>
+                    <li>
+                        <i class='bx bx-undo'></i>
+                        <a href="/#">Recentes</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-photo-album'></i>
+                        <a href="/#">Avaliações</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-heart'></i>
+                        <a href="/#">Favoritos</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-folder'></i>
+                        <a href="/#">Local</a>
+                    </li>
+                    <li>
+                       <i class="fa-solid fa-ticket"></i>
+                        <a href="/#">Shows perto de você</a>
+                    </li>
+
                 </ul>
-                <p>Pesquise no Last.fm e descubra novas músicas.</p>
             </div>
+
+            <div class="menu">
+                <h5>Playlist</h5>
+                <ul>
+                    <li>
+                        <i class='bx bxs-plus-square'></i>
+                        <!-- Gerado por IA: abre o formulário de criação de playlist. -->
+                        <a href="/#" data-create-playlist aria-haspopup="dialog">Criar uma nova</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <!-- Gerado por IA: lista as playlists da conta. -->
+                        <a href="/frontend/pages/playlists.html" data-my-playlists>Suas Playlists</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="/#">Recomendados</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="/#">Playlists do Synchro</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-footer">
+                <a href="/#">Legal</a>
+                <a href="/#">Centro de Privacidade</a>
+                <a href="/#">Política de Privacidade</a>
+                <a href="/#">Cookies</a>
+                <a href="/#">Sobre Anúncios</a>
+                <a href="/#">Acessibilidades</a>
+            </div>
+            <button class="nav-language-button">
+                <i class="fa-solid fa-globe"></i>
+                Português do Brasil
+            </button>
+
         </aside>
         <main>
             <button class="menu-toggle" type="button" aria-label="Abrir menu"><i class="fa-solid fa-bars"></i></button>
@@ -66,6 +141,7 @@
                         <div class="song-actions">
                             <a id="lastFmLink" class="lastfm-button" target="_blank" rel="noopener noreferrer" hidden><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Abrir no Last.fm</a>
                             <button id="favoriteBtn" type="button" aria-pressed="false">♡ Favoritar</button>
+                            <button id="addToPlaylistBtn" type="button" aria-haspopup="dialog" disabled><i class="fa-solid fa-plus" aria-hidden="true"></i> Adicionar à playlist</button>
                         </div>
                     </div>
                 </section>
@@ -95,6 +171,24 @@
             </div>
         </main>
     </div>
+    <dialog id="songPlaylistDialog" class="song-playlist-dialog" aria-labelledby="songPlaylistHeading">
+        <form id="songPlaylistForm">
+            <h2 id="songPlaylistHeading">Adicionar à playlist</h2>
+            <p id="songPlaylistDescription"></p>
+            <fieldset id="songPlaylistChoices" disabled>
+                <legend>Escolha uma playlist</legend>
+                <div id="songPlaylistCards" class="song-playlist-cards"></div>
+            </fieldset>
+            <p id="songPlaylistFeedback" role="status" aria-live="polite"></p>
+            <a id="songPlaylistLogin" href="login.html" hidden>Entrar na minha conta</a>
+            <a id="songPlaylistLibrary" href="playlists.html" hidden>Criar uma playlist na minha biblioteca</a>
+            <div class="song-playlist-actions">
+                <button id="songPlaylistClose" type="button">Fechar</button>
+                <button id="songPlaylistRetry" type="button" hidden>Tentar novamente</button>
+                <button id="songPlaylistSubmit" type="submit" disabled>Adicionar</button>
+            </div>
+        </form>
+    </dialog>
 </body>
 </html>
 <!-- Gerado por IA -->

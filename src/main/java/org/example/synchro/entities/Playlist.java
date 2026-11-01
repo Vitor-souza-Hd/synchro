@@ -6,10 +6,13 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.OrderColumn;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -23,7 +26,8 @@ public class Playlist extends Midia {
     private String banner;
     
     @ManyToMany(fetch = FetchType.LAZY)
-    private Set<Musica> musicas = new HashSet<>();
+    @OrderColumn(name = "posicao")
+    private List<Musica> musicas = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -56,6 +60,18 @@ public class Playlist extends Midia {
         musicas.remove(musica);
     }
 
+    public void addAlbumMusicas(Album album) {
+        for (Musica musica : album.getMusicas()) {
+            musicas.add(musica);
+        }
+    }
+    public void addPlaylistMusicas(Playlist playlist) {
+        if(this.getId() != playlist.getId()){
+        for (Musica musica : playlist.getMusicas()) {
+            musicas.add(musica);
+        }
+        }
+    }
     public void addUsuario(User usuario) {
         colaboradores.add(usuario);
         usuario.getPlaylists().add(this);

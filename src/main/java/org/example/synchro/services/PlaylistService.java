@@ -3,10 +3,11 @@ package org.example.synchro.services;
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.dto.PlaylistDto;
 import org.example.synchro.dto.PlaylistRequestDto;
-import org.example.synchro.entities.Playlist;
-import org.example.synchro.entities.User;
+import org.example.synchro.entities.*;
+import org.example.synchro.repositories.MidiaRepository;
 import org.example.synchro.repositories.PlaylistRepository;
 import org.example.synchro.repositories.UserRepository;
+import org.example.synchro.services.exception.InvalidTokenException;
 import org.example.synchro.services.exception.ResourceConflictException;
 import org.example.synchro.services.exception.ResourceNotFoundException;
 import org.example.synchro.services.exception.UnauthorizedException;
@@ -24,6 +25,7 @@ public class PlaylistService {
     private final UserRepository userRepository;
     private final PlaylistRepository playlistRepository;
     private final CookieService cookieService;
+    private final MidiaRepository midiaRepository;
 
     @Transactional(readOnly = true)
     public List<PlaylistDto> findMyPlaylists(String cookie) {
@@ -37,7 +39,7 @@ public class PlaylistService {
         playlistRepository.findByColaboradoresContaining(user).forEach(p -> playlists.put(p.getId(), p));
         return playlists.values().stream()
                 .sorted(java.util.Comparator.comparing(Playlist::getId).reversed())
-                .map(PlaylistDto::new).toList();
+                .map(playlist -> new PlaylistDto(playlist, user)).toList();
     }
 
     @Transactional
@@ -53,7 +55,7 @@ public class PlaylistService {
         playlist.setCapa(request.getCapa());
         playlist.setBanner(request.getBanner());
         Playlist savedPlaylist = playlistRepository.save(playlist);
-        return new PlaylistDto(savedPlaylist);
+        return new PlaylistDto(savedPlaylist, user);
     }
 
     @Transactional
@@ -73,7 +75,7 @@ public class PlaylistService {
         if (request.getCapa() != null) playlist.setCapa(request.getCapa());
         if (request.getBanner() != null) playlist.setBanner(request.getBanner());
         playlistRepository.save(playlist);
-        return new PlaylistDto(playlist);
+        return new PlaylistDto(playlist, user);
     }
 
     @Transactional
@@ -96,6 +98,7 @@ public class PlaylistService {
         }
         playlist.addUsuario(colaborador);
     }
+
     @Transactional
     public void removeUserToPlaylist(String cookie,Long playlistId, Long colaboradorid){
         if(!cookieService.checkCookie(cookie)){
@@ -118,5 +121,40 @@ public class PlaylistService {
             throw new ResourceConflictException("o criador não pode ser removido da playlist");
         }
         playlist.removeUsuario(colaborador);
+    }
+
+    @Transactional
+    public void addMidiaToPlaylist(String cookie,Long playlistId, Long midiaId){
+        if(!cookieService.checkCookie(cookie)){
+            throw new InvalidTokenException("sessão invalida");
+        }
+        Optional<Playlist> playlistOptional = playlistRepository.findById(playlistId);
+        Optional<User> userOptional = userRepository.findById(cookieService.getId(cookie));
+
+        Playlist playlist = playlistOptional.orElseThrow(()-> new ResourceNotFoundException("Playlist não encontrado"));
+        User user = userOptional.orElseThrow(() -> new ResourceNotFoundException("usuário não encontrado"));
+
+        if(!playlist.colaborador(user)){
+            throw new UnauthorizedException("usuário não autorizado a modificar a playlist");
+        }
+
+        Optional<Midia>midiaOptional = midiaRepository.findById(midiaId);
+
+        Midia midia = midiaOptional.orElseThrow(()-> new ResourceNotFoundException("conteúdo não encontrado"));
+        if(midia instanceof Musica musica) {
+            playlist.addMusica(musica);
+            playlistRepository.save(playlist);
+        }
+        else if (midia instanceof Album album) {
+            playlist.addAlbumMusicas(album);
+            playlistRepository.save(playlist);
+        } else if (midia instanceof Playlist outraPlaylist) {
+            if(playlist.getId() != outraPlaylist.getId()) {
+                playlist.addPlaylistMusicas(outraPlaylist);
+                playlistRepository.save(playlist);
+            }
+        }
+        else throw new ResourceConflictException("conteúdo incompativel com playlist");
+
     }
 }

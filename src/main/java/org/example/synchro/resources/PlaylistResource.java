@@ -52,6 +52,16 @@ public class PlaylistResource {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{playlistId}/midias/{midiaId}")
+    public ResponseEntity<Void> addMidiaToPlaylist(
+            @CookieValue(name = "token_jwt", required = false) String cookie,
+            @PathVariable("playlistId") Long playlistId,
+            @PathVariable("midiaId") Long midiaId
+    ) {
+        playlistService.addMidiaToPlaylist(cookie, playlistId, midiaId);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/update-playlist/{playlistId}/remove-user/{userId}")
     public ResponseEntity<Void> removeUserToPlaylist(
             @CookieValue(name = "token_jwt", required = false) String cookie,
