@@ -9,6 +9,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const coverCache = new Map();
 
+// Cache de URLs de capas durante a sessao.
+    const COVER_CACHE_PREFIX = "synchro:album-cover:";
+
+    function readSavedCover(releaseGroupId) {
+
+        try {
+            const key =
+                COVER_CACHE_PREFIX + releaseGroupId;
+
+            const saved = sessionStorage.getItem(key);
+
+            if (!saved) return null;
+
+            const data = JSON.parse(saved);
+
+            // Atualiza o endereço depois de 24 horas.
+            const maxAge = 24 * 60 * 60 * 1000;
+
+            if (
+                Date.now() - data.savedAt > maxAge ||
+                !validCoverUrl(data.url)
+            ) {
+                sessionStorage.removeItem(key);
+                return null;
+            }
+
+            return data.url;
+
+        } catch {
+            return null;
+        }
+    }
+
+    function saveCover(releaseGroupId, url) {
+
+        if (!validCoverUrl(url)) return;
+
+        try {
+            sessionStorage.setItem(
+                COVER_CACHE_PREFIX + releaseGroupId,
+                JSON.stringify({
+                    url,
+                    savedAt: Date.now()
+                })
+            );
+        } catch {
+            // Cache opcional: nao impede a capa.
+        }
+    }
+
+
     function showMessage(text) {
         feedback.textContent = text;
         feedback.hidden = false;
@@ -34,6 +85,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // =====================================
 
     async function findCover(releaseGroupId) {
+        const savedUrl = readSavedCover(releaseGroupId);
+
+        if (savedUrl) {
+            return savedUrl;
+        }
 
         if (coverCache.has(releaseGroupId)) {
             return coverCache.get(releaseGroupId);
@@ -62,9 +118,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Verifica a URL diretamente, sem depender
             // exclusivamente do campo "status".
-            return validCoverUrl(data.coverUrl)
-                ? data.coverUrl
-                : null;
+            if (validCoverUrl(data.coverUrl)) {
+
+                saveCover(releaseGroupId, data.coverUrl);
+
+                return data.coverUrl;
+            }
+
+            return null;
 
         })().catch(error => {
 

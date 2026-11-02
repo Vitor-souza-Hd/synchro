@@ -18,30 +18,36 @@
         <aside class="sidebar">
             <div class="logo">
                     <i class='bx bx-pulse'></i>
-                <a href="#">SYNCHRO</a>
+                <a href="index2.html">SYNCHRO</a>
             </div>
+
 
             <div class="menu">
                 <h5>Menu</h5>
+
                 <ul>
                     <li>
-                        <i class='bx bxs-bolt-circle'></i>
-                        <a href="#">Explorar</a>
+                        <i class="bx bxs-bolt-circle"></i>
+                        <a href="index2.html">Explorar</a>
                     </li>
+
                     <li>
-                        <i class='bx bxs-volume-full'></i>
-                        <a href="#">Gêneros</a>
+                        <i class="bx bxs-volume-full"></i>
+                        <a href="index2.html#generos">Gêneros</a>
                     </li>
+
                     <li>
-                        <i class='bx bxs-album'></i>
-                        <a href="#">Álbuns</a>
+                        <i class="bx bxs-album"></i>
+                        <a href="index2.html#albuns">Álbuns</a>
                     </li>
+
                     <li>
-                        <i class='bx bxs-microphone'></i>
-                        <a href="#">Artistas</a>
+                        <i class="bx bxs-microphone"></i>
+                        <a href="index2.html#artistas">Artistas</a>
                     </li>
                 </ul>
             </div>
+
 
             <div class="menu">
                 <h5>Sua Biblioteca</h5>
@@ -56,7 +62,7 @@
                     </li>
                     <li>
                         <i class='bx bxs-heart'></i>
-                        <a href="#">Favoritos</a>
+                        <a href="favoritos.html">Favoritos</a>
                     </li>
                     <li>
                         <i class='bx bxs-folder'></i>
@@ -113,11 +119,13 @@
             <div class="search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
 
-        <input 
-            class="search"
-            type="text"
-            placeholder="O que você quer ouvir?"
-            aria-label="Buscar música">
+                <input
+                        id="pesquisa"
+                        class="search"
+                        type="text"
+                        placeholder="O que você quer ouvir?"
+                        aria-label="Buscar música"
+                >
             </div>
             <div class="nav-links">
                 
@@ -126,9 +134,9 @@
                 </button>
                 <i class="fa-solid fa-users"></i>
                 <i class="fa-solid fa-gear"></i>
-                    <a href="#">Músicas</a>
-                    <a href="#">Artistas</a>
-                    <a href="#">Revisões</a>
+                <a href="#pesquisa">Músicas</a>
+                <a href="#artistas">Artistas</a>
+                <a href="#">Revisões</a>
             </div>       
 
                         <a href="user.html" class="user">
@@ -138,20 +146,47 @@
         </header>
         <!--PRINCIPAL-->
         <section class="content">
-            <h2>Artistas Populares</h2>
+            <h2 id="artistas">Artistas Populares</h2>
             <div class="artists">
                 <!--Inserir dados com JS-->
             </div>
-            <h2>Álbuns Populares</h2>
+            <h2 id="albuns">Álbuns Populares</h2>
             <div class="albums">
                 <!--Inserir dados com JS-->
             </div>
-            <h2>Gêneros Populares</h2>
+            <h2 id="generos">Gêneros Populares</h2>
             <div class="genres">
                 <!--Inserir dados com JS-->
             </div>
         </section>
-        
+
+            <section
+                    id="sobre"
+                    style="
+        margin: 60px 0 30px;
+        padding: 28px;
+        border: 1px solid #444;
+        border-radius: 16px;
+        background: rgba(30, 25, 35, 0.85);
+        color: white;
+    "
+            >
+                <h2>Sobre o Synchro</h2>
+
+                <p style="margin-top: 16px; line-height: 1.7;">
+                    O Synchro é uma rede social musical criada
+                    para conectar pessoas por meio de seus
+                    gostos musicais.
+                </p>
+
+                <p style="margin-top: 12px; line-height: 1.7;">
+                    Aqui você pode descobrir artistas, músicas
+                    e álbuns, organizar seus favoritos,
+                    compartilhar opiniões e explorar
+                    novas experiências musicais.
+                </p>
+            </section>
+
         </main>
     </div>
            
@@ -159,5 +194,7 @@
 
     <script src="script2.js"></script>
     <script src="busca.js"></script>
+    <script src="navegacao.js"></script>
+    <script src="navegacao-global.js"></script>
 </body>
 </html>

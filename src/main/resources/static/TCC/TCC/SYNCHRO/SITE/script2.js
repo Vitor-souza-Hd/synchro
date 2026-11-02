@@ -218,8 +218,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.querySelector(".search");
     const searchBox = document.querySelector(".search-box");
 
-    if (searchInput && searchBox) {
-
+    if (
+        searchInput &&
+        searchBox &&
+        !document.querySelector('script[src="busca.js"]')
+    ) {
         const searchResults = document.createElement("div");
         searchResults.id = "lastfm-search-results";
 
