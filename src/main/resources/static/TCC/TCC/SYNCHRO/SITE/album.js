@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const average = document.getElementById("albumReviewAverage");
     const rating = document.getElementById("albumReviewRating");
     const comment = document.getElementById("albumReviewText");
+    const ratingSelector = window.SynchroRating.mount(rating);
     const saveButton = document.getElementById("saveAlbumReview");
     const cancelButton = document.getElementById("cancelAlbumReview");
     const feedback = document.getElementById("albumReviewFeedback");
@@ -85,7 +86,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             edit.style.borderRadius = "5px";
             edit.style.cursor = "pointer";
             edit.addEventListener("click", () => {
-                rating.value = review.rating;
+                ratingSelector.setValue(review.rating);
                 comment.value = review.review || "";
                 window.scrollTo({ top: 400, behavior: 'smooth' });
             });
@@ -140,7 +141,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Botão Limpar
     cancelButton.addEventListener("click", () => {
-        rating.value = 8;
+        ratingSelector.setValue(8);
         comment.value = "";
         feedback.textContent = "";
     });
@@ -173,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             feedback.textContent = "";
             await loadReviews();
             await loadAverage();
-            rating.value = 8;
+            ratingSelector.setValue(8);
             comment.value = "";
             alert("Avaliação salva com sucesso!");
         } catch (error) {
