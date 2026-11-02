@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const trackName = params.get("track")?.trim();
     const artistName = params.get("artist")?.trim();
+    const sourceAlbum = params.get("album")?.trim();
+    const sourceAlbumArtist = params.get("albumArtist")?.trim();
 
     const musicNameElement =
         document.getElementById("musicName");
@@ -202,57 +204,133 @@ document.addEventListener("DOMContentLoaded", () => {
     // IDENTIFICAR ÁLBUM PELO MUSICBRAINZ
     // =========================================
 
+
     async function carregarAlbumMusicBrainz() {
 
         albumElement.textContent = "Identificando álbum...";
         limparImagem();
 
-        try {
+        function normalize(text) {
+            return String(text || "")
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .replace(/\s+/g, " ")
+                .trim();
+        }
 
-            const resultado = await consultarSynchro(
-                "/musicbrainz/track/album",
+        async function buscarAlbumDeOrigem() {
+
+            if (!sourceAlbum || !sourceAlbumArtist) {
+                return null;
+            }
+
+            const data = await consultarSynchro(
+                "/musicbrainz/album/search",
                 {
-                    artist: artistName,
-                    track: trackName
+                    album: sourceAlbum,
+                    artist: sourceAlbumArtist
                 }
             );
 
-            if (
-                resultado.status !== "found" ||
-                !resultado.album?.releaseGroupId ||
-                !resultado.album?.title
-            ) {
+            const groups = data["release-groups"] || [];
 
+            if (!Array.isArray(groups)) {
+                return null;
+            }
+
+            // Confirma que o MusicBrainz encontrou
+            // o album de estudio solicitado.
+            const match = groups.find(item =>
+                item.id &&
+                normalize(item.title) ===
+                normalize(sourceAlbum) &&
+                item["primary-type"] === "Album" &&
+                (
+                    !Array.isArray(item["secondary-types"]) ||
+                    item["secondary-types"].length === 0
+                )
+            );
+
+            if (!match) return null;
+
+            return {
+                title: match.title,
+                releaseGroupId: match.id
+            };
+        }
+
+        try {
+
+            let identifiedAlbum = null;
+
+            // Primeiro: identificacao habitual
+            // pela musica + artista.
+            try {
+                const result = await consultarSynchro(
+                    "/musicbrainz/track/album",
+                    {
+                        artist: artistName,
+                        track: trackName
+                    }
+                );
+
+                if (
+                    result.status === "found" &&
+                    result.album?.releaseGroupId &&
+                    result.album?.title
+                ) {
+                    identifiedAlbum = result.album;
+                }
+
+            } catch (error) {
+                console.warn(
+                    "[Synchro] Busca pela faixa falhou:",
+                    error
+                );
+            }
+
+            // Segundo: se a faixa nao identificou
+            // um album, usa o contexto de origem
+            // e confirma no MusicBrainz.
+            if (!identifiedAlbum) {
+                try {
+                    identifiedAlbum =
+                        await buscarAlbumDeOrigem();
+
+                } catch (error) {
+                    console.warn(
+                        "[Synchro] Busca pelo album de origem falhou:",
+                        error
+                    );
+                }
+            }
+
+            if (!identifiedAlbum) {
                 albumElement.textContent =
                     "Álbum de estúdio não identificado";
-
                 return;
             }
 
-            const album = resultado.album;
-
-            // Exibe o álbum selecionado pelo backend.
             albumElement.textContent =
-                `Álbum associado: ${album.title}`;
+                `Álbum associado: ${identifiedAlbum.title}`;
 
-            // Busca a capa pelo identificador MusicBrainz.
             await carregarCapaCoverArtArchive(
-                album.releaseGroupId
+                identifiedAlbum.releaseGroupId
             );
 
         } catch (error) {
 
             console.warn(
-                "Não foi possível identificar o álbum:",
+                "[Synchro] Erro ao carregar álbum:",
                 error
             );
 
-            // Erros externos não devem impedir
-            // a exibição das informações da música.
             albumElement.textContent =
                 "Álbum indisponível no momento";
         }
     }
+
 
     // =========================================
     // BUSCAR CAPA PELO BACKEND
