@@ -89,6 +89,41 @@
             color: #bdbdbd;
             margin: 15px 0;
         }
+
+
+        /* FAVORITOS NA PAGINA DE EXPLORACAO */
+
+        #albumExploreFavoriteArea {
+            margin-top: 20px;
+        }
+
+        #albumExploreFavoriteArea[hidden] {
+            display: none;
+        }
+
+        #albumExploreFavoriteBtn {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        #albumExploreFavoriteBtn.is-favorite {
+            color: #ff6584;
+            background: #39212c;
+            border-color: #ff315e;
+        }
+
+        #albumExploreFavoriteFeedback {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #bdb7be;
+            line-height: 1.5;
+        }
+
+        #albumExploreFavoriteFeedback:empty {
+            display: none;
+        }
+
     </style>
 
 
@@ -281,6 +316,30 @@
                 </a>
 
                 <p id="albumExploreDetails"></p>
+
+                <!-- FAVORITOS DO ALBUM -->
+                <div id="albumExploreFavoriteArea" hidden>
+
+                    <button
+                            id="albumExploreFavoriteBtn"
+                            class="music-favorite-button"
+                            type="button"
+                            aria-pressed="false"
+                            disabled
+                    >
+                        <i class="bx bx-heart"></i>
+                        Favoritar álbum
+                    </button>
+
+                    <p
+                            id="albumExploreFavoriteFeedback"
+                            class="music-favorite-feedback"
+                            role="status"
+                            aria-live="polite"
+                    ></p>
+
+                </div>
+
             </div>
         </section>
 
@@ -304,6 +363,7 @@
 
 <script src="album-explorar.js"></script>
 <script src="busca.js"></script>
+<script src="favoritos-album-explorar.js"></script>
 
 <script>
     document.querySelector(".menu-toggle")

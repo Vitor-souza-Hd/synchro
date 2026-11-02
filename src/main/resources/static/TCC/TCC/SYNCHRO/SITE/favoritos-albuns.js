@@ -130,20 +130,43 @@ document.addEventListener("DOMContentLoaded", () => {
     // CRIAR CARTÃO DO ÁLBUM
     // =====================================
 
+
     function renderAlbum(item) {
 
         if (
             !item ||
             typeof item.album !== "string" ||
             typeof item.artist !== "string" ||
-            typeof item.releaseGroupId !== "string"
+            typeof item.releaseGroupId !== "string" ||
+            !item.album.trim() ||
+            !item.artist.trim()
         ) {
             return;
         }
 
+        // CARTAO DO ALBUM
         const card = document.createElement("article");
         card.className = "favorite-card favorite-album-card";
 
+        // LINK PARA A PAGINA DO ALBUM NO SYNCHRO
+        const link = document.createElement("a");
+        link.className = "favorite-card-link";
+        link.setAttribute(
+            "aria-label",
+            `Abrir álbum ${item.album} de ${item.artist}`
+        );
+
+        const url = new URL(
+            "album-explorar.html",
+            window.location.href
+        );
+
+        url.searchParams.set("album", item.album);
+        url.searchParams.set("artist", item.artist);
+
+        link.href = url.toString();
+
+        // CAPA
         const cover = document.createElement("div");
         cover.className = "favorite-album-cover";
 
@@ -152,6 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         cover.appendChild(icon);
 
+        // INFORMACOES
         const info = document.createElement("div");
         info.className = "favorite-card-info";
 
@@ -165,36 +189,22 @@ document.addEventListener("DOMContentLoaded", () => {
         type.className = "favorite-album-type";
         type.textContent = "ÁLBUM";
 
-        // O álbum externo usa um UUID do MusicBrainz.
-        // Não usar album.html?id=UUID:
-        // essa página espera um ID numérico interno.
-        const externalLink = document.createElement("a");
-        externalLink.className = "favorite-album-link";
-        externalLink.textContent = "Ver no MusicBrainz";
+        info.append(title, artist, type);
 
-        externalLink.href =
-            "https://musicbrainz.org/release-group/" +
-            encodeURIComponent(item.releaseGroupId);
+        // TODO O CARTAO SERA CLICAVEL
+        link.append(cover, info);
+        card.appendChild(link);
 
-        externalLink.target = "_blank";
-        externalLink.rel = "noopener noreferrer";
-
-        info.append(
-            title,
-            artist,
-            type,
-            externalLink
-        );
-
-        card.append(cover, info);
         grid.appendChild(card);
 
+        // MANTEM O CARREGAMENTO DA CAPA REAL
         loadCover(
             cover,
             item.releaseGroupId,
             item.album
         );
     }
+
 
     // =====================================
     // CARREGAR FAVORITOS
