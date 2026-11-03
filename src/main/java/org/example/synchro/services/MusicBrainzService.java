@@ -87,6 +87,27 @@ public class MusicBrainzService {
     }
 
     // =========================================
+    // PESQUISAR SINGLES
+    // =========================================
+
+    public Mono<String> searchSingles(
+            String artistName,
+            String singleName
+    ) {
+
+        String query =
+                "releasegroup:\"" + limparPesquisa(singleName) + "\"" +
+                        " AND artistname:\"" + limparPesquisa(artistName) + "\"" +
+                        " AND primarytype:single";
+
+        return consultarMusicBrainz(
+                "/release-group/",
+                query,
+                25
+        );
+    }
+
+    // =========================================
     // PESQUISAR GRAVAÇÕES
     // =========================================
 

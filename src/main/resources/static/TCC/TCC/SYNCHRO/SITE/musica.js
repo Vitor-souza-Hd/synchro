@@ -205,13 +205,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================
 
 
+
     async function carregarAlbumMusicBrainz() {
 
         albumElement.textContent = "Identificando álbum...";
         limparImagem();
 
-        function normalize(text) {
-            return String(text || "")
+        function normalize(value) {
+            return String(value || "")
                 .normalize("NFD")
                 .replace(/[\u0300-\u036f]/g, "")
                 .toLowerCase()
@@ -219,101 +220,233 @@ document.addEventListener("DOMContentLoaded", () => {
                 .trim();
         }
 
-        async function buscarAlbumDeOrigem() {
+        // Identifica um album pelo nome e artista,
+        // exigindo correspondencia com o MusicBrainz.
+        async function buscarAlbumPorNome(
+            nome,
+            artista,
+            tipo = "Album"
+        ) {
 
-            if (!sourceAlbum || !sourceAlbumArtist) {
+            if (!nome || !artista) {
                 return null;
             }
 
+            const isSingle = tipo === "Single";
+
             const data = await consultarSynchro(
-                "/musicbrainz/album/search",
-                {
-                    album: sourceAlbum,
-                    artist: sourceAlbumArtist
-                }
+                isSingle
+                    ? "/musicbrainz/single/search"
+                    : "/musicbrainz/album/search",
+                isSingle
+                    ? {
+                        single: nome,
+                        artist: artista
+                    }
+                    : {
+                        album: nome,
+                        artist: artista
+                    }
             );
 
-            const groups = data["release-groups"] || [];
+            const groups = data["release-groups"];
 
             if (!Array.isArray(groups)) {
                 return null;
             }
 
-            // Confirma que o MusicBrainz encontrou
-            // o album de estudio solicitado.
-            const match = groups.find(item =>
-                item.id &&
-                normalize(item.title) ===
-                normalize(sourceAlbum) &&
-                item["primary-type"] === "Album" &&
-                (
-                    !Array.isArray(item["secondary-types"]) ||
-                    item["secondary-types"].length === 0
-                )
-            );
+            const match = groups.find(item => {
+                if (!item?.id) return false;
 
-            if (!match) return null;
+                const tituloCorreto =
+                    normalize(item.title) === normalize(nome);
+
+                const albumPrincipal =
+                    item["primary-type"] === "Album";
+
+                const tipoCorreto =
+                    item["primary-type"] === tipo;
+
+                const semTipoSecundario =
+                    tipo === "Single" ||
+                    !Array.isArray(item["secondary-types"]) ||
+                    item["secondary-types"].length === 0;
+
+                const creditos = item["artist-credit"];
+
+                const artistaCorreto =
+                    !Array.isArray(creditos) ||
+                    creditos.some(credito => {
+                        const nomeCredito =
+                            credito.artist?.name ||
+                            credito.name ||
+                            "";
+
+                        return normalize(nomeCredito) ===
+                            normalize(artista);
+                    });
+
+                return tituloCorreto &&
+                    tipoCorreto &&
+                    semTipoSecundario &&
+                    artistaCorreto;
+            });
+
+            if (!match) {
+                return null;
+            }
 
             return {
                 title: match.title,
-                releaseGroupId: match.id
+                releaseGroupId: match.id,
+                type: tipo
             };
         }
 
-        try {
+        // Alternativa: o Last.fm pode informar
+        // diretamente o album associado a faixa.
+        async function buscarAlbumPeloLastFm() {
 
-            let identifiedAlbum = null;
-
-            // Primeiro: identificacao habitual
-            // pela musica + artista.
-            try {
-                const result = await consultarSynchro(
-                    "/musicbrainz/track/album",
-                    {
-                        artist: artistName,
-                        track: trackName
-                    }
-                );
-
-                if (
-                    result.status === "found" &&
-                    result.album?.releaseGroupId &&
-                    result.album?.title
-                ) {
-                    identifiedAlbum = result.album;
+            const data = await consultarLastFm(
+                "track.getInfo",
+                {
+                    artist: artistName,
+                    track: trackName
                 }
+            );
 
-            } catch (error) {
-                console.warn(
-                    "[Synchro] Busca pela faixa falhou:",
-                    error
-                );
+            const album = data.track?.album;
+
+            if (!album?.title) {
+                return null;
             }
 
-            // Segundo: se a faixa nao identificou
-            // um album, usa o contexto de origem
-            // e confirma no MusicBrainz.
-            if (!identifiedAlbum) {
-                try {
-                    identifiedAlbum =
-                        await buscarAlbumDeOrigem();
+            const artistaAlbum =
+                typeof album.artist === "string"
+                    ? album.artist
+                    : album.artist?.name || artistName;
 
+            return buscarAlbumPorNome(
+                album.title,
+                artistaAlbum
+            );
+        }
+
+        try {
+            let identifiedAlbum = null;
+
+            // 1. Priorizar o album de origem.
+            // Isso e importante quando a faixa pertence
+            // a diferentes lancamentos.
+
+            if (sourceAlbum) {
+                try {
+                    identifiedAlbum = await buscarAlbumPorNome(
+                        sourceAlbum,
+                        sourceAlbumArtist || artistName
+                    );
                 } catch (error) {
                     console.warn(
-                        "[Synchro] Busca pelo album de origem falhou:",
+                        "[Synchro] Album de origem:",
                         error
                     );
                 }
             }
 
+            // 2. Identificacao habitual pela musica.
+
+            if (!identifiedAlbum) {
+                try {
+                    const result = await consultarSynchro(
+                        "/musicbrainz/track/album",
+                        {
+                            artist: artistName,
+                            track: trackName
+                        }
+                    );
+
+                    if (
+                        result.status === "found" &&
+                        result.album?.releaseGroupId &&
+                        result.album?.title
+                    ) {
+                        identifiedAlbum = result.album;
+                    }
+                } catch (error) {
+                    console.warn(
+                        "[Synchro] Busca pela faixa:",
+                        error
+                    );
+                }
+            }
+
+            // 3. Alternativa: consultar o Last.fm
+            // e confirmar o album no MusicBrainz.
+
+            if (!identifiedAlbum) {
+                try {
+                    identifiedAlbum =
+                        await buscarAlbumPeloLastFm();
+
+                } catch (error) {
+                    console.warn(
+                        "[Synchro] Busca pelo Last.fm:",
+                        error
+                    );
+                }
+            }
+
+            // 4. Procurar um single oficial.
+            // So tenta depois das buscas por album.
+
+            if (!identifiedAlbum) {
+                try {
+                    identifiedAlbum =
+                        await buscarAlbumPorNome(
+                            trackName,
+                            artistName,
+                            "Single"
+                        );
+
+                    if (identifiedAlbum) {
+                        console.info(
+                            "[Synchro] Single identificado:",
+                            identifiedAlbum.title
+                        );
+                    }
+
+                } catch (error) {
+                    console.warn(
+                        "[Synchro] Busca pelo single:",
+                        error
+                    );
+                }
+            }
+
+            // Nenhuma fonte identificou um album valido.
+
             if (!identifiedAlbum) {
                 albumElement.textContent =
-                    "Álbum de estúdio não identificado";
+                    "Lançamento não identificado";
+
+                console.info(
+                    "[Synchro] Nenhum álbum confirmado para:",
+                    artistName,
+                    "-",
+                    trackName
+                );
+
                 return;
             }
 
+            // Exibe o album identificado.
+
             albumElement.textContent =
-                `Álbum associado: ${identifiedAlbum.title}`;
+                identifiedAlbum.type === "Single"
+                    ? "Single"
+                    : `Álbum associado: ${identifiedAlbum.title}`;
+
+            // Utiliza o carregamento de capa existente.
 
             await carregarCapaCoverArtArchive(
                 identifiedAlbum.releaseGroupId
@@ -330,6 +463,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Álbum indisponível no momento";
         }
     }
+
 
 
     // =========================================
