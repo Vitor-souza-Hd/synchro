@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ["álbuns", home + "#albuns"],
         ["artistas", home + "#artistas"],
         ["favoritos", "favoritos.html"],
+        ["recentes", "recentes.html"],
         ["músicas", home + "#pesquisa"],
         ["sobre o synchro", home + "#sobre"]
     ]);
