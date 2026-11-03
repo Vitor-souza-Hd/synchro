@@ -1,0 +1,220 @@
+
+/* =========================================
+   SYNCHRO - TEMA CLARO DA PAGINA INICIAL
+   ========================================= */
+
+/* Fundo principal */
+
+html.synchro-light body.synchro-home {
+    background: #f5eef2;
+    color: #30202b;
+}
+
+/* Esconde o video escuro apenas no modo claro */
+
+html.synchro-light
+.synchro-home .background-video {
+    display: none;
+}
+
+/* MENU LATERAL */
+
+html.synchro-light
+.synchro-home .container .sidebar {
+    background: #29212e;
+    border-color: #493745;
+    backdrop-filter: none;
+}
+
+html.synchro-light
+.synchro-home .sidebar .menu h5 {
+    color: #e2b5cb;
+}
+
+html.synchro-light
+.synchro-home .sidebar .menu ul li a,
+html.synchro-light
+.synchro-home .sidebar .menu ul li i {
+    color: #f8f4f7;
+}
+
+html.synchro-light
+.synchro-home .sidebar .menu ul li:hover a,
+html.synchro-light
+.synchro-home .sidebar .menu ul li:hover i {
+    color: #ff91b0;
+}
+
+html.synchro-light
+.synchro-home .sidebar .logo a,
+html.synchro-light
+.synchro-home .sidebar .logo i {
+    color: #ff6588;
+}
+
+/* Rodape lateral */
+
+html.synchro-light
+.synchro-home .nav-footer a {
+    color: #d6c4d0;
+}
+
+html.synchro-light
+.synchro-home .nav-footer a:hover {
+    color: #ffffff;
+}
+
+html.synchro-light
+.synchro-home .nav-language-button {
+    color: #ffffff;
+    border-color: #756171;
+}
+
+html.synchro-light
+.synchro-home .nav-language-button i {
+    color: #ffffff;
+}
+
+/* CABECALHO */
+
+html.synchro-light
+.synchro-home .search-box {
+    background: #ffffff;
+    border-color: #dfcbd6;
+    box-shadow: 0 3px 14px rgba(64, 30, 49, 0.07);
+}
+
+html.synchro-light
+.synchro-home .search {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-home .search::placeholder {
+    color: #766673;
+}
+
+html.synchro-light
+.synchro-home .search-box i,
+html.synchro-light
+.synchro-home .search-bar .nav-links > i,
+html.synchro-light
+.synchro-home .settings-shortcut i,
+html.synchro-light
+.synchro-home .user i {
+    color: #49313f;
+}
+
+html.synchro-light
+.synchro-home .search-bar .nav-links a:not(.settings-shortcut) {
+    color: #554250;
+}
+
+html.synchro-light
+.synchro-home .search-bar .nav-links a:hover,
+html.synchro-light
+.synchro-home .settings-shortcut:hover i {
+    color: #ba3f6d;
+}
+
+/* Titulos principais */
+
+html.synchro-light
+.synchro-home main .content h2 {
+    color: #30202b;
+}
+
+/* CARDS DE ARTISTAS, ALBUNS E GENEROS */
+
+html.synchro-light
+.synchro-home .artist-card,
+html.synchro-light
+.synchro-home .album-card,
+html.synchro-light
+.synchro-home .genre-card {
+    background: #ffffff;
+    border: 1px solid #e6d9e0;
+    box-shadow: 0 4px 14px rgba(55, 25, 42, 0.06);
+}
+
+html.synchro-light
+.synchro-home .artist-card:hover,
+html.synchro-light
+.synchro-home .album-card:hover,
+html.synchro-light
+.synchro-home .genre-card:hover {
+    background: #fff6fa;
+    border-color: #dca6bc;
+}
+
+html.synchro-light
+.synchro-home .artist-card h3,
+html.synchro-light
+.synchro-home .album-card h3,
+html.synchro-light
+.synchro-home .genre-card h3 {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-home .artist-card p,
+html.synchro-light
+.synchro-home .album-card p,
+html.synchro-light
+.synchro-home .genre-card p {
+    color: #715d69;
+}
+
+/* AVALIACOES NA HOME, SE EXIBIDAS */
+
+html.synchro-light
+.synchro-home .reviews-card {
+    background: #ffffff;
+    border: 1px solid #e6d9e0;
+}
+
+html.synchro-light
+.synchro-home .review-info h3,
+html.synchro-light
+.synchro-home .review-text {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-home .review-info h5,
+html.synchro-light
+.synchro-home .review-user span {
+    color: #715d69;
+}
+
+/* SOBRE O SYNCHRO
+   Sobrescreve os estilos inline atuais. */
+
+html.synchro-light
+.synchro-home #sobre {
+    background: #ffffff !important;
+    border-color: #e6d9e0 !important;
+    color: #30202b !important;
+    box-shadow: 0 4px 14px rgba(55, 25, 42, 0.06);
+}
+
+html.synchro-light
+.synchro-home #sobre h2,
+html.synchro-light
+.synchro-home #sobre p {
+    color: #30202b;
+}
+
+/* CABECALHO FIXO NO CELULAR */
+
+@media (max-width: 768px) {
+    html.synchro-light
+    .synchro-home .search-bar {
+        background: rgba(245, 238, 242, 0.96);
+    }
+
+    html.synchro-light
+    .synchro-home .menu-toggle i {
+        color: #30202b;
+    }
+}

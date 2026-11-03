@@ -1,0 +1,379 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Álbum - Synchro</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="musica.css">
+
+    <link
+            href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+            rel="stylesheet"
+    >
+
+    <style>
+        .album-explore-content {
+            padding: 30px;
+            color: #fff;
+        }
+
+        .album-explore-top {
+            display: flex;
+            gap: 28px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 36px;
+        }
+
+        .album-explore-cover {
+            width: 230px;
+            height: 230px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #30252d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .album-explore-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .album-explore-cover i {
+            font-size: 90px;
+            color: #ff6588;
+        }
+
+        .album-explore-info h1 {
+            font-size: clamp(28px, 4vw, 44px);
+            margin: 10px 0;
+        }
+
+        .album-explore-info a {
+            color: #ff859e;
+            text-decoration: none;
+        }
+
+        .album-explore-tracks {
+            margin-top: 18px;
+            max-width: 850px;
+        }
+
+        .album-explore-track {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #363036;
+            text-decoration: none;
+            color: #f3f3f3;
+        }
+
+        .album-explore-track:hover {
+            background: #30242c;
+        }
+
+        .album-explore-track span {
+            color: #ff839e;
+        }
+
+        .album-explore-status {
+            color: #bdbdbd;
+            margin: 15px 0;
+        }
+
+
+        /* FAVORITOS NA PAGINA DE EXPLORACAO */
+
+        #albumExploreFavoriteArea {
+            margin-top: 20px;
+        }
+
+        #albumExploreFavoriteArea[hidden] {
+            display: none;
+        }
+
+        #albumExploreFavoriteBtn {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        #albumExploreFavoriteBtn.is-favorite {
+            color: #ff6584;
+            background: #39212c;
+            border-color: #ff315e;
+        }
+
+        #albumExploreFavoriteFeedback {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #bdb7be;
+            line-height: 1.5;
+        }
+
+        #albumExploreFavoriteFeedback:empty {
+            display: none;
+        }
+
+    </style>
+
+
+    <style>
+        /* CORRECAO DO MENU LATERAL */
+
+
+
+
+
+
+
+
+
+        /* CABECALHO */
+
+        .container main {
+            min-width: 0;
+        }
+
+
+
+
+
+        @media (max-width: 768px) {
+            .container .sidebar {
+                height: 100vh;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+<div class="container">
+
+
+    <!-- MENU LATERAL -->
+
+    <!-- SIDEBAR - MESMA ESTRUTURA DA PAGINA INICIAL -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            <i class="bx bx-pulse"></i>
+            <a href="index2.html">SYNCHRO</a>
+        </div>
+
+        <div class="menu">
+            <h5>Menu</h5>
+            <ul>
+                <li>
+                    <i class="bx bxs-bolt-circle"></i>
+                    <a href="index2.html">Explorar</a>
+                </li>
+                <li>
+                    <i class="bx bxs-volume-full"></i>
+                    <a href="#">Gêneros</a>
+                </li>
+                <li>
+                    <i class="bx bxs-album"></i>
+                    <a href="#">Álbuns</a>
+                </li>
+                <li>
+                    <i class="bx bxs-microphone"></i>
+                    <a href="#">Artistas</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu">
+            <h5>Sua Biblioteca</h5>
+            <ul>
+                <li>
+                    <i class="bx bx-undo"></i>
+                    <a href="recentes.html">Recentes</a>
+                </li>
+                <li>
+                    <i class="bx bxs-photo-album"></i>
+                    <a href="#">Avaliações</a>
+                </li>
+                <li>
+                    <i class="bx bxs-heart"></i>
+                    <a href="favoritos.html">Favoritos</a>
+                </li>
+                <li>
+                    <i class="bx bxs-folder"></i>
+                    <a href="#">Local</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu">
+            <h5>Playlist</h5>
+            <ul>
+                <li>
+                    <i class="bx bxs-plus-square"></i>
+                    <a href="#">Criar uma nova</a>
+                </li>
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="#">Suas Playlists</a>
+                </li>
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="#">Recomendados</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="nav-footer">
+            <a href="#">Sobre o Synchro</a>
+        </div>
+
+    </aside>
+
+
+
+
+    <main class="album-explore-content">
+
+
+        <!-- CABECALHO DO SYNCHRO -->
+
+        <!-- CABECALHO - MESMA ESTRUTURA DA PAGINA INICIAL -->
+
+        <header class="search-bar">
+
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                        class="search"
+                        type="text"
+                        placeholder="O que você quer ouvir?"
+                        aria-label="Buscar música"
+                        autocomplete="off"
+                >
+            </div>
+
+            <div class="nav-links">
+
+                <button
+                        class="menu-toggle"
+                        type="button"
+                        aria-label="Abrir ou fechar menu"
+                >
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
+                <a href="index2.html">Início</a>
+                <a href="#">Músicas</a>
+                <a href="#">Artistas</a>
+
+            </div>
+
+            <a
+                    href="user.html"
+                    class="user"
+                    aria-label="Meu perfil"
+            >
+                <i class="fa-solid fa-circle-user"></i>
+            </a>
+
+        </header>
+
+
+
+        <a href="index2.html"
+           style="color:#ff839e;text-decoration:none;">
+            ← Voltar ao início
+        </a>
+
+        <section class="album-explore-top">
+
+            <div class="album-explore-cover"
+                 id="albumExploreCover">
+                <i class="bx bx-album"></i>
+            </div>
+
+            <div class="album-explore-info">
+                <span>ÁLBUM</span>
+
+                <h1 id="albumExploreName">
+                    Carregando...
+                </h1>
+
+                <a id="albumExploreArtist" href="#">
+                    Carregando artista...
+                </a>
+
+                <p id="albumExploreDetails"></p>
+
+                <!-- FAVORITOS DO ALBUM -->
+                <div id="albumExploreFavoriteArea" hidden>
+
+                    <button
+                            id="albumExploreFavoriteBtn"
+                            class="music-favorite-button"
+                            type="button"
+                            aria-pressed="false"
+                            disabled
+                    >
+                        <i class="bx bx-heart"></i>
+                        Favoritar álbum
+                    </button>
+
+                    <p
+                            id="albumExploreFavoriteFeedback"
+                            class="music-favorite-feedback"
+                            role="status"
+                            aria-live="polite"
+                    ></p>
+
+                </div>
+
+            </div>
+        </section>
+
+        <p id="albumExploreStatus"
+           class="album-explore-status"
+           role="status">
+            Consultando o Last.fm...
+        </p>
+
+        <section>
+            <h2>Músicas do álbum</h2>
+            <div
+                    id="albumExploreTracks"
+                    class="album-explore-tracks">
+            </div>
+        </section>
+
+    </main>
+</div>
+
+
+<script src="album-explorar.js"></script>
+<script src="busca.js"></script>
+<script src="favoritos-album-explorar.js"></script>
+<script src="navegacao-global.js"></script>
+<script src="recentes.js"></script>
+
+<script>
+    document.querySelector(".menu-toggle")
+        ?.addEventListener("click", () => {
+            document.querySelector(".sidebar")
+                ?.classList.toggle("active");
+        });
+</script>
+
+</body>
+</html>

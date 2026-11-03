@@ -6,14 +6,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const albumArtistEl = document.getElementById("albumArtist");
     const trackListEl = document.getElementById("trackList");
 
-    // Elementos de Review
     const status = document.getElementById("albumReviewStatus");
     const average = document.getElementById("albumReviewAverage");
-
-    // Input hidden e barrinhas de avaliação
     const rating = document.getElementById("albumReviewRating");
     const ratingItems = document.querySelectorAll(".rating-item");
-
     const comment = document.getElementById("albumReviewText");
     const saveButton = document.getElementById("saveAlbumReview");
     const cancelButton = document.getElementById("cancelAlbumReview");
@@ -23,9 +19,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     let myUsername = null;
     let myReview = null;
 
-    // ==========================================
-    // LÓGICA DAS BARRINHAS DE NOTA
-    // ==========================================
     function atualizarBarraVisual(valor) {
         ratingItems.forEach(item => {
             if (parseInt(item.dataset.value) === parseInt(valor)) {
@@ -36,21 +29,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // Adiciona o evento de clique nas barrinhas
     ratingItems.forEach(item => {
         item.addEventListener('click', () => {
             const valor = parseInt(item.dataset.value);
-            rating.value = valor; // Atualiza o input escondido
-            atualizarBarraVisual(valor); // Atualiza a cor visual
+            rating.value = valor;
+            atualizarBarraVisual(valor);
         });
     });
 
-    // Inicia a barra com o valor 8 marcado
     atualizarBarraVisual(8);
 
-    // ==========================================
-    // FUNÇÕES DE REQUISIÇÃO E RENDERIZAÇÃO
-    // ==========================================
     async function requestJson(url, options = {}) {
         const response = await fetch(url, { credentials: "same-origin", ...options });
         if (!response.ok) throw new Error("HTTP " + response.status);
@@ -58,7 +46,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return response.json();
     }
 
-    // 1. Busca o álbum e as músicas
     try {
         const album = await requestJson(`/album/id/${albumId}`);
         albumNameEl.textContent = album.titulo;
@@ -85,13 +72,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // 2. Autenticação
     try {
-        const me = await requestJson("/users/me"); // Ou /auth/me, dependendo do backend
+        const me = await requestJson("/auth/me"); // AQUI ESTAVA O ERRO: /auth/me em vez de /users/me
         myUsername = me.username || null;
     } catch { myUsername = null; }
 
-    // 3. Renderiza os cards de review
     function addReviewCard(review) {
         const card = document.createElement("article");
         card.className = "music-review-card";
@@ -106,7 +91,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             <p style="color: #b3b3b3;">${review.review || ""}</p>
         `;
 
-        // Se a review for do próprio usuário logado, adiciona botões
         if (myReview && review.id === myReview.id) {
             const edit = document.createElement("button");
             edit.textContent = "Editar";
@@ -120,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             edit.style.cursor = "pointer";
             edit.addEventListener("click", () => {
                 rating.value = review.rating;
-                atualizarBarraVisual(review.rating); // Atualiza a barra visual também!
+                atualizarBarraVisual(review.rating);
                 comment.value = review.review || "";
                 window.scrollTo({ top: 400, behavior: 'smooth' });
             });
@@ -145,7 +129,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         list.appendChild(card);
     }
 
-    // 4. Carrega todas as reviews da mídia
     async function loadReviews() {
         const [allReviews, mine] = await Promise.all([
             requestJson("/review"),
@@ -163,7 +146,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // 5. Carrega a média
     async function loadAverage() {
         try {
             const data = await requestJson(`/review/midia/${albumId}/rating`);
@@ -175,15 +157,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // 6. Botão Limpar
     cancelButton.addEventListener("click", () => {
         rating.value = 8;
-        atualizarBarraVisual(8); // Reseta a barra visual
+        atualizarBarraVisual(8);
         comment.value = "";
         feedback.textContent = "";
     });
 
-    // 7. Botão Salvar
     saveButton.addEventListener("click", async () => {
         if (!myUsername) {
             feedback.textContent = "⚠️ Você precisa estar logado para salvar.";
@@ -213,7 +193,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             await loadReviews();
             await loadAverage();
 
-            // Reseta o formulário após salvar
             rating.value = 8;
             atualizarBarraVisual(8);
             comment.value = "";
@@ -226,7 +205,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // Inicializa as reviews e a média
     status.textContent = "";
     await Promise.all([loadReviews(), loadAverage()]);
 });

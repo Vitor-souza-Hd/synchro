@@ -1,0 +1,295 @@
+
+/* =========================================
+   SYNCHRO - TEMA CLARO DE ARTISTAS
+   ========================================= */
+
+/* FUNDO PRINCIPAL */
+
+html.synchro-light body.synchro-artista {
+    background: #f5eef2;
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-artista .container main {
+    min-width: 0;
+    color: #30202b;
+}
+
+/* MENU LATERAL */
+
+html.synchro-light
+.synchro-artista .container .sidebar {
+    background: #29212e;
+    border-color: #493745;
+    backdrop-filter: none;
+}
+
+html.synchro-light
+.synchro-artista .sidebar .menu h5 {
+    color: #e2b5cb;
+}
+
+html.synchro-light
+.synchro-artista .sidebar .menu li a,
+html.synchro-light
+.synchro-artista .sidebar .menu li i {
+    color: #f8f4f7;
+}
+
+html.synchro-light
+.synchro-artista .sidebar .menu li:hover a,
+html.synchro-light
+.synchro-artista .sidebar .menu li:hover i {
+    color: #ff91b0;
+}
+
+html.synchro-light
+.synchro-artista .sidebar .logo a,
+html.synchro-light
+.synchro-artista .sidebar .logo i {
+    color: #ff6588;
+}
+
+html.synchro-light
+.synchro-artista .sidebar .nav-footer a {
+    color: #d6c4d0;
+}
+
+html.synchro-light
+.synchro-artista .nav-language-button {
+    color: #ffffff;
+    border-color: #756171;
+}
+
+html.synchro-light
+.synchro-artista .nav-language-button i {
+    color: #ffffff;
+}
+
+/* BARRA DE PESQUISA */
+
+html.synchro-light
+.synchro-artista .search-box {
+    background: #ffffff;
+    border-color: #dfcbd6;
+    box-shadow: 0 3px 12px rgba(64,30,49,.06);
+}
+
+html.synchro-light
+.synchro-artista .search {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-artista .search::placeholder {
+    color: #756573;
+}
+
+html.synchro-light
+.synchro-artista .search-box i,
+html.synchro-light
+.synchro-artista .search-bar .nav-links > i,
+html.synchro-light
+.synchro-artista .search-bar .user i {
+    color: #49313f;
+}
+
+html.synchro-light
+.synchro-artista .search-bar .nav-links a {
+    color: #554250;
+}
+
+html.synchro-light
+.synchro-artista .search-bar .nav-links a:hover {
+    color: #b63e6a;
+}
+
+/* CABECALHO DO ARTISTA */
+
+html.synchro-light
+.synchro-artista .artist-header {
+    background: linear-gradient(
+            125deg,
+            #f1d7e3,
+            #ffffff 75%
+    );
+    border: 1px solid #e3cbd8;
+    box-shadow: 0 5px 18px rgba(55,25,42,.05);
+}
+
+html.synchro-light
+.synchro-artista .artist-label {
+    color: #a13f68;
+}
+
+html.synchro-light
+.synchro-artista .artist-info h1 {
+    color: #30202b;
+}
+
+/* FOTOGRAFIA DO ARTISTA */
+
+html.synchro-light
+.synchro-artista .artist-image img {
+    background: #e7cfdb;
+    border: 4px solid #ffffff;
+    box-shadow: 0 12px 30px rgba(55,25,42,.14);
+}
+
+/* GENEROS MUSICAIS */
+
+html.synchro-light
+.synchro-artista .tags span {
+    background: #f6e6ee;
+    color: #843a5b;
+    border: 1px solid #e1bbcd;
+}
+
+/* BOTAO FAVORITAR */
+
+html.synchro-light
+.synchro-artista #favoriteBtn {
+    background: #bd3564;
+    color: #ffffff;
+    border: 1px solid #bd3564;
+}
+
+html.synchro-light
+.synchro-artista #favoriteBtn i {
+    color: #ffffff;
+}
+
+html.synchro-light
+.synchro-artista #favoriteBtn:hover:not(:disabled) {
+    background: #9f2451;
+}
+
+html.synchro-light
+.synchro-artista #favoriteBtn[aria-pressed="true"] {
+    background: #f8dce8;
+    color: #8e244b !important;
+    border-color: #ba4772 !important;
+}
+
+html.synchro-light
+.synchro-artista #favoriteBtn[aria-pressed="true"] i {
+    color: #8e244b;
+}
+
+html.synchro-light
+.synchro-artista #favoriteBtn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+/* TITULOS DAS SECOES */
+
+html.synchro-light
+.synchro-artista .artist-section h2 {
+    color: #30202b;
+}
+
+/* MUSICAS POPULARES */
+
+html.synchro-light
+.synchro-artista .track {
+    background: #ffffff;
+    border: 1px solid #e8dae2;
+    box-shadow: 0 2px 10px rgba(55,25,42,.04);
+}
+
+html.synchro-light
+.synchro-artista .track:hover {
+    background: #fff3f8;
+    border-color: #d9a8bd;
+}
+
+html.synchro-light
+.synchro-artista .track-number {
+    color: #806b78;
+}
+
+html.synchro-light
+.synchro-artista .track-info strong {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-artista .track-info strong a {
+    color: inherit;
+}
+
+html.synchro-light
+.synchro-artista .track-info span {
+    color: #715d69;
+}
+
+html.synchro-light
+.synchro-artista .track button,
+html.synchro-light
+.synchro-artista .track button i {
+    color: #a63865;
+}
+
+html.synchro-light
+.synchro-artista .track button:hover {
+    color: #d04477;
+}
+
+/* ALBUNS POPULARES */
+
+html.synchro-light
+.synchro-artista .artist-section .album-card {
+    background: #ffffff;
+    border: 1px solid #e6d9e0;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 4px 14px rgba(55,25,42,.06);
+}
+
+html.synchro-light
+.synchro-artista .artist-section .album-card:hover {
+    background: #fff6fa;
+    border-color: #d9a8bd;
+}
+
+html.synchro-light
+.synchro-artista .artist-section .album-card h3 {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-artista .artist-section .album-card p {
+    color: #715d69;
+}
+
+/* BIOGRAFIA */
+
+html.synchro-light
+.synchro-artista .biography {
+    background: #ffffff;
+    border: 1px solid #e6d9e0;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 14px rgba(55,25,42,.05);
+}
+
+html.synchro-light
+.synchro-artista .biography p {
+    color: #554651;
+}
+
+/* CONTRASTE DO MENU NO CELULAR */
+
+@media (max-width: 768px) {
+    html.synchro-light
+    .synchro-artista .search-bar {
+        background: rgba(245,238,242,.96);
+    }
+
+    html.synchro-light
+    .synchro-artista .menu-toggle i {
+        color: #30202b;
+    }
+}

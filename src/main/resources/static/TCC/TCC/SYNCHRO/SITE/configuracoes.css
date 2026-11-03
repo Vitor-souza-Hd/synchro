@@ -1,0 +1,239 @@
+
+/* CONFIGURACOES - SYNCHRO */
+
+.settings-main {
+    min-width: 0;
+    padding: 24px 36px 60px;
+    color: #f7f3f5;
+}
+
+.settings-topbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 45px;
+}
+
+.settings-topbar a {
+    color: #e9dce2;
+    font-size: 14px;
+}
+
+.settings-heading {
+    margin-bottom: 32px;
+}
+
+.settings-heading span {
+    color: #ff819f;
+    font-size: 12px;
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+.settings-heading h1 {
+    font-size: clamp(32px, 4vw, 48px);
+    margin: 12px 0;
+}
+
+.settings-heading p,
+.settings-card p {
+    color: #c5bac1;
+    line-height: 1.6;
+}
+
+.settings-card {
+    background: #211c23;
+    border: 1px solid #493643;
+    border-radius: 18px;
+    padding: 26px;
+    margin-bottom: 22px;
+}
+
+.settings-section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.settings-section-title i {
+    font-size: 26px;
+    color: #ff7897;
+}
+
+.settings-section-title h2 {
+    margin: 0;
+    font-size: 23px;
+}
+
+.settings-card label {
+    display: block;
+    margin: 18px 0 10px;
+}
+
+#themePreference {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px;
+    border: 1px solid #745064;
+    border-radius: 10px;
+    background: #342935;
+    color: #fff;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 22px 0;
+}
+
+.settings-row strong {
+    display: block;
+    margin-bottom: 8px;
+}
+
+#historyEnabled {
+    width: 24px;
+    height: 24px;
+    accent-color: #ff6588;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.settings-button {
+    margin-top: 18px;
+    padding: 12px 18px;
+    background: #432839;
+    color: white;
+    border: 1px solid #91536f;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.settings-button:hover {
+    background: #63374d;
+}
+
+#settingsFeedback {
+    min-height: 24px;
+    color: #ff9bb2;
+}
+
+/* TEMA CLARO - APENAS CONFIGURACOES */
+
+body.settings-light {
+    background: #f4eef2;
+}
+
+.settings-light .settings-main {
+    color: #261d25;
+}
+
+.settings-light .settings-card {
+    background: white;
+    border-color: #e1cfd9;
+}
+
+.settings-light .settings-card h2,
+.settings-light .settings-card p,
+.settings-light .settings-heading p,
+.settings-light .settings-row strong {
+    color: #332a32;
+}
+
+.settings-light .settings-topbar a {
+    color: #472d3c;
+}
+
+.settings-light #themePreference {
+    background: #fff;
+    color: #241d23;
+    border-color: #bea1b1;
+}
+
+.settings-light .settings-button {
+    color: white;
+}
+
+@media (max-width: 700px) {
+    .settings-main {
+        padding: 22px 18px 45px;
+    }
+
+    .settings-card {
+        padding: 20px;
+    }
+}
+
+/* =========================================
+   MODO CLARO - CORRECAO DE CONTRASTE
+   ========================================= */
+
+/* Menu lateral com fundo escuro */
+
+body.settings-light .container .sidebar {
+    background: #29212e;
+    border-color: #493745;
+    backdrop-filter: none;
+}
+
+/* Titulos das categorias */
+
+body.settings-light .sidebar .menu h5 {
+    color: #e2b5cb;
+}
+
+/* Links e icones do menu */
+
+body.settings-light .sidebar .menu ul li a,
+body.settings-light .sidebar .menu ul li i {
+    color: #f8f4f7;
+}
+
+/* Destaque ao passar o mouse */
+
+body.settings-light .sidebar .menu ul li:hover a,
+body.settings-light .sidebar .menu ul li:hover i {
+    color: #ff91b0;
+}
+
+/* Pagina atual */
+
+body.settings-light
+.sidebar a[aria-current="page"] {
+    color: #ff91b0;
+}
+
+/* Logo continua destacada */
+
+body.settings-light .sidebar .logo a,
+body.settings-light .sidebar .logo i {
+    color: #ff6588;
+}
+
+/* Rodape, caso exista */
+
+body.settings-light .sidebar .nav-footer a {
+    color: #d6c4d0;
+}
+
+/* Icones e textos gerais da area principal */
+
+body.settings-light .settings-main h1,
+body.settings-light .settings-main h2,
+body.settings-light .settings-main strong,
+body.settings-light .settings-main label {
+    color: #261d25;
+}
+
+body.settings-light .settings-main p {
+    color: #554651;
+}
+
+/* Feedback das preferencias */
+
+body.settings-light #settingsFeedback {
+    color: #8e3155;
+}

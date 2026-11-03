@@ -1,0 +1,372 @@
+
+/* ==========================================
+   SYNCHRO - MODO CLARO DO PERFIL
+   ========================================== */
+
+/* FUNDO PRINCIPAL */
+
+html.synchro-light body.synchro-usuario {
+    background: #f5eef2;
+    color: #30202b;
+}
+
+/* CABECALHO */
+
+html.synchro-light
+.synchro-usuario .top-header {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-usuario .search-box {
+    background: #ffffff;
+    border: 1px solid #dfcbd6;
+    box-shadow: 0 3px 12px rgba(64,30,49,.06);
+}
+
+html.synchro-light
+.synchro-usuario .search {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-usuario .search::placeholder {
+    color: #756573;
+}
+
+html.synchro-light
+.synchro-usuario .search-box i,
+html.synchro-light
+.synchro-usuario .nav-links i,
+html.synchro-light
+.synchro-usuario .nav-links a {
+    color: #49313f;
+}
+
+html.synchro-light
+.synchro-usuario .nav-links a:hover,
+html.synchro-light
+.synchro-usuario .nav-links i:hover {
+    color: #b63e6a;
+}
+
+/* BANNER DO PERFIL
+   Mantemos a camada escura para garantir
+   contraste sobre fotografias personalizadas. */
+
+html.synchro-light
+.synchro-usuario .profile-header {
+    background: linear-gradient(
+            135deg,
+            #edcbdc,
+            #c49aac
+    );
+    border: 1px solid #ddbfce;
+    box-shadow: 0 8px 25px rgba(55,25,42,.08);
+}
+
+html.synchro-light
+.synchro-usuario .profile-header::before {
+    background: linear-gradient(
+            to top,
+            rgba(26,17,26,.88),
+            rgba(26,17,26,.38)
+    );
+}
+
+/* Textos sobre o banner permanecem claros */
+
+html.synchro-light
+.synchro-usuario .banner-info h1,
+html.synchro-light
+.synchro-usuario .banner-info p,
+html.synchro-light
+.synchro-usuario .banner-info span,
+html.synchro-light
+.synchro-usuario .user-card h3,
+html.synchro-light
+.synchro-usuario .user-card p {
+    color: #ffffff;
+}
+
+/* FOTO DE PERFIL */
+
+html.synchro-light
+.synchro-usuario .user-card img {
+    border: 4px solid rgba(255,255,255,.9);
+    box-shadow: 0 10px 30px rgba(25,15,25,.25);
+}
+
+/* ESTATISTICAS DO PERFIL */
+
+html.synchro-light
+.synchro-usuario .profile-stats div {
+    background: rgba(25,17,28,.55);
+    border-color: rgba(255,255,255,.25);
+}
+
+html.synchro-light
+.synchro-usuario .profile-stats h3,
+html.synchro-light
+.synchro-usuario .profile-stats p {
+    color: #ffffff;
+}
+
+/* BOTOES DO BANNER */
+
+html.synchro-light
+.synchro-usuario #editBiographyButton,
+html.synchro-light
+.synchro-usuario #editPhotoButton,
+html.synchro-light
+.synchro-usuario #editBannerButton,
+html.synchro-light
+.synchro-usuario .lastfm-button {
+    background: rgba(37,26,38,.88);
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,.3);
+}
+
+html.synchro-light
+.synchro-usuario #editBiographyButton:hover,
+html.synchro-light
+.synchro-usuario #editPhotoButton:hover,
+html.synchro-light
+.synchro-usuario #editBannerButton:hover,
+html.synchro-light
+.synchro-usuario .lastfm-button:hover {
+    background: #583148;
+    border-color: #ff91b0;
+}
+
+/* EDITORES DO PERFIL */
+
+html.synchro-light
+.synchro-usuario #biographyEditor,
+html.synchro-light
+.synchro-usuario #photoEditor,
+html.synchro-light
+.synchro-usuario #bannerEditor {
+    background: rgba(30,22,32,.9);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 12px;
+    padding: 15px;
+    color: #ffffff;
+}
+
+html.synchro-light
+.synchro-usuario #biographyEditor label,
+html.synchro-light
+.synchro-usuario #photoEditor label,
+html.synchro-light
+.synchro-usuario #bannerEditor label,
+html.synchro-light
+.synchro-usuario #biographyFeedback,
+html.synchro-light
+.synchro-usuario #photoFeedback,
+html.synchro-light
+.synchro-usuario #bannerFeedback {
+    color: #ffffff;
+}
+
+html.synchro-light
+.synchro-usuario #biographyInput,
+html.synchro-light
+.synchro-usuario #photoUrlInput,
+html.synchro-light
+.synchro-usuario #bannerUrlInput {
+    background: #fffafd;
+    color: #30202b;
+    border: 1px solid #dbc0cf;
+}
+
+html.synchro-light
+.synchro-usuario #biographyInput::placeholder,
+html.synchro-light
+.synchro-usuario #photoUrlInput::placeholder,
+html.synchro-light
+.synchro-usuario #bannerUrlInput::placeholder {
+    color: #796573;
+}
+
+html.synchro-light
+.synchro-usuario .biography-actions button,
+html.synchro-light
+.synchro-usuario .photo-actions button,
+html.synchro-light
+.synchro-usuario .banner-actions button {
+    background: #743352;
+    color: #ffffff;
+    border: 1px solid #a15b7b;
+}
+
+/* TITULOS DAS SECOES */
+
+html.synchro-light
+.synchro-usuario main > section h2,
+html.synchro-light
+.synchro-usuario .ranking-controls h2 {
+    color: #30202b;
+}
+
+/* ARTISTAS, AVALIACOES E PLAYLISTS */
+
+html.synchro-light
+.synchro-usuario .artist-card,
+html.synchro-light
+.synchro-usuario .review-card,
+html.synchro-light
+.synchro-usuario .playlist-card {
+    background: #ffffff;
+    border: 1px solid #e6d9e0;
+    box-shadow: 0 4px 14px rgba(55,25,42,.05);
+}
+
+html.synchro-light
+.synchro-usuario .artist-card:hover,
+html.synchro-light
+.synchro-usuario .review-card:hover,
+html.synchro-light
+.synchro-usuario .playlist-card:hover {
+    background: #fff3f8;
+    border-color: #d9a8bd;
+}
+
+html.synchro-light
+.synchro-usuario .artist-card h3,
+html.synchro-light
+.synchro-usuario .review-card h3,
+html.synchro-light
+.synchro-usuario .playlist-card h3 {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-usuario .artist-card p,
+html.synchro-light
+.synchro-usuario .review-card p,
+html.synchro-light
+.synchro-usuario .playlist-card p,
+html.synchro-light
+.synchro-usuario .review-card h5 {
+    color: #715d69;
+}
+
+/* MENSAGENS DE SECOES VAZIAS */
+
+html.synchro-light
+.synchro-usuario .profile-empty {
+    color: #65515e;
+}
+
+/* CONTROLES DO RELATORIO MUSICAL */
+
+html.synchro-light
+.synchro-usuario .ranking-controls {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-usuario #rankingPeriod {
+    background: #ffffff;
+    color: #30202b;
+    border: 1px solid #d9bdca;
+    border-radius: 9px;
+    padding: 10px;
+}
+
+html.synchro-light
+.synchro-usuario #rankingStatus {
+    color: #705665;
+}
+
+/* CARTOES DOS RELATORIOS */
+
+html.synchro-light
+.synchro-usuario .weekly-card {
+    background: #ffffff;
+    border: 1px solid #e6d9e0;
+    padding: 18px;
+    box-shadow: 0 4px 14px rgba(55,25,42,.05);
+}
+
+html.synchro-light
+.synchro-usuario .weekly-card h5,
+html.synchro-light
+.synchro-usuario .weekly-card .h-artists,
+html.synchro-light
+.synchro-usuario .weekly-card .h-albums,
+html.synchro-light
+.synchro-usuario .weekly-card .h-musics,
+html.synchro-light
+.synchro-usuario .weekly-card .h-genre {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-usuario .weekly-card p,
+html.synchro-light
+.synchro-usuario .weekly-card .p-artists,
+html.synchro-light
+.synchro-usuario .weekly-card .p-albums,
+html.synchro-light
+.synchro-usuario .weekly-card .p-musics,
+html.synchro-light
+.synchro-usuario .weekly-card .p-genres {
+    color: #715d69;
+}
+
+/* ITENS DOS RANKINGS */
+
+html.synchro-light
+.synchro-usuario .rank-item {
+    border-bottom: 1px solid #eee1e8;
+}
+
+html.synchro-light
+.synchro-usuario .report-artists h3,
+html.synchro-light
+.synchro-usuario .report-albums h3,
+html.synchro-light
+.synchro-usuario .report-musics h3,
+html.synchro-light
+.synchro-usuario .report-genres h3 {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-usuario .report-artists p,
+html.synchro-light
+.synchro-usuario .report-albums p,
+html.synchro-light
+.synchro-usuario .report-musics p,
+html.synchro-light
+.synchro-usuario .report-genres p {
+    color: #715d69;
+}
+
+/* NAVEGACAO POR TECLADO */
+
+html.synchro-light
+.synchro-usuario button:focus-visible,
+html.synchro-light
+.synchro-usuario a:focus-visible,
+html.synchro-light
+.synchro-usuario input:focus-visible,
+html.synchro-light
+.synchro-usuario textarea:focus-visible,
+html.synchro-light
+.synchro-usuario select:focus-visible {
+    outline: 2px solid #bb4773;
+    outline-offset: 3px;
+}
+
+/* CELULAR */
+
+@media (max-width: 768px) {
+    html.synchro-light
+    .synchro-usuario .weekly-report {
+        grid-template-columns:
+            repeat(auto-fit, minmax(180px, 1fr));
+    }
+}

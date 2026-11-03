@@ -736,3 +736,31 @@ gap: 20px;
     90%{color:#cd2743;}
     100%{color:#cd2727;}
 }
+
+/* ATALHO PARA CONFIGURACOES */
+
+.settings-shortcut {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.settings-shortcut i {
+    color: #ffffff;
+    font-size: 20px;
+}
+
+.settings-shortcut:hover {
+    background: rgba(255, 101, 136, 0.18);
+    transform: rotate(25deg);
+}
+
+.settings-shortcut:focus-visible {
+    outline: 2px solid #ff6588;
+    outline-offset: 3px;
+}

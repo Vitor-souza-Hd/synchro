@@ -420,3 +420,78 @@
     border-color: #ff315e;
     color: white;
 }
+
+/* FAVORITOS DE MUSICAS */
+
+.music-favorite-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    padding: 11px 18px;
+    border: 1px solid #555;
+    border-radius: 10px;
+
+    background: #29232b;
+    color: #f5f5f5;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.music-favorite-button i {
+    font-size: 21px;
+}
+
+.music-favorite-button:hover:not(:disabled) {
+    background: #392831;
+    border-color: #ff315e;
+}
+
+.music-favorite-button.is-favorite {
+    color: #ff6584;
+    background: #39212c;
+    border-color: #ff315e;
+}
+
+.music-favorite-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.music-favorite-feedback {
+    margin-top: 10px;
+    color: #bdb7be;
+    font-size: 13px;
+}
+
+.music-favorite-feedback:empty {
+    display: none;
+}
+
+/* FAVORITOS DE ALBUNS */
+
+#favoriteAlbumArea {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+#favoriteAlbumArea[hidden] {
+    display: none;
+}
+
+#favoriteAlbumBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+}
+
+#favoriteAlbumBtn.is-favorite {
+    color: #ff6584;
+    background: #39212c;
+    border-color: #ff315e;
+}

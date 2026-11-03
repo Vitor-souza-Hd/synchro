@@ -92,3 +92,273 @@
     font-size: 18px;
   }
 }
+
+/* CATEGORIAS DA BIBLIOTECA */
+
+.favorites-category {
+  margin-bottom: 45px;
+}
+
+.favorites-category-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.favorites-category-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 23px;
+  margin: 0;
+}
+
+.favorites-category-heading h2 i {
+  color: #ff557a;
+}
+
+#favoriteTracksCount {
+  color: #a9a9a9;
+  font-size: 13px;
+}
+
+/* CARTOES DE MUSICAS FAVORITAS */
+
+.favorite-track-card {
+  background: #211f24;
+}
+
+.favorite-track-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+          135deg,
+          #3b2530,
+          #211f26 65%,
+          #17171a
+  );
+}
+
+.favorite-track-cover i {
+  color: #ff6588;
+  font-size: 70px;
+}
+
+.favorite-track-type {
+  display: inline-block;
+  margin-top: 12px;
+
+  color: #ff839e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.favorite-track-card:hover {
+  border-color: #ff557a;
+}
+
+@media (max-width: 600px) {
+  .favorites-category-heading h2 {
+    font-size: 19px;
+  }
+
+  .favorite-track-cover i {
+    font-size: 52px;
+  }
+}
+
+/* CAPA DAS MUSICAS FAVORITAS */
+
+.favorite-track-cover {
+  position: relative;
+  overflow: hidden;
+}
+
+.favorite-track-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
+  transition: transform 0.3s ease;
+}
+
+.favorite-track-card:hover .favorite-track-image {
+  transform: scale(1.05);
+}
+
+/* ALBUNS FAVORITOS */
+
+#favoriteAlbumsCount {
+  color: #a9a9a9;
+  font-size: 13px;
+}
+
+.favorite-album-card {
+  background: #211f24;
+}
+
+.favorite-album-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background: linear-gradient(
+          135deg,
+          #39252f,
+          #211e26 65%,
+          #17171a
+  );
+}
+
+.favorite-album-cover > i {
+  font-size: 70px;
+  color: #ff6588;
+}
+
+.favorite-album-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+
+  transition: transform 0.3s ease;
+}
+
+.favorite-album-card:hover .favorite-album-image {
+  transform: scale(1.05);
+}
+
+.favorite-album-type {
+  display: block;
+  margin-top: 12px;
+
+  color: #ff839e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.favorite-album-link {
+  display: inline-block;
+  margin-top: 12px;
+
+  color: #d5c3cc;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.favorite-album-link:hover {
+  color: #ff6588;
+  text-decoration: underline;
+}
+
+.favorite-album-card:hover {
+  border-color: #ff557a;
+}
+
+/* CARTOES DE ALBUNS CLICAVEIS */
+
+.favorite-album-card .favorite-card-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: #ffffff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.favorite-album-card:hover {
+  border-color: #ff557a;
+}
+
+.favorite-album-card:focus-within {
+  outline: 2px solid #ff6588;
+  outline-offset: 3px;
+}
+
+/* ==========================================
+   ORGANIZACAO DA BIBLIOTECA DE FAVORITOS
+   ========================================== */
+
+.favorites-main {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Separacao consistente entre categorias */
+
+.favorites-category {
+  width: 100%;
+  margin-bottom: 55px;
+}
+
+.favorites-category-heading {
+  margin-bottom: 22px;
+}
+
+/* Grade uniforme para os cartoes */
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(
+        auto-fill,
+        minmax(190px, 1fr)
+    );
+  gap: 22px;
+  align-items: start;
+}
+
+/* Impede cartoes excessivamente largos */
+
+.favorite-card {
+  width: 100%;
+  min-width: 0;
+  max-width: 260px;
+  justify-self: start;
+}
+
+/* Mantem capas proporcionais */
+
+.favorite-track-cover,
+.favorite-album-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+/* Espacamento para telas menores */
+
+@media (max-width: 600px) {
+
+  .favorites-grid {
+    grid-template-columns: repeat(
+            2,
+            minmax(0, 1fr)
+        );
+    gap: 14px;
+  }
+
+  .favorite-card {
+    max-width: none;
+  }
+
+  .favorites-category {
+    margin-bottom: 40px;
+  }
+}

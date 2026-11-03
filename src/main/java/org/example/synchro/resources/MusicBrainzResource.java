@@ -36,6 +36,28 @@ public class MusicBrainzResource {
         return musicBrainzService.searchAlbums(artist, album);
     }
 
+
+    // =========================================
+    // PESQUISAR SINGLES
+    // =========================================
+
+    @GetMapping(
+            value = "/single/search",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<String> searchSingles(
+            @RequestParam("artist") String artist,
+            @RequestParam("single") String single
+    ) {
+
+        validarParametros(artist, single);
+
+        return musicBrainzService.searchSingles(
+                artist,
+                single
+        );
+    }
+
     // =========================================
     // PESQUISAR GRAVAÇÕES
     // =========================================

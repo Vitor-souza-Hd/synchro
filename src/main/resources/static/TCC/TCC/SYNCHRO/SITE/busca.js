@@ -137,6 +137,45 @@ document.addEventListener("DOMContentLoaded", () => {
         return response.json();
     }
 
+
+    // =========================================
+    // BUSCA DE ALBUNS NO LAST.FM
+    // =========================================
+
+    async function consultarAlbuns(query, signal) {
+        const url = new URL(
+            "https://ws.audioscrobbler.com/2.0/"
+        );
+
+        url.searchParams.set("method", "album.search");
+        url.searchParams.set("album", query);
+        url.searchParams.set(
+            "api_key",
+            "7c62ff4c30df11f623f6ecd649c5d104"
+        );
+        url.searchParams.set("format", "json");
+        url.searchParams.set("limit", "10");
+
+        const response = await fetch(url, { signal });
+
+        if (!response.ok) {
+            throw new Error(
+                "Erro na busca de albuns: HTTP " +
+                response.status
+            );
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(
+                data.message || "Erro no Last.fm"
+            );
+        }
+
+        return data;
+    }
+
     async function pesquisar(query) {
         if (controller) {
             controller.abort();
@@ -151,7 +190,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const responses = await Promise.allSettled([
             consultar("/last-fm/artist/search", query, signal),
-            consultar("/last-fm/track/search", query, signal)
+            consultar("/last-fm/track/search", query, signal),
+            consultarAlbuns(query, signal)
         ]);
 
         // Ignora respostas de pesquisas antigas.
@@ -249,6 +289,77 @@ document.addEventListener("DOMContentLoaded", () => {
                             item.name,
                             item.artist,
                             destination
+                        )
+                    );
+
+                    total++;
+                });
+            }
+        }
+
+
+        // =========================================
+        // ALBUNS
+        // =========================================
+
+        if (responses[2].status === "fulfilled") {
+
+            const data = responses[2].value;
+
+            const rawAlbums =
+                data.results?.albummatches?.album || [];
+
+            const albums = Array.isArray(rawAlbums)
+                ? rawAlbums
+                : [rawAlbums];
+
+            const unique = new Set();
+
+            const validAlbums = albums
+                .filter(item =>
+                    typeof item.name === "string" &&
+                    item.name.trim() &&
+                    typeof item.artist === "string" &&
+                    item.artist.trim()
+                )
+                .filter(item => {
+                    const key = (
+                        item.artist + "|" + item.name
+                    ).toLowerCase();
+
+                    if (unique.has(key)) return false;
+
+                    unique.add(key);
+                    return true;
+                })
+                .slice(0, 5);
+
+            if (validAlbums.length > 0) {
+
+                criarTitulo("Álbuns");
+
+                validAlbums.forEach(item => {
+
+                    const url = new URL(
+                        "album-explorar.html",
+                        window.location.href
+                    );
+
+                    url.searchParams.set(
+                        "artist",
+                        item.artist
+                    );
+
+                    url.searchParams.set(
+                        "album",
+                        item.name
+                    );
+
+                    results.appendChild(
+                        criarResultado(
+                            item.name,
+                            item.artist + " • Álbum",
+                            url.toString()
                         )
                     );
 

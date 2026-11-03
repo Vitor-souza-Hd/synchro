@@ -10,6 +10,9 @@
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="musica.css">
+    <link rel="stylesheet" href="seletor-nota.css">
+    <link rel="stylesheet" href="tema-musica.css">
+    <script src="tema-global.js"></script>
 
     <link
             href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
@@ -22,7 +25,7 @@
     >
 </head>
 
-<body>
+<body class="synchro-musica">
 
 <div class="container">
 
@@ -66,7 +69,7 @@
             <ul>
                 <li>
                     <i class="bx bx-undo"></i>
-                    <a href="#">Recentes</a>
+                    <a href="recentes.html">Recentes</a>
                 </li>
 
                 <li>
@@ -172,9 +175,43 @@
 
                 <p id="musicAlbum"></p>
 
+                <div id="favoriteAlbumArea" hidden>
+                    <button
+                            id="favoriteAlbumBtn"
+                            class="music-favorite-button"
+                            type="button"
+                            aria-pressed="false"
+                            disabled
+                    >
+                        <i class="bx bx-heart"></i>
+                        Favoritar álbum
+                    </button>
+
+                    <p
+                            id="favoriteAlbumFeedback"
+                            class="music-favorite-feedback"
+                            role="status"
+                            aria-live="polite"
+                    ></p>
+                </div>
+
+
                 <div id="musicTags" class="music-tags"></div>
 
+
                 <div class="music-actions">
+
+                    <button
+                            id="favoriteTrackBtn"
+                            class="music-favorite-button"
+                            type="button"
+                            aria-pressed="false"
+                            disabled
+                    >
+                        <i class="bx bx-heart"></i>
+                        Favoritar
+                    </button>
+
                     <a
                             id="lastfmLink"
                             href="#"
@@ -185,7 +222,16 @@
                         <i class="bx bx-link-external"></i>
                         Abrir no Last.fm
                     </a>
+
                 </div>
+
+                <p
+                        id="favoriteTrackFeedback"
+                        class="music-favorite-feedback"
+                        role="status"
+                        aria-live="polite"
+                ></p>
+
 
             </div>
 
@@ -309,7 +355,11 @@
 
 <script src="musica.js"></script>
 <script src="busca.js"></script>
-<script src="avaliacoes-musica.js"></script>F
-
+<script src="seletor-nota.js"></script>
+<script src="avaliacoes-musica.js"></script>
+<script src="favoritos-musica.js"></script>
+<script src="favoritos-album.js"></script>
+<script src="navegacao-global.js"></script>
+<script src="recentes.js"></script>
 </body>
 </html>
