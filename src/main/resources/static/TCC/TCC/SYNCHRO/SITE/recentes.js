@@ -32,6 +32,17 @@
     }
 
     function trackPage() {
+        try {
+            if (
+                localStorage.getItem(
+                    "synchro:history-enabled:v1"
+                ) === "false"
+            ) {
+                return;
+            }
+        } catch {
+            // Mantem o comportamento padrao.
+        }
         const file = location.pathname.split("/").pop();
         const params = new URLSearchParams(location.search);
 

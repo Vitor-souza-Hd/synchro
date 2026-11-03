@@ -51,6 +51,45 @@ document.addEventListener("DOMContentLoaded", () => {
         link.removeAttribute("aria-disabled");
     });
 
+    // =========================================
+    // LINK GLOBAL DE CONFIGURACOES
+    // =========================================
+
+    const sidebar = document.querySelector(".sidebar");
+
+    if (
+        sidebar &&
+        !sidebar.querySelector(
+            'a[href="configuracoes.html"]'
+        )
+    ) {
+        const menus = sidebar.querySelectorAll(".menu");
+
+        const libraryMenu = [...menus].find(menu =>
+            normalize(
+                menu.querySelector("h5")?.textContent
+            ) === "sua biblioteca"
+        );
+
+        const list =
+            libraryMenu?.querySelector("ul") ||
+            menus[0]?.querySelector("ul");
+
+        if (list) {
+            const item = document.createElement("li");
+
+            const icon = document.createElement("i");
+            icon.className = "bx bxs-cog";
+
+            const link = document.createElement("a");
+            link.href = "configuracoes.html";
+            link.textContent = "Configurações";
+
+            item.append(icon, link);
+            list.appendChild(item);
+        }
+    }
+
     // A barra de pesquisa da página inicial
     // recebe foco quando acessada por #pesquisa.
 
