@@ -1,0 +1,160 @@
+
+.sidebar {
+    justify-content: flex-start !important;
+    padding-top: 40px;
+}
+.sidebar .logo {
+    margin-bottom: 50px;
+}
+
+
+#albumReviewRating,
+#albumReviewText {
+    width: 100%;
+    max-width: 500px;
+    padding: 12px;
+    background: #1f1f1f;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #fff;
+    font-family: inherit;
+    margin-bottom: 15px;
+    margin-top: 5px;
+    display: block;
+}
+
+#albumReviewRating {
+    max-width: 100px;
+    text-align: center;
+}
+
+#albumReviewRating:focus,
+#albumReviewText:focus {
+    outline: none;
+    border-color: #1db954;
+}
+
+.music-review-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+#saveAlbumReview,
+#cancelAlbumReview {
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: 0.2s;
+}
+
+#saveAlbumReview {
+    background: #1db954;
+    color: #fff;
+}
+#saveAlbumReview:hover {
+    background: #1ed760;
+    transform: scale(1.02);
+}
+
+#cancelAlbumReview {
+    background: transparent;
+    color: #b3b3b3;
+    border: 1px solid #555;
+}
+#cancelAlbumReview:hover {
+    background: #333;
+    color: #fff;
+}
+
+#albumReviewEditor {
+    max-width: 600px;
+    margin-top: 20px;
+}
+
+#albumReviewEditor h3,
+#albumReviewEditor label {
+    color: #fff;
+    display: block;
+    margin-bottom: 5px;
+}
+
+
+.rating-scale {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
+
+.rating-item {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: 0.2s;
+}
+
+.rating-item span {
+    color: #b3b3b3;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+/* Cor base da barrinha (um pouco apagada) */
+.rating-item .bar {
+    width: 35px;
+    height: 4px;
+    border-radius: 2px;
+    transition: 0.2s;
+    opacity: 0.6; /* Deixa a cor mais suave quando não está clicada */
+}
+
+/* Cores individuais para cada nota */
+.rating-item[data-value="1"] .bar { background: #e91e63; } /* Rosa Escuro */
+.rating-item[data-value="2"] .bar { background: #f44336; } /* Vermelho */
+.rating-item[data-value="3"] .bar { background: #ff5722; } /* Laranja Escuro */
+.rating-item[data-value="4"] .bar { background: #ff9800; } /* Laranja */
+.rating-item[data-value="5"] .bar { background: #ffeb3b; } /* Amarelo */
+.rating-item[data-value="6"] .bar { background: #cddc39; } /* Verde Limão */
+.rating-item[data-value="7"] .bar { background: #8bc34a; } /* Verde Claro */
+.rating-item[data-value="8"] .bar { background: #4caf50; } /* Verde */
+.rating-item[data-value="9"] .bar { background: #00bcd4; } /* Ciano */
+.rating-item[data-value="10"] .bar { background: #03a9f4; } /* Azul Claro */
+
+    .rating-item.active .bar {
+    opacity: 1;
+}
+.rating-item[data-value="1"].active .bar { box-shadow: 0 0 8px #e91e63; }
+.rating-item[data-value="2"].active .bar { box-shadow: 0 0 8px #f44336; }
+.rating-item[data-value="3"].active .bar { box-shadow: 0 0 8px #ff5722; }
+.rating-item[data-value="4"].active .bar { box-shadow: 0 0 8px #ff9800; }
+.rating-item[data-value="5"].active .bar { box-shadow: 0 0 8px #ffeb3b; }
+.rating-item[data-value="6"].active .bar { box-shadow: 0 0 8px #cddc39; }
+.rating-item[data-value="7"].active .bar { box-shadow: 0 0 8px #8bc34a; }
+.rating-item[data-value="8"].active .bar { box-shadow: 0 0 8px #4caf50; }
+.rating-item[data-value="9"].active .bar { box-shadow: 0 0 8px #00bcd4; }
+.rating-item[data-value="10"].active .bar { box-shadow: 0 0 8px #03a9f4; }
+
+/* Efeito ao passar o mouse */
+.rating-item:hover .bar {
+    opacity: 0.8;
+}
+
+.rating-item:hover span { color: #fff; }
+.rating-item:hover .bar { background: #888; }
+
+
+.rating-item.active span {
+    color: #fff;
+    font-weight: bold;
+}
+.rating-item.active .bar {
+    background: #1db954;
+    box-shadow: 0 0 8px #1db954;
+}

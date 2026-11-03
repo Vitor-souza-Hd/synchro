@@ -1,18 +1,9 @@
-
 document.addEventListener("DOMContentLoaded", () => {
 
     // =========================================================
     // DADOS DA PÁGINA INICIAL
     // =========================================================
-
-    const artistsData = [
-        { name: "Bad Bunny", image: "./img/badbunny.jpg", link: "https://open.spotify.com/intl-pt/artist/4q3ewBCX7sLwd24euuV69X?si=o0l4pjizSSujyc7xJMkX4Q" },
-        { name: "Rihanna", image: "./img/rihanna.jpg", link: "https://open.spotify.com/intl-pt/artist/5pKCCKE2ajJHZ9KAiaK11H?si=cbghCdyZQAOApW6H1qb9KA" },
-        { name: "Justin Bieber", image: "./img/justin.jpg", link: "https://open.spotify.com/intl-pt/artist/1uNFoZAHBGtllmzznpCI3s?si=soZDaPLPRS2kYb9CPUCxgw" },
-        { name: "Billie Eilish", image: "./img/billieeilish.jpg", link: "https://open.spotify.com/intl-pt/artist/6qqNVTkY8uBg9cP3Jd7DAH?si=r1NI9BmQSRm0TSLkhws8vw" },
-        { name: "Kendrick Lamar", image: "./img/kendricklamar.jpg", link: "https://open.spotify.com/intl-pt/artist/2YZyLoL8N0Wb9xBt1NhZWg?si=ZERj3og4RxSMDk8nakQPQg" },
-        { name: "The Weekend", image: "./img/theweeknd.jpg" }
-    ];
+    // (O artistsData foi removido, agora puxamos do banco/Last.fm)
 
     const albumsData = [
         { name: "Debí Tirar Más Fotos", artist: "Bad Bunny", image: "./img/DebíTirarMásFotos.png", link: "https://open.spotify.com/intl-pt/track/3sK8wGT43QFpWrvNQsrQya?si=68653d6088a04bec" },
@@ -98,26 +89,92 @@ document.addEventListener("DOMContentLoaded", () => {
     const reviewsGrid = document.querySelector(".reviews");
 
     // =========================================================
-    // EXIBIR ARTISTAS POPULARES
+    // EXIBIR ARTISTAS POPULARES (BASEADO NO LAST.FM OU BANCO)
     // =========================================================
 
     if (artistsGrid) {
-        artistsData.forEach(artist => {
-            const artistCard = document.createElement("div");
-            artistCard.classList.add("artist-card");
+        async function carregarArtistas() {
+            try {
+                let artistasParaExibir = [];
 
-            artistCard.innerHTML = `
-                <a href="${artist.link || "#"}" target="_blank">
-                    <img src="${artist.image}" alt="Imagem de ${artist.name}">
-                    <div>
-                        <h3>${artist.name}</h3>
-                        <p>Artista</p>
-                    </div>
-                </a>
-            `;
+                // 1. Tenta buscar os top artistas do Last.fm do usuário logado
+                try {
+                    const lastfmRes = await fetch('/last-fm/me/top/artist', { credentials: 'same-origin' });
 
-            artistsGrid.appendChild(artistCard);
-        });
+                    if (lastfmRes.ok) {
+                        const lastfmData = await lastfmRes.json();
+
+                        // O Last.fm pode retornar { topartists: { artist: [...] } } ou um array direto
+                        const listaLastFm = lastfmData.topartists?.artist || lastfmData;
+
+                        if (Array.isArray(listaLastFm) && listaLastFm.length > 0) {
+                            const topArtistasNomes = listaLastFm.map(a => (a.name || a.nome || "").toLowerCase());
+
+                            // Busca todos os artistas do nosso banco para cruzar os dados
+                            const dbRes = await fetch('/artista');
+                            if (dbRes.ok) {
+                                const artistasDoBanco = await dbRes.json();
+
+                                // Filtra apenas os que o usuário escuta
+                                artistasParaExibir = artistasDoBanco.filter(artista =>
+                                    topArtistasNomes.includes(artista.nome.toLowerCase())
+                                );
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log("Usuário sem dados no Last.fm. Usando artistas gerais.");
+                }
+
+                // 2. Se não achou nada pelo Last.fm (ou não está logado), pega os artistas gerais do banco
+                if (artistasParaExibir.length === 0) {
+                    const dbRes = await fetch('/artista');
+                    if (!dbRes.ok) throw new Error('Erro na API do banco');
+                    artistasParaExibir = await dbRes.json();
+                }
+
+                artistsGrid.innerHTML = ''; // Limpa a div
+
+                if (artistasParaExibir.length === 0) {
+                    artistsGrid.innerHTML = '<p style="color:#b3b3b3;">Nenhum artista cadastrado.</p>';
+                    return;
+                }
+
+                // Pega os 6 primeiros para manter o layout
+                const artistasPopulares = artistasParaExibir.slice(0, 6);
+
+                artistasPopulares.forEach(artist => {
+                    const artistCard = document.createElement("div");
+                    artistCard.classList.add("artist-card");
+
+                    // Link interno do Synchro
+                    const linkInterno = `artista.html?artist=${encodeURIComponent(artist.nome)}`;
+
+                    // Fallback de imagem (se a API não trouxer foto, usa o placeholder verde)
+                    const fallbackUrl = `https://placehold.co/300/1db954/fff?text=${encodeURIComponent(artist.nome)}`;
+                    const imagem = artist.imgUrl || fallbackUrl;
+
+                    artistCard.innerHTML = `
+                        <a href="${linkInterno}">
+                            <img src="${imagem}" 
+                                 alt="Imagem de ${artist.nome}"
+                                 onerror="this.onerror=null; this.src='${fallbackUrl}';">
+                            <div>
+                                <h3>${artist.nome}</h3>
+                                <p>Artista</p>
+                            </div>
+                        </a>
+                    `;
+
+                    artistsGrid.appendChild(artistCard);
+                });
+
+            } catch (error) {
+                console.error("Erro ao carregar artistas:", error);
+                artistsGrid.innerHTML = '<p style="color:#ff4d4d;">Erro ao carregar artistas.</p>';
+            }
+        }
+        carregarArtistas();
     }
 
     // =========================================================
@@ -218,8 +275,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.querySelector(".search");
     const searchBox = document.querySelector(".search-box");
 
-    if (searchInput && searchBox) {
-
+    if (
+        searchInput &&
+        searchBox &&
+        !document.querySelector('script[src="busca.js"]')
+    ) {
         const searchResults = document.createElement("div");
         searchResults.id = "lastfm-search-results";
 
@@ -247,10 +307,6 @@ document.addEventListener("DOMContentLoaded", () => {
         let searchController;
         let searchVersion = 0;
 
-        // =====================================================
-        // MENSAGENS DA PESQUISA
-        // =====================================================
-
         function showMessage(message) {
             searchResults.replaceChildren();
 
@@ -263,18 +319,11 @@ document.addEventListener("DOMContentLoaded", () => {
             searchResults.style.display = "block";
         }
 
-        // =====================================================
-        // CRIAR ITEM DE RESULTADO
-        // =====================================================
-
         function createResult(name, subtitle, url) {
-
-            // Aceita páginas internas de artistas e músicas.
             const isInternalUrl =
                 typeof url === "string" &&
                 /^(artista|musica)\.html\?/i.test(url);
 
-            // Mantém suporte a links externos do Last.fm.
             const isLastFmUrl =
                 typeof url === "string" &&
                 /^https:\/\/(www\.)?last\.fm\//i.test(url);
@@ -288,8 +337,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (validUrl) {
                 item.href = url;
 
-                // Links internos abrem na mesma aba.
-                // Links externos abrem em outra aba.
                 if (isLastFmUrl) {
                     item.target = "_blank";
                     item.rel = "noopener noreferrer";
@@ -330,12 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return item;
         }
 
-        // =====================================================
-        // REQUISIÇÃO AO BACKEND
-        // =====================================================
-
         async function fetchLastFmResults(endpoint, query, signal) {
-
             const response = await fetch(
                 `${endpoint}?q=${encodeURIComponent(query)}`,
                 { signal }
@@ -350,12 +392,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return response.json();
         }
 
-        // =====================================================
-        // REALIZAR PESQUISA
-        // =====================================================
-
         async function performSearch(query) {
-
             if (searchController) {
                 searchController.abort();
             }
@@ -368,7 +405,6 @@ document.addEventListener("DOMContentLoaded", () => {
             showMessage("Pesquisando no Last.fm...");
 
             try {
-
                 const [artistsResponse, tracksResponse] =
                     await Promise.allSettled([
                         fetchLastFmResults(
@@ -394,12 +430,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 let totalResults = 0;
 
-                // =============================================
-                // RESULTADOS DE ARTISTAS
-                // =============================================
-
                 if (artistsResponse.status === "fulfilled") {
-
                     const artists =
                         artistsResponse.value?.results
                             ?.artistmatches?.artist || [];
@@ -409,7 +440,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         : [artists];
 
                     if (artistList.length > 0) {
-
                         const heading = document.createElement("h4");
                         heading.textContent = "Artistas";
                         heading.style.padding = "8px";
@@ -418,7 +448,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         searchResults.appendChild(heading);
 
                         artistList.slice(0, 5).forEach(artist => {
-
                             if (!artist.name) {
                                 return;
                             }
@@ -439,12 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
 
-                // =============================================
-                // RESULTADOS DE MÚSICAS
-                // =============================================
-
                 if (tracksResponse.status === "fulfilled") {
-
                     const tracks =
                         tracksResponse.value?.results
                             ?.trackmatches?.track || [];
@@ -454,7 +478,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         : [tracks];
 
                     if (trackList.length > 0) {
-
                         const heading = document.createElement("h4");
                         heading.textContent = "Músicas";
                         heading.style.padding = "8px";
@@ -463,9 +486,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         searchResults.appendChild(heading);
 
                         trackList.slice(0, 5).forEach(track => {
-
-                            // O Last.fm geralmente retorna o nome
-                            // do artista como uma string.
                             const artistName =
                                 typeof track.artist === "string"
                                     ? track.artist
@@ -475,7 +495,6 @@ document.addEventListener("DOMContentLoaded", () => {
                                 return;
                             }
 
-                            // NOVO: abrir a página interna da música.
                             const internalUrl =
                                 `musica.html?artist=${encodeURIComponent(artistName)}` +
                                 `&track=${encodeURIComponent(track.name)}`;
@@ -493,12 +512,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
 
-                // =============================================
-                // NENHUM RESULTADO
-                // =============================================
-
                 if (totalResults === 0) {
-
                     if (
                         artistsResponse.status === "rejected" &&
                         tracksResponse.status === "rejected"
@@ -511,13 +525,11 @@ document.addEventListener("DOMContentLoaded", () => {
                             "Nenhum resultado encontrado."
                         );
                     }
-
                 } else {
                     searchResults.style.display = "block";
                 }
 
             } catch (error) {
-
                 if (error.name !== "AbortError") {
                     console.error("Erro na pesquisa:", error);
 
@@ -528,18 +540,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // =====================================================
-        // EVENTOS DA BARRA DE PESQUISA
-        // =====================================================
-
         searchInput.addEventListener("input", () => {
-
             clearTimeout(searchTimer);
 
             const query = searchInput.value.trim();
 
             if (query.length < 2) {
-
                 searchVersion++;
 
                 if (searchController) {
@@ -557,25 +563,19 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 400);
         });
 
-        // FECHAR COM ESCAPE
         searchInput.addEventListener("keydown", event => {
-
             if (event.key === "Escape") {
                 searchResults.style.display = "none";
             }
         });
 
-        // FECHAR AO CLICAR FORA
         document.addEventListener("click", event => {
-
             if (!searchBox.contains(event.target)) {
                 searchResults.style.display = "none";
             }
         });
 
-        // REABRIR AO CLICAR NA PESQUISA
         searchInput.addEventListener("focus", () => {
-
             if (
                 searchInput.value.trim().length >= 2 &&
                 searchResults.childElementCount > 0
