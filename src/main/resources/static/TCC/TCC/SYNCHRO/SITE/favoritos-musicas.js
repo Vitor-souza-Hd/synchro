@@ -12,6 +12,79 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const coverCache = new Map();
 
+    // =========================================
+    // CACHE DAS CAPAS DE MUSICAS
+    // =========================================
+
+    const CACHE_PREFIX = "synchro:track-cover:v1:";
+    const CACHE_DURATION = 24 * 60 * 60 * 1000;
+
+    function coverKey(track, artist) {
+        return CACHE_PREFIX +
+            encodeURIComponent(
+                JSON.stringify([
+                    artist.trim().toLowerCase(),
+                    track.trim().toLowerCase()
+                ])
+            );
+    }
+
+    function readSavedCover(track, artist) {
+
+        const key = coverKey(track, artist);
+
+        try {
+            const saved = sessionStorage.getItem(key);
+
+            if (!saved) return null;
+
+            const data = JSON.parse(saved);
+
+            if (
+                !data.savedAt ||
+                Date.now() - data.savedAt > CACHE_DURATION ||
+                !validCoverUrl(data.url)
+            ) {
+                sessionStorage.removeItem(key);
+                return null;
+            }
+
+            return data.url;
+
+        } catch {
+            return null;
+        }
+    }
+
+    function saveCover(track, artist, url) {
+
+        if (!validCoverUrl(url)) return;
+
+        try {
+            sessionStorage.setItem(
+                coverKey(track, artist),
+                JSON.stringify({
+                    url,
+                    savedAt: Date.now()
+                })
+            );
+        } catch {
+            // Falha de armazenamento nao impede o site.
+        }
+    }
+
+    function removeSavedCover(track, artist) {
+
+        try {
+            sessionStorage.removeItem(
+                coverKey(track, artist)
+            );
+        } catch {
+            // Cache opcional.
+        }
+    }
+
+
     function showMessage(text) {
         feedback.textContent = text;
         feedback.hidden = false;
@@ -36,13 +109,30 @@ document.addEventListener("DOMContentLoaded", () => {
     // BUSCAR CAPA DA MÚSICA
     // =========================================
 
+
     async function findCover(track, artist) {
 
-        const key = `${artist.toLowerCase()}::${track.toLowerCase()}`;
+        // Primeiro tenta a capa salva na sessao.
+        const savedCover = readSavedCover(track, artist);
 
+        if (savedCover) {
+            console.log(
+                "[Synchro] Capa recuperada do cache:",
+                track
+            );
+
+            return savedCover;
+        }
+
+        const key =
+            `${artist.toLowerCase()}::${track.toLowerCase()}`;
+
+        // Evita requisicoes duplicadas
+        // durante o carregamento da pagina.
         if (coverCache.has(key)) {
             return coverCache.get(key);
         }
+
 
         const operation = (async () => {
 
@@ -150,27 +240,37 @@ document.addEventListener("DOMContentLoaded", () => {
         img.style.objectFit = "cover";
         img.style.display = "block";
 
+
         img.onload = () => {
 
             if (!cover.isConnected) return;
 
+            // Salva apenas depois de carregar a imagem.
+            saveCover(track, artist, imageUrl);
+
             cover.replaceChildren(img);
 
             console.log(
-                "[Synchro] Capa inserida no cartão:",
+                "[Synchro] Capa carregada:",
                 track,
                 img.naturalWidth,
                 img.naturalHeight
             );
         };
 
+
+
         img.onerror = () => {
-            console.error(
-                "[Synchro] Falha ao carregar imagem:",
-                track,
-                imageUrl
+
+            // Remove o endereco salvo se a imagem falhar.
+            removeSavedCover(track, artist);
+
+            console.warn(
+                "[Synchro] Falha ao carregar capa:",
+                track
             );
         };
+
 
         // Atribuir a URL por ultimo,
         // depois de configurar os eventos.

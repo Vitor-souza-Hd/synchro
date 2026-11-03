@@ -292,3 +292,73 @@
   outline: 2px solid #ff6588;
   outline-offset: 3px;
 }
+
+/* ==========================================
+   ORGANIZACAO DA BIBLIOTECA DE FAVORITOS
+   ========================================== */
+
+.favorites-main {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Separacao consistente entre categorias */
+
+.favorites-category {
+  width: 100%;
+  margin-bottom: 55px;
+}
+
+.favorites-category-heading {
+  margin-bottom: 22px;
+}
+
+/* Grade uniforme para os cartoes */
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(
+        auto-fill,
+        minmax(190px, 1fr)
+    );
+  gap: 22px;
+  align-items: start;
+}
+
+/* Impede cartoes excessivamente largos */
+
+.favorite-card {
+  width: 100%;
+  min-width: 0;
+  max-width: 260px;
+  justify-self: start;
+}
+
+/* Mantem capas proporcionais */
+
+.favorite-track-cover,
+.favorite-album-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+/* Espacamento para telas menores */
+
+@media (max-width: 600px) {
+
+  .favorites-grid {
+    grid-template-columns: repeat(
+            2,
+            minmax(0, 1fr)
+        );
+    gap: 14px;
+  }
+
+  .favorite-card {
+    max-width: none;
+  }
+
+  .favorites-category {
+    margin-bottom: 40px;
+  }
+}
