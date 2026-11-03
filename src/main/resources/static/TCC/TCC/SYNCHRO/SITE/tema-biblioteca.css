@@ -1,0 +1,303 @@
+
+/* ==========================================
+   SYNCHRO - MODO CLARO DA BIBLIOTECA
+   Favoritos e Recentes
+   ========================================== */
+
+/* FUNDO E AREA PRINCIPAL */
+
+html.synchro-light body.synchro-biblioteca {
+    background: #f5eef2;
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-biblioteca .container main {
+    color: #30202b;
+    min-width: 0;
+}
+
+/* MENU LATERAL - GRAFITE */
+
+html.synchro-light
+.synchro-biblioteca .container .sidebar {
+    background: #29212e;
+    border-color: #493745;
+    backdrop-filter: none;
+}
+
+html.synchro-light
+.synchro-biblioteca .sidebar .menu h5 {
+    color: #e2b5cb;
+}
+
+html.synchro-light
+.synchro-biblioteca .sidebar .menu li a,
+html.synchro-light
+.synchro-biblioteca .sidebar .menu li i {
+    color: #f8f4f7;
+}
+
+html.synchro-light
+.synchro-biblioteca .sidebar .menu li:hover a,
+html.synchro-light
+.synchro-biblioteca .sidebar .menu li:hover i,
+html.synchro-light
+.synchro-biblioteca .sidebar a[aria-current="page"],
+html.synchro-light
+.synchro-biblioteca .sidebar .fav-menu-active a,
+html.synchro-light
+.synchro-biblioteca .sidebar .fav-menu-active i {
+    color: #ff91b0 !important;
+}
+
+html.synchro-light
+.synchro-biblioteca .sidebar .logo a,
+html.synchro-light
+.synchro-biblioteca .sidebar .logo i {
+    color: #ff6588;
+}
+
+html.synchro-light
+.synchro-biblioteca .nav-footer a {
+    color: #d6c4d0;
+}
+
+/* CABECALHO E PESQUISA */
+
+html.synchro-light
+.synchro-biblioteca .search-box {
+    background: #ffffff;
+    border: 1px solid #dfcbd6;
+    box-shadow: 0 3px 12px rgba(64,30,49,.06);
+}
+
+html.synchro-light
+.synchro-biblioteca .search {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-biblioteca .search::placeholder {
+    color: #756573;
+}
+
+html.synchro-light
+.synchro-biblioteca .search-box i {
+    color: #66505f;
+}
+
+html.synchro-light
+.synchro-biblioteca .favorites-home-link,
+html.synchro-light
+.synchro-biblioteca .favorites-profile-link,
+html.synchro-light
+.synchro-biblioteca .favorites-topbar a i,
+html.synchro-light
+.synchro-biblioteca .search-bar .nav-links a,
+html.synchro-light
+.synchro-biblioteca .search-bar .user i {
+    color: #49313f;
+}
+
+html.synchro-light
+.synchro-biblioteca .favorites-menu-toggle {
+    background: #eadce5;
+    color: #49313f;
+}
+
+html.synchro-light
+.synchro-biblioteca .favorites-menu-toggle i,
+html.synchro-light
+.synchro-biblioteca .menu-toggle i {
+    color: #49313f;
+}
+
+/* ==========================================
+   FAVORITOS
+   ========================================== */
+
+html.synchro-light
+.synchro-biblioteca .favorites-heading {
+    background: linear-gradient(
+            125deg,
+            #f2dae5,
+            #ffffff 70%
+    );
+    border-color: #e1c7d5;
+}
+
+html.synchro-light
+.synchro-biblioteca .favorites-eyebrow {
+    color: #a53f69;
+}
+
+html.synchro-light
+.synchro-biblioteca .favorites-heading h1,
+html.synchro-light
+.synchro-biblioteca .favorites-category-heading h2 {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-biblioteca .favorites-heading p,
+html.synchro-light
+.synchro-biblioteca .favorites-feedback,
+html.synchro-light
+.synchro-biblioteca #favoriteTracksCount,
+html.synchro-light
+.synchro-biblioteca #favoriteAlbumsCount {
+    color: #65515e;
+}
+
+html.synchro-light
+.synchro-biblioteca .favorite-card {
+    background: #ffffff;
+    border-color: #e3d3dc;
+    box-shadow: 0 4px 14px rgba(55,25,42,.06);
+}
+
+html.synchro-light
+.synchro-biblioteca .favorite-card:hover {
+    border-color: #c85a83;
+}
+
+html.synchro-light
+.synchro-biblioteca .favorite-card-link,
+html.synchro-light
+.synchro-biblioteca .favorite-card-info h2 {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-biblioteca .favorite-card-info p {
+    color: #715e6b;
+}
+
+html.synchro-light
+.synchro-biblioteca .favorite-track-type,
+html.synchro-light
+.synchro-biblioteca .favorite-album-type,
+html.synchro-light
+.synchro-biblioteca .favorite-album-link {
+    color: #a63865;
+}
+
+/* Mantem um fundo elegante se faltar capa. */
+
+html.synchro-light
+.synchro-biblioteca .favorite-track-cover,
+html.synchro-light
+.synchro-biblioteca .favorite-album-cover {
+    background: linear-gradient(
+            135deg,
+            #f1d3e0,
+            #dbb8ca
+    );
+}
+
+html.synchro-light
+.synchro-biblioteca .favorite-track-cover i,
+html.synchro-light
+.synchro-biblioteca .favorite-album-cover i {
+    color: #a93e6c;
+}
+
+/* ==========================================
+   RECENTES
+   ========================================== */
+
+html.synchro-light
+.synchro-biblioteca .recentes-header {
+    background: linear-gradient(
+            125deg,
+            #f2dae5,
+            #ffffff 70%
+    );
+    border-color: #e1c7d5;
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-biblioteca .recentes-header > span {
+    color: #a53f69;
+}
+
+html.synchro-light
+.synchro-biblioteca .recentes-header h1 {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-biblioteca .recentes-header p,
+html.synchro-light
+.synchro-biblioteca #recentesCount,
+html.synchro-light
+.synchro-biblioteca #recentesEmpty {
+    color: #65515e;
+}
+
+html.synchro-light
+.synchro-biblioteca .recentes-card {
+    background: #ffffff;
+    border-color: #e3d3dc;
+    color: #30202b;
+    box-shadow: 0 4px 14px rgba(55,25,42,.06);
+}
+
+html.synchro-light
+.synchro-biblioteca .recentes-card:hover {
+    border-color: #c85a83;
+}
+
+html.synchro-light
+.synchro-biblioteca .recentes-info h3 {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-biblioteca .recentes-info p {
+    color: #715e6b;
+}
+
+html.synchro-light
+.synchro-biblioteca .recentes-info small {
+    color: #a63865;
+}
+
+html.synchro-light
+.synchro-biblioteca .recentes-cover {
+    background: linear-gradient(
+            135deg,
+            #f1d3e0,
+            #dbb8ca
+    );
+}
+
+html.synchro-light
+.synchro-biblioteca .recentes-cover i {
+    color: #a93e6c;
+}
+
+/* Botao limpar historico */
+
+html.synchro-light
+.synchro-biblioteca #limparRecentes {
+    background: #7c3152;
+    border-color: #7c3152;
+    color: #ffffff;
+}
+
+html.synchro-light
+.synchro-biblioteca #limparRecentes:hover:not(:disabled) {
+    background: #a13d67;
+}
+
+/* Responsividade */
+
+@media (max-width: 768px) {
+    html.synchro-light
+    .synchro-biblioteca .search-bar {
+        background: rgba(245,238,242,.96);
+    }
+}
