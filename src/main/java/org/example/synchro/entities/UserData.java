@@ -33,6 +33,13 @@ public class UserData implements Serializable {
     private Integer lastFmAlbums;
     private Instant lastFmUpdatedAt;
 
+    @Column(length = 2000)
+    private String biography;
+    @Column(name = "profile_image_url", length = 2000)
+    private String profileImageUrl;
+    @Column(name = "banner_image_url", length = 2000)
+    private String bannerImageUrl;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "author")
     private Set<Review> reviews = new HashSet<>();
 

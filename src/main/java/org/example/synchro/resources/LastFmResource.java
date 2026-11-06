@@ -117,8 +117,89 @@ public class LastFmResource {
     private ResponseEntity<Void> profileRedirect(String result) {
         return ResponseEntity.status(303).cacheControl(CacheControl.noStore())
                 .header("Referrer-Policy", "no-referrer")
-                .location(URI.create("/frontend/pages/user.html?lastfm=" + result)).build();
+                .location(URI.create("/frontend/pages/perfil.html?lastfm=" + result)).build();
     }
 
     private record PendingAuth(String state, Long userId, Instant expiresAt) implements java.io.Serializable {}
+    @GetMapping(
+            value = "/me/top/{type}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<ResponseEntity<?>> getMyTop(
+            @CookieValue(name = "token_jwt", required = false) String cookie,
+            @PathVariable String type,
+            @RequestParam(defaultValue = "7day") String period) {
+        if (!cookieService.checkCookie(cookie)) return Mono.just(unauthorized());
+        if (!java.util.Set.of("artists", "albums", "tracks").contains(type)
+                || !java.util.Set.of("overall", "7day", "1month", "3month", "6month", "12month").contains(period)) {
+            return Mono.just(ResponseEntity.badRequest().body(Map.of("error", "Tipo ou período de ranking inválido.")));
+        }
+
+        return lastfmService.getTopBySynchroId(cookieService.getId(cookie), type, period)
+                .<ResponseEntity<?>>map(json -> ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                        .contentType(MediaType.APPLICATION_JSON).body(json))
+                .onErrorResume(java.util.concurrent.TimeoutException.class, error ->
+                        Mono.just(ResponseEntity.status(504).cacheControl(CacheControl.noStore()).body(
+                                Map.of("error", "O Last.fm demorou para responder. Tente novamente."))))
+                .onErrorResume(org.example.synchro.services.exception.ResourceConflictException.class, error ->
+                        Mono.just(ResponseEntity.status(409).body(Map.of("error", "Conecte sua conta Last.fm primeiro."))))
+                .onErrorResume(error -> {
+                    log.warn("Ranking Last.fm indisponível: tipo={}, período={}, falha={}", type, period,
+                            error.getClass().getSimpleName());
+                    return Mono.just(ResponseEntity.status(502).body(Map.of("error", "Falha ao consultar o Last.fm.")));
+                });
+    }
+
+    // =========================================================
+    // CONSULTAR TAGS DE UM ARTISTA
+    // =========================================================
+
+    @GetMapping(
+            value = "/artist/tags",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<ResponseEntity<String>> getArtistTags(
+            @RequestParam String artist
+    ) {
+
+        if (artist == null
+                || artist.isBlank()
+                || artist.length() > 200) {
+
+            return Mono.just(
+                    ResponseEntity
+                            .badRequest()
+                            .body(
+                                    "{\"error\":\"Nome do artista invalido\"}"
+                            )
+            );
+        }
+
+        return lastfmService
+                .getArtistTopTags(artist)
+                .map(json ->
+                        ResponseEntity
+                                .ok()
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .body(json)
+                )
+                .onErrorResume(error -> {
+                    System.err.println(
+                            "Erro ao consultar tags do artista: "
+                                    + error.getMessage()
+                    );
+
+                    return Mono.just(
+                            ResponseEntity
+                                    .status(502)
+                                    .body(
+                                            "{\"error\":\"Falha ao consultar tags no Last.fm\"}"
+                                    )
+                    );
+                });
+    }
+
+
 }

@@ -203,6 +203,7 @@ document.querySelector('.menu-toggle')?.addEventListener('click', () => {
 });
 
 const artistNameFromUrl = (params.get("artist") || '').trim();
+const artistPhotoRequests = new Map();
 let artistName = artistNameFromUrl || '';
 
 let artist = Object.values(artistsData).find(item => item.name.toLowerCase() === artistNameFromUrl.toLowerCase());
@@ -229,7 +230,7 @@ async function loadCatalogArtist() {
     document.getElementById('artistName').textContent = 'Carregando...';
     document.getElementById('artistImage').src = '../assets/images/catalog-placeholder.svg';
     try {
-        if (id) await fetch(`/catalog/artists/${encodeURIComponent(id)}/refresh`, { method: 'POST' }).catch(() => {});
+        if (!id && window.SynchroCatalog) await window.SynchroCatalog.record({type: 'artist', name: artistNameFromUrl});
         const endpoint = id ? `/catalog/artists/${encodeURIComponent(id)}`
             : `/catalog/artists/by-name?name=${encodeURIComponent(artistNameFromUrl)}`;
         const response = await fetch(endpoint, { headers: { Accept: 'application/json' }, cache: 'no-store' });
@@ -241,21 +242,8 @@ async function loadCatalogArtist() {
         }
         if (!response.ok) throw new Error(response.status === 404 ? 'Artista não encontrado' : 'Não foi possível carregar o artista.');
         const data = await response.json();
-        const saved = data.artist;
-        artistName = saved.nome;
-        artist = {
-            name: saved.nome,
-            image: saved.imgUrl || artistsData[saved.nome]?.image || '../assets/images/catalog-placeholder.svg',
-            bio: new DOMParser().parseFromString(saved.biografia || 'Biografia não disponível no catálogo.', 'text/html').body.textContent,
-            genre: saved.lastFm?.tags || [],
-            tracks: data.musicas.map(item => ({ id: item.id, name: item.titulo })),
-            albums: data.albums.map(item => ({ id: item.id, name: item.titulo, image: item.lastFm?.imageUrl || '../assets/images/catalog-placeholder.svg' }))
-        };
-        carregarPaginaArtista(artist);
-        setArtistLoading(false);
-        artistStatus.textContent = '';
-        atualizarBotaoFavorito();
-        artistLabel.textContent = artistName;
+        renderCatalogArtist(data);
+        refreshCatalogArtist(data.artist.id, endpoint);
     } catch (error) {
         document.querySelector('.artist-header').setAttribute('aria-busy', 'false');
         document.getElementById('artistName').textContent = error.message;
@@ -263,6 +251,48 @@ async function loadCatalogArtist() {
             ? 'Este artista não está disponível. Volte à pesquisa e selecione um resultado atualizado.'
             : 'Ocorreu uma falha ao carregar o artista. Recarregue a página para tentar novamente.';
     }
+}
+
+async function refreshCatalogArtist(id, endpoint) {
+    try {
+        const refreshed = await fetch(`/catalog/artists/${encodeURIComponent(id)}/refresh`, {method: 'POST'});
+        if (!refreshed.ok) return;
+        const response = await fetch(endpoint, {headers: {Accept: 'application/json'}, cache: 'no-store'});
+        if (response.ok) renderCatalogArtist(await response.json());
+    } catch { /* Optional metadata must not hide an already rendered artist. */ }
+}
+
+function renderCatalogArtist(data) {
+        const saved = data.artist;
+        artistName = saved.nome;
+        artist = {
+            name: saved.nome,
+            lastFmUrl: saved.lastFm?.url,
+            image: saved.imgUrl || artistsData[saved.nome]?.image || '../assets/images/catalog-placeholder.svg',
+            bio: new DOMParser().parseFromString(saved.biografia || 'Biografia não disponível no catálogo.', 'text/html').body.textContent,
+            genre: saved.lastFm?.tags || [],
+            tracks: data.musicas.map(item => ({ id: item.id, name: item.titulo })),
+            albums: data.albums.map(item => ({ id: item.id, name: item.titulo, image: item.lastFm?.imageUrl || '../assets/images/catalog-placeholder.svg' }))
+        };
+        carregarPaginaArtista(artist);
+        loadCatalogArtistPhoto(saved);
+        setArtistLoading(false);
+        artistStatus.textContent = '';
+        atualizarBotaoFavorito();
+        artistLabel.textContent = artistName;
+}
+
+function loadCatalogArtistPhoto(saved) {
+    if (artist.image && !/placeholder\.svg|2a96cbd8b46e442fc41c2b86b821562f|placehold\.co/.test(artist.image)) return;
+    if (!artistPhotoRequests.has(saved.id)) {
+        artistPhotoRequests.set(saved.id, fetch('/catalog/artists/' + encodeURIComponent(saved.id) + '/photo')
+            .then(response => response.ok ? response.json() : null).catch(() => null));
+    }
+    artistPhotoRequests.get(saved.id).then(photo => {
+        if (artistName !== saved.nome || photo?.status !== 'found' || !/^https:\/\//i.test(photo.imgUrl)) return;
+        artist.image = photo.imgUrl;
+        document.getElementById('artistImage').src = photo.imgUrl;
+    });
 }
 // Run after the rest of the page's event handlers and labels have been initialized.
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadCatalogArtist);
@@ -295,6 +325,18 @@ if (!artist) {
 // =====================================================
 
 function carregarPaginaArtista(artist) {
+
+    const lastFmLink = document.getElementById('artistLastFmLink');
+    if (lastFmLink && artist.name) {
+        let url = 'https://www.last.fm/music/' + encodeURIComponent(artist.name);
+        try {
+            const provided = new URL(artist.lastFmUrl);
+            if (provided.protocol === 'https:' && ['last.fm', 'www.last.fm'].includes(provided.hostname)
+                && !provided.username && !provided.password && provided.pathname.startsWith('/music/')) url = provided.href;
+        } catch { /* The artist name still supplies a direct Last.fm link. */ }
+        lastFmLink.href = url;
+        lastFmLink.hidden = false;
+    }
 
     document.title =
         `SYNCHRO - ${artist.name}`;
@@ -419,7 +461,7 @@ function carregarMusicas(tracks, artistName) {
         if (typeof track === 'object') {
             const link = document.createElement('a');
             link.className = 'track catalog-link';
-            link.href = `musica.html?id=${encodeURIComponent(track.id)}`;
+            link.href = `detalhes-musica.html?id=${encodeURIComponent(track.id)}`;
             link.textContent = `${String(index + 1).padStart(2, '0')} · ${track.name}`;
             container.append(link);
             return;
@@ -542,92 +584,13 @@ function carregarAlbuns(albums, artistName) {
 const favoriteBtn =
     document.getElementById("favoriteBtn");
 
-if (favoriteBtn) {
-
-    atualizarBotaoFavorito();
-
-
-    favoriteBtn.addEventListener("click", () => {
-        if (!artist) return;
-
-        let favorites =
-            JSON.parse(
-                localStorage.getItem("synchroFavorites")
-            ) || [];
-
-
-        // Se ainda não está favoritado
-        if (!favorites.includes(artist.name)) {
-
-            favorites.push(artist.name);
-
-        }
-
-        // Se já está favoritado
-        else {
-
-            favorites =
-                favorites.filter(
-                    favorite => favorite !== artist.name
-                );
-
-        }
-
-
-        // Salvar novamente
-        localStorage.setItem(
-            "synchroFavorites",
-            JSON.stringify(favorites)
-        );
-
-
-        // Atualizar aparência
-        atualizarBotaoFavorito();
-
-    });
-
-}
-
-
-// =====================================================
-// ATUALIZAR BOTÃO
-// =====================================================
-
 function atualizarBotaoFavorito() {
-
-    if (!favoriteBtn || !artist) {
-        return;
+    if (favoriteBtn && artist) {
+        window.SynchroFeatures.bindFavorite(favoriteBtn, {kind:'artists',artist:artist.name});
+        let details=document.querySelector('.artist-header .feature-detail-link');
+        if(!details){details=document.createElement('a');details.className='feature-detail-link';details.textContent='Explorar músicas e álbuns do artista';document.querySelector('.artist-header').append(details);}
+        details.href='/frontend/pages/detalhes-artista.html?artist='+encodeURIComponent(artist.name);
     }
-
-
-    const favorites =
-        JSON.parse(
-            localStorage.getItem("synchroFavorites")
-        ) || [];
-
-
-    if (favorites.includes(artist.name)) {
-
-        favoriteBtn.innerHTML = `
-            <i class="bx bxs-heart"></i>
-            Favoritado
-        `;
-
-        favoriteBtn.classList.add("favorited");
-
-    }
-
-    else {
-
-        favoriteBtn.innerHTML = `
-            <i class="bx bx-heart"></i>
-            Favoritar
-        `;
-
-        favoriteBtn.classList.remove("favorited");
-
-    }
-
 }
 
 //Janela modal de Reviews

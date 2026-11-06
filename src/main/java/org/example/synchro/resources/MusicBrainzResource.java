@@ -1,0 +1,122 @@
+package org.example.synchro.resources;
+
+import lombok.RequiredArgsConstructor;
+import org.example.synchro.services.MusicBrainzService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/musicbrainz")
+@RequiredArgsConstructor
+public class MusicBrainzResource {
+
+    private final MusicBrainzService musicBrainzService;
+
+    // =========================================
+    // PESQUISAR ÁLBUNS
+    // =========================================
+
+    @GetMapping(
+            value = "/album/search",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<String> searchAlbums(
+            @RequestParam("artist") String artist,
+            @RequestParam("album") String album
+    ) {
+
+        validarParametros(artist, album);
+
+        return musicBrainzService.searchAlbums(artist, album);
+    }
+
+
+    // =========================================
+    // PESQUISAR SINGLES
+    // =========================================
+
+    @GetMapping(
+            value = "/single/search",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<String> searchSingles(
+            @RequestParam("artist") String artist,
+            @RequestParam("single") String single
+    ) {
+
+        validarParametros(artist, single);
+
+        return musicBrainzService.searchSingles(
+                artist,
+                single
+        );
+    }
+
+    // =========================================
+    // PESQUISAR GRAVAÇÕES
+    // =========================================
+
+    @GetMapping(
+            value = "/track/search",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<String> searchTracks(
+            @RequestParam("artist") String artist,
+            @RequestParam("track") String track
+    ) {
+
+        validarParametros(artist, track);
+
+        return musicBrainzService.searchTracks(artist, track);
+    }
+
+    // =========================================
+    // IDENTIFICAR ÁLBUM DA MÚSICA
+    // =========================================
+
+    @GetMapping(
+            value = "/track/album",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<Map<String, Object>> findTrackAlbum(
+            @RequestParam("artist") String artist,
+            @RequestParam("track") String track
+    ) {
+
+        validarParametros(artist, track);
+
+        return musicBrainzService.findTrackAlbum(
+                artist,
+                track
+        );
+    }
+
+    // =========================================
+    // VALIDAR PARÂMETROS
+    // =========================================
+
+    private void validarParametros(
+            String primeiro,
+            String segundo
+    ) {
+
+        if (
+                primeiro == null ||
+                        primeiro.isBlank() || primeiro.length() > 200 ||
+                        segundo == null ||
+                        segundo.isBlank() || segundo.length() > 200
+        ) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Informe os parâmetros obrigatórios."
+            );
+        }
+    }
+}
+

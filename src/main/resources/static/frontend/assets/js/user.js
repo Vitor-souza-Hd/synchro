@@ -1,5 +1,30 @@
 document.addEventListener("DOMContentLoaded", loadCurrentUserProfile);
 const isPublicProfile = new URLSearchParams(window.location.search).has('user');
+// Cada aba do perfil compartilha a resposta entre rankings, gêneros e contadores.
+const profileRankings = new Map();
+function fetchProfileRanking(type, period) {
+    const key = type + ':' + period;
+    const cached = profileRankings.get(key);
+    if (cached && Date.now() < cached.expires) return cached.request;
+    const entry = {expires: Infinity};
+    entry.request = fetch('/last-fm/me/top/' + type + '?period=' + encodeURIComponent(period), {
+        credentials: 'same-origin', cache: 'no-store', headers: {Accept: 'application/json'}
+    }).then(async response => {
+        if (!response.ok) {
+            const error = new Error('Ranking indisponível.');
+            error.status = response.status;
+            throw error;
+        }
+        const data = await response.json();
+        entry.expires = Date.now() + 60000;
+        return data;
+    }).catch(error => {
+        profileRankings.delete(key);
+        throw error;
+    });
+    profileRankings.set(key, entry);
+    return entry.request;
+}
 window.addEventListener('pageshow', () => {
     // The user may return without authorizing, using the browser's Back button.
     const button = document.getElementById('connectLastFm');
@@ -18,6 +43,7 @@ async function loadCurrentUserProfile() {
 
     try {
         const publicUser = new URLSearchParams(window.location.search).get('user');
+        if (isPublicProfile && !/^\d+$/.test(publicUser)) throw new Error("Perfil não encontrado.");
         const response = await fetch(publicUser ? `/catalog/users/${encodeURIComponent(publicUser)}` : "/users/me", {
             credentials: "same-origin",
             headers: { Accept: "application/json" }
@@ -35,7 +61,7 @@ async function loadCurrentUserProfile() {
         const user = await response.json();
         renderCurrentUser(user);
         if (publicUser) {
-            document.querySelector('.banner-info h1').textContent = 'Perfil';
+            document.getElementById('profileHeading').textContent = 'Perfil';
             ['profileEmail', 'profileBirthDay', 'profileGender'].forEach(id => document.getElementById(id).hidden = true);
         }
 
@@ -45,6 +71,8 @@ async function loadCurrentUserProfile() {
             document.getElementById('connectLastFm').addEventListener('click', connectLastFm);
             document.getElementById('syncLastFm').addEventListener('click', syncLastFm);
             showLastFmCallbackResult();
+            document.documentElement.classList.add("own-profile");
+            document.dispatchEvent(new CustomEvent("synchro:own-profile", {detail: user}));
         }
     } catch (error) {
         showProfileError(error.message || "Não foi possível carregar seu perfil.");
@@ -88,8 +116,8 @@ function renderLastFm(user) {
     setProfileText('profileAlbums', formatCount(data.lastFmAlbums));
     const image = document.getElementById('profileImage');
     const fallback = '../assets/images/user/userphoto.jpg';
-    image.onerror = () => { image.onerror = null; image.src = fallback; };
-    image.src = fallback;
+    image.dataset.defaultPhoto = fallback;
+    showProfilePhoto(image);
     if (!connected) return;
 
     document.getElementById('lastFmProfileLink').href = `https://www.last.fm/user/${encodeURIComponent(user.lastFmUsername)}`;
@@ -100,8 +128,22 @@ function renderLastFm(user) {
         : `Atualizado em ${updated.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`);
     try {
         const url = new URL(data.lastFmImageUrl);
-        if (url.protocol === 'https:' && !url.username && !url.password) image.src = url.href;
+        if (url.protocol === 'https:' && !url.username && !url.password) {
+            image.dataset.defaultPhoto = url.href;
+            showProfilePhoto(image);
+        }
     } catch { /* Keep the default photo when Last.fm has no image. */ }
+}
+
+function showProfilePhoto(image) {
+    const fallback = '../assets/images/user/userphoto.jpg';
+    const sources = [...new Set([image.dataset.customPhoto, image.dataset.defaultPhoto, fallback].filter(Boolean))];
+    const next = () => {
+        if (sources.length === 0) { image.onerror = null; return; }
+        image.src = sources.shift();
+    };
+    image.onerror = next;
+    next();
 }
 
 function setOptionalLastFmText(id, value) {

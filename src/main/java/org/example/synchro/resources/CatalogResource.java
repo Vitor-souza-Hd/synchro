@@ -21,6 +21,17 @@ public class CatalogResource {
     private final UserRepository users;
     private final org.example.synchro.services.LastFmCatalogService lastFm;
 
+    public record Interaction(String type, String name, String artist, String album, String albumArtist) {}
+    public record RegisteredItem(String type, long id) {}
+
+    @PostMapping("/interactions")
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public RegisteredItem registerInteraction(@RequestBody Interaction interaction) {
+        long id = lastFm.register(interaction.type(), interaction.name(), interaction.artist(),
+                interaction.album(), interaction.albumArtist());
+        return new RegisteredItem(interaction.type(), id);
+    }
+
     @PostMapping("/{type}/{id}/refresh")
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void refresh(@PathVariable String type, @PathVariable long id) {

@@ -74,9 +74,9 @@ const baseUrl = process.env.SYNCHRO_TEST_URL || 'http://localhost:8080';
         await page.unroute('**/search?**');
         await page.setViewportSize({ width: 1280, height: 850 });
 
-        for (const path of ['/frontend/pages/artista.html?artist=Radiohead', '/frontend/pages/user.html']) {
+        for (const path of ['/frontend/pages/artista.html?artist=Radiohead', '/frontend/pages/perfil.html']) {
             // Supply a session fixture only for the profile page; search still uses the real API.
-            if (path.includes('user.html')) await page.route('**/users/me', route => route.fulfill({
+            if (path.includes('perfil.html')) await page.route('**/users/me', route => route.fulfill({
                 json: { username: 'search-test', data: {} }
             }));
             await page.goto(baseUrl + path, { waitUntil: 'domcontentloaded' });

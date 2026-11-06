@@ -1,6 +1,17 @@
 (() => {
+    if (window.SynchroSearch) {
+        window.SynchroSearch.initialize();
+        return;
+    }
     function initializeSearch() {
         document.querySelectorAll('input.search').forEach((input, index) => {
+            if (input.dataset.synchroSearchReady === 'true') return;
+            input.dataset.synchroSearchReady = 'true';
+            const box = input.closest('.search-box');
+            if (box) {
+                box.dataset.synchroSearchReady = 'true';
+                box.querySelectorAll('#lastfm-search-results').forEach(element => element.remove());
+            }
             const panel = document.createElement('section');
             panel.id = `synchro-search-results-${index}`;
             panel.className = 'synchro-search-results';
@@ -12,7 +23,6 @@
             input.maxLength = 200;
             input.placeholder = 'Pesquisar no Last.fm — pressione Enter';
             input.setAttribute('aria-controls', panel.id);
-            const box = input.closest('.search-box');
             const submit = document.createElement('button');
             submit.type = 'button';
             submit.className = 'synchro-search-submit';
@@ -60,20 +70,22 @@
             function render(data) {
                 const groups = [
                     ['Músicas', data.songs, item => item.titulo,
-                        item => [item.lastFm?.artistName || item.artistas?.map(artist => artist.nome).join(', '), item.album?.titulo].filter(Boolean).join(' · '), 'musica'],
+                        item => [item.lastFm?.artistName || item.artistas?.map(artist => artist.nome).join(', '), item.album?.titulo].filter(Boolean).join(' · '), 'detalhes-musica'],
                     ['Artistas', data.artists, item => item.nome, () => 'Artista', 'artista'],
                     ['Álbuns', data.albums, item => item.titulo,
                         item => item.lastFm?.artistName || item.artistas?.map(artist => artist.nome).join(', ') || 'Álbum', 'album'],
-                    ['Usuários', data.users, item => item.username, () => 'Usuário', 'user']
+                    ['Usuários', data.users, item => item.username, () => 'Usuário', 'perfil']
                 ];
                 if (!groups.some(([, items]) => Array.isArray(items) && items.length)) {
-                    message(data.warning || 'Nenhum resultado encontrado no Last.fm.');
+                    message(data.refreshing ? 'Pesquisando no Last.fm…' : data.warning || 'Nenhum resultado encontrado no Last.fm.');
                     return;
                 }
                 panel.replaceChildren();
                 const source = document.createElement('p');
                 source.className = 'synchro-search-status';
-                source.textContent = data.warning || 'Resultados do Last.fm · salvos no Synchro';
+                source.textContent = data.warning || (data.refreshing
+                    ? 'Resultados salvos · buscando mais resultados no Last.fm…'
+                    : data.source === 'local' ? 'Resultados salvos no Synchro' : 'Resultados do Last.fm · salvos no Synchro');
                 panel.append(source);
                 groups.forEach(([label, items, title, description, page]) => {
                     if (!Array.isArray(items) || !items.length) return;
@@ -85,7 +97,7 @@
                         const name = document.createElement('strong');
                         const detail = document.createElement('span');
                         const link = document.createElement('a');
-                        link.href = `/frontend/pages/${page}.html?${page === 'user' ? 'user' : 'id'}=${encodeURIComponent(item.id)}`;
+                        link.href = `/frontend/pages/${page}.html?${page === 'perfil' ? 'user' : 'id'}=${encodeURIComponent(item.id)}`;
                         name.textContent = title(item);
                         detail.textContent = description(item);
                         link.append(name, detail);
@@ -106,16 +118,33 @@
 
             async function search(term, requestVersion) {
                 controller = new AbortController();
+                const signal = controller.signal;
                 input.setAttribute('aria-busy', 'true');
-                message('Pesquisando no Last.fm e salvando os detalhes…');
+                message('Pesquisando no Synchro e no Last.fm…');
                 try {
-                    const response = await fetch(`/search?q=${encodeURIComponent(term)}`, {
-                        signal: controller.signal,
-                        headers: { Accept: 'application/json' }
-                    });
-                    if (!response.ok) throw new Error('Pesquisa indisponível');
-                    const data = await response.json();
-                    if (requestVersion === version) render(data);
+                    let previous;
+                    for (let attempt = 0; attempt < 30; attempt++) {
+                        const response = await fetch(`/search?q=${encodeURIComponent(term)}`, {
+                            signal, headers: { Accept: 'application/json' }
+                        });
+                        if (!response.ok) throw new Error('Pesquisa indisponível');
+                        const data = await response.json();
+                        if (signal.aborted || requestVersion !== version) return;
+                        if (attempt === 29 && data.refreshing) {
+                            data.refreshing = false;
+                            data.warning = 'A consulta ao Last.fm continua. Pesquise novamente em instantes; os dados salvos estão disponíveis.';
+                        }
+                        const snapshot = JSON.stringify(data);
+                        if (snapshot !== previous) render(data);
+                        previous = snapshot;
+                        if (!data.refreshing) break;
+                        await new Promise(resolve => {
+                            const done = () => { clearTimeout(timer); signal.removeEventListener('abort', done); resolve(); };
+                            const timer = setTimeout(done, 1000);
+                            signal.addEventListener('abort', done, {once: true});
+                        });
+                        if (signal.aborted || requestVersion !== version) return;
+                    }
                 } catch (error) {
                     if (error.name !== 'AbortError' && requestVersion === version) {
                         message('Não foi possível pesquisar agora. Tente novamente.');
@@ -159,6 +188,7 @@
         });
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeSearch);
+    window.SynchroSearch = {initialize: initializeSearch};
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeSearch, {once: true});
     else initializeSearch();
 })();

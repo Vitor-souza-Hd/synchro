@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>Configurações - Synchro</title>
+
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/configuracoes.css">
+
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+          rel="stylesheet">
+<link rel="stylesheet" href="/frontend/assets/css/auth.css">
+<link rel="stylesheet" href="/frontend/assets/css/features.css">
+<script src="/frontend/assets/js/features.js?v=20261105-catalog-interactions-1" defer></script>
+<script src="/frontend/assets/js/auth.js" defer></script>
+<script src="/frontend/assets/js/explorar/tema-global.js"></script>
+</head>
+<body>
+<div class="feature-session"><div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div><div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div></div>
+
+<div class="container">
+
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="bx bx-pulse"></i>
+            <a href="/frontend/pages/explorar.html">SYNCHRO</a>
+        </div>
+
+        <div class="menu">
+            <h5>Menu</h5>
+            <ul>
+                <li><i class="bx bxs-home"></i>
+                    <a href="/frontend/pages/explorar.html">Explorar</a></li>
+                <li><i class="bx bxs-album"></i>
+                    <a href="/frontend/pages/explorar.html#albuns">Álbuns</a></li>
+                <li><i class="bx bxs-microphone"></i>
+                    <a href="/frontend/pages/explorar.html#artistas">Artistas</a></li>
+            </ul>
+        </div>
+
+        <div class="menu">
+            <h5>Sua Biblioteca</h5>
+            <ul>
+                <li><i class="bx bx-history"></i>
+                    <a href="/frontend/pages/recentes.html">Recentes</a></li>
+                <li><i class="bx bxs-heart"></i>
+                    <a href="/frontend/pages/favoritos.html">Favoritos</a></li>
+            </ul>
+        </div>
+
+        <div class="menu">
+            <h5>Preferências</h5>
+            <ul>
+                <li>
+                    <i class="bx bxs-cog"></i>
+                    <a href="/frontend/pages/configuracoes.html"
+                       aria-current="page">Configurações</a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <main class="settings-main">
+
+        <header class="settings-topbar">
+            <a href="/frontend/pages/explorar.html">
+                <i class="bx bx-arrow-back"></i>
+                Voltar ao início
+            </a>
+            <a href="/frontend/pages/perfil.html">
+                <i class="bx bxs-user-circle"></i>
+                Meu perfil
+            </a>
+        </header>
+
+        <div class="settings-heading">
+            <span>PERSONALIZAÇÃO</span>
+            <h1>Configurações</h1>
+            <p>Deixe o Synchro do seu jeito.</p>
+        </div>
+
+        <section class="settings-card">
+            <div class="settings-section-title">
+                <i class="bx bxs-palette"></i>
+                <h2>Aparência</h2>
+            </div>
+
+            <p>Escolha o visual da página de Configurações.</p>
+
+            <label for="themePreference">Tema</label>
+            <select id="themePreference">
+                <option value="dark">Escuro</option>
+                <option value="light">Claro</option>
+            </select>
+        </section>
+
+        <section class="settings-card">
+            <div class="settings-section-title">
+                <i class="bx bx-history"></i>
+                <h2>Histórico de atividades</h2>
+            </div>
+
+            <div class="settings-row">
+                <div>
+                    <strong>Salvar atividades recentes</strong>
+                    <p>
+                        Registrar páginas de músicas,
+                        álbuns e artistas visitados.
+                    </p>
+                </div>
+
+                <input id="historyEnabled"
+                       type="checkbox"
+                       aria-label="Ativar histórico">
+            </div>
+
+            <button id="clearHistory"
+                    class="settings-button"
+                    type="button">
+                Limpar histórico
+            </button>
+        </section>
+
+        <section class="settings-card">
+            <div class="settings-section-title">
+                <i class="bx bxs-lock-alt"></i>
+                <h2>Privacidade</h2>
+            </div>
+
+            <p>
+                Suas preferências e o histórico desta
+                versão são armazenados neste navegador.
+                Os dados não são sincronizados
+                entre dispositivos.
+            </p>
+
+            <button id="clearImageCache"
+                    class="settings-button"
+                    type="button">
+                Limpar cache local de capas
+            </button>
+        </section>
+
+        <p id="settingsFeedback"
+           role="status"
+           aria-live="polite"></p>
+
+    </main>
+</div>
+
+<script src="/frontend/assets/js/explorar/configuracoes.js"></script>
+<script src="/frontend/assets/js/explorar/navegacao-global.js"></script>
+</body>
+</html>
+

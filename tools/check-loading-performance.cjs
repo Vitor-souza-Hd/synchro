@@ -1,0 +1,172 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const root = path.resolve(__dirname, '../src/main/resources/static/frontend/assets/js');
+const tick = () => new Promise(resolve => setImmediate(resolve));
+function deferred() { let resolve; const promise = new Promise(done => { resolve = done; }); return {promise, resolve}; }
+class Element {
+    constructor() {
+        this.children = []; this.listeners = {}; this.attrs = {}; this.dataset = {}; this.style = {}; this.hidden = true;
+        this.classList = {add() {}, toggle() {}, remove() {}, contains() { return false; }};
+    }
+    set innerHTML(value) { this.html = value; this.children = []; }
+    get innerHTML() { return this.html || ''; }
+    get childElementCount() { return this.children.length; }
+    append(...nodes) { this.children.push(...nodes); }
+    appendChild(node) { this.append(node); }
+    replaceChildren(...nodes) { this.children = nodes; }
+    before() {}
+    setAttribute(key, value) { this.attrs[key] = value; }
+    removeAttribute(key) { delete this.attrs[key]; }
+    addEventListener(type, fn) { this.listeners[type] = fn; }
+}
+function environment(search) {
+    const nodes = new Map(), selectors = new Map(), events = {};
+    const node = id => { if (!nodes.has(id)) nodes.set(id, new Element()); return nodes.get(id); };
+    const document = {readyState: 'loading', body: new Element(),
+        getElementById: node, createElement: () => new Element(),
+        querySelector: selector => selectors.get(selector) || null,
+        querySelectorAll: selector => selectors.has(selector) ? [selectors.get(selector)] : [],
+        addEventListener: (name, fn) => { events[name] = fn; }};
+    const context = {document, URL, URLSearchParams, console,
+        window: {location: {search}, SynchroFeatures: {bindFavorite() {}, escapeHtml: value => value}},
+        DOMParser: class { parseFromString(value) { return {body: {textContent: value}, querySelectorAll: () => []}; } }};
+    return {node, selectors, events, context};
+}
+const json = data => ({ok: true, json: async () => data});
+
+async function checkAlbum(success) {
+    const env = environment('?id=1'), pending = deferred(), calls = [];
+    const data = count => ({album: {id: 1, titulo: 'Saved album', artistas: [{id: 2, nome: 'Artist'}]},
+        musicas: Array.from({length: count}, (_, i) => ({id: i + 1, titulo: 'Track ' + i}))});
+    let current = data(1);
+    env.context.fetch = async url => {
+        calls.push(url); return url.endsWith('/refresh') ? pending.promise : json(current);
+    };
+    vm.runInNewContext(fs.readFileSync(path.join(root, 'media.js'), 'utf8'), env.context);
+    await tick();
+    assert.ok(!calls[0].endsWith('/refresh'), 'Album must load saved data first');
+    assert.equal(env.node('catalogContent').hidden, false, 'Album is visible while refresh is pending');
+    assert.equal(env.node('catalogTracks').children.length, 1);
+    current = data(2); pending.resolve({ok: success}); await tick();
+    assert.equal(env.node('catalogContent').hidden, false);
+    assert.equal(env.node('catalogArtists').children.length, 1, 'Refreshing must not duplicate artists');
+    assert.equal(env.node('catalogTracks').children.length, success ? 2 : 1);
+}
+
+async function checkArtist(success) {
+    const env = environment('?id=2'), pending = deferred(), calls = [];
+    const header = new Element(); env.selectors.set('.artist-header', header);
+    env.selectors.set('.artist-header .feature-detail-link', new Element());
+    env.selectors.set('.artist-section', new Element());
+    const data = title => ({artist: {id: 2, nome: title}, musicas: [{id: 3, titulo: 'Track'}], albums: []});
+    let current = data('Saved artist');
+    env.context.fetch = async url => {
+        calls.push(url); return url.endsWith('/refresh') ? pending.promise : json(current);
+    };
+    vm.runInNewContext(fs.readFileSync(path.join(root, 'artista.js'), 'utf8'), env.context);
+    await env.events.DOMContentLoaded(); await tick();
+    assert.equal(calls[0], '/catalog/artists/2');
+    assert.equal(env.node('artistName').textContent, 'Saved artist');
+    assert.equal(header.attrs['aria-busy'], 'false', 'Artist is usable while refresh is pending');
+    assert.equal(env.node('favoriteBtn').disabled, false);
+    assert.equal(env.node('artistLastFmLink').href, 'https://www.last.fm/music/Saved%20artist');
+    assert.equal(env.node('artistLastFmLink').hidden, false);
+    current = data('Updated artist'); pending.resolve({ok: success}); await tick();
+    assert.equal(env.node('artistName').textContent, success ? 'Updated artist' : 'Saved artist');
+    assert.equal(env.node('tracks').children.length, 1, 'Refreshing must not duplicate tracks');
+}
+
+async function checkHome() {
+    const env = environment(''), pending = deferred(), grid = new Element(), calls = [];
+    env.selectors.set('.artists', grid);
+    env.context.fetch = async url => {
+        calls.push(url);
+        return url === '/artista' ? json([{nome: 'Saved artist'}]) : pending.promise;
+    };
+    vm.runInNewContext(fs.readFileSync(path.join(root, 'explorar/script2.js'), 'utf8'), env.context);
+    env.events.DOMContentLoaded(); await tick();
+    assert.equal(calls[0], '/artista');
+    assert.equal(grid.children.length, 1, 'Local artists must appear before external rankings');
+    assert.equal(grid.children[0].children[0].children[1].children[0].textContent, 'Saved artist');
+    pending.resolve({ok: false}); await tick();
+    assert.equal(grid.children.length, 1, 'Failed rankings must preserve saved artists');
+    assert.equal(calls.filter(url => url === '/artista').length, 1, 'Reuse catalog response');
+}
+async function checkPopularArtistPhotos() {
+    const env = environment(''), pending = deferred(), ranking = deferred(), grid = new Element(), calls = [];
+    const artists = [{id: 1, nome: 'Missing photo'},
+        {id: 2, nome: 'Saved photo', imgUrl: 'https://example.test/saved.jpg'},
+        {id: 3, nome: 'Broken photo', imgUrl: 'https://example.test/broken.jpg'}];
+    env.selectors.set('.artists', grid);
+    env.context.fetch = async url => {
+        calls.push(url);
+        if (url === '/artista') return json(artists);
+        if (url === '/catalog/artists/1/photo') return pending.promise;
+        if (url === '/catalog/artists/3/photo?refresh=true') return json({status: 'found', imgUrl: 'https://commons.wikimedia.org/artist.jpg'});
+        if (url.startsWith('/last-fm/')) return ranking.promise;
+        throw new Error('Unexpected photo request: ' + url);
+    };
+    vm.runInNewContext(fs.readFileSync(path.join(root, 'explorar/script2.js'), 'utf8'), env.context);
+    env.events.DOMContentLoaded(); await tick();
+    assert.equal(grid.children.length, 3, 'Cards must render before photo and ranking requests finish');
+    const missing = grid.children[0].children[0].children[0];
+    const saved = grid.children[1].children[0].children[0];
+    const broken = grid.children[2].children[0].children[0];
+    assert.equal(missing.src, '/frontend/assets/images/artist-placeholder.svg');
+    assert.equal(saved.src, 'https://example.test/saved.jpg');
+    assert.ok(!calls.some(url => url.includes('/artists/2/photo')), 'Working saved photos need no external lookup');
+    broken.onerror(); await tick();
+    assert.equal(broken.src, 'https://commons.wikimedia.org/artist.jpg');
+    pending.resolve(json({status: 'found', imgUrl: 'https://commons.wikimedia.org/missing.jpg'})); await tick();
+    assert.equal(missing.src, 'https://commons.wikimedia.org/missing.jpg');
+    broken.onerror();
+    assert.equal(broken.src, '/frontend/assets/images/artist-placeholder.svg');
+    assert.equal(calls.filter(url => url.includes('/photo')).length, 2, 'Broken external images must not create retry loops');
+    ranking.resolve(json({topartists: {artist: [{name: 'Missing photo'}]}})); await tick();
+    assert.equal(grid.children[0].children[0].children[0].src, 'https://commons.wikimedia.org/missing.jpg');
+    assert.equal(calls.filter(url => url.includes('/photo')).length, 2, 'Personalized re-render reuses found photos');
+}
+async function checkArtistLastFmPhoto(broken, gallery = false) {
+    const env = environment('?artist=Test%20Artist'), calls = [];
+    env.context.window.location.origin = 'http://synchro.test';
+    env.context.window.location.href = 'http://synchro.test/frontend/pages/detalhes-artista.html?artist=Test%20Artist';
+    env.context.setTimeout = setTimeout; env.context.clearTimeout = clearTimeout;
+    if (gallery) env.context.window.SynchroCatalog = {record: async () => ({id: 42})};
+    env.context.Image = class {
+        set src(url) { queueMicrotask(() => url.includes('broken') ? this.onerror?.() : this.onload?.()); }
+    };
+    env.context.fetch = async input => {
+        const url = new URL(input, 'http://synchro.test'); calls.push(url);
+        if (url.pathname === '/catalog/artists/42/photo') return json({status: 'found', imgUrl: 'https://lastfm.freetls.fastly.net/gallery.jpg'});
+        if (url.pathname.startsWith('/favorites/')) return json({favorite: false});
+        if (url.hostname.endsWith('wikipedia.org')) return json({query: {pages: [{title: 'Test Artist',
+            thumbnail: {source: 'https://upload.wikimedia.org/fallback.jpg'}}]}});
+        const method = url.searchParams.get('method');
+        if (method === 'artist.getinfo') return json({artist: {name: 'Test Artist', image: [
+            {size: 'mega', '#text': 'https://lastfm.freetls.fastly.net/2a96cbd8b46e442fc41c2b86b821562f.png'},
+            {size: 'extralarge', '#text': broken ? 'https://lastfm.freetls.fastly.net/broken.jpg' : 'https://lastfm.freetls.fastly.net/photo.jpg'}
+        ]}});
+        if (method === 'artist.gettoptracks') return json({toptracks: {track: []}});
+        if (method === 'artist.gettopalbums') return json({topalbums: {album: []}});
+        throw new Error('Unexpected image source: ' + input);
+    };
+    vm.runInNewContext(fs.readFileSync(path.join(root, 'explorar/artista.js'), 'utf8'), env.context);
+    await tick(); await tick();
+    assert.equal(env.node('artistImage').src, gallery ? 'https://lastfm.freetls.fastly.net/gallery.jpg'
+        : broken ? 'https://upload.wikimedia.org/fallback.jpg' : 'https://lastfm.freetls.fastly.net/photo.jpg');
+    assert.equal(calls.some(url => url.hostname.endsWith('wikipedia.org')), broken && !gallery,
+        'Use Last.fm first and consult Wikipedia only when its image fails');
+}
+(async () => {
+    await checkAlbum(true); await checkAlbum(false);
+    await checkArtist(true); await checkArtist(false);
+    await checkHome();
+    await checkPopularArtistPhotos();
+    await checkArtistLastFmPhoto(false); await checkArtistLastFmPhoto(true);
+    await checkArtistLastFmPhoto(true, true);
+    console.log('PASS: albums, artists and Explore render saved data before external requests finish; refresh success/failure preserves content without duplicates.');
+    console.log('PASS: popular artist photos load in the background, reuse saved images, recover broken URLs and keep a local placeholder when loading fails.');
+    console.log('PASS: artist page accepts real Last.fm photos, rejects generic images and falls back to Wikipedia on image loading errors.');
+})().catch(error => { console.error(error); process.exitCode = 1; });

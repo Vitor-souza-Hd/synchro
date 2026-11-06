@@ -51,7 +51,7 @@ const { chromium } = require('playwright');
             const contentType = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.jpg': 'image/jpeg' }[path.extname(file)] || 'application/octet-stream';
             return route.fulfill({ contentType, body: fs.readFileSync(file) });
         });
-        const url = 'http://synchro.test/frontend/pages/user.html';
+        const url = 'http://synchro.test/frontend/pages/perfil.html';
         await page.goto(url);
         const connect = page.getByRole('button', { name: 'Conectar ao lastFM', exact: true });
         const sync = page.getByRole('button', { name: 'Atualizar dados do Last.fm', exact: true });

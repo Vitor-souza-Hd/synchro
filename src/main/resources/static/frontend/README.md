@@ -10,7 +10,7 @@ Spring Boot serves the main page at `/` and `/index.html`.
 
 ## Last.fm no perfil
 
-Em `/frontend/pages/user.html`, **Conectar ao lastFM** aparece enquanto a conta não tiver uma sessão Last.fm autorizada. Um nome preenchido no cadastro não conta como conexão. Após autorizar no Last.fm, o usuário volta ao perfil e o Synchro salva foto, nome no Last.fm, país e contagens de scrobbles, artistas, músicas e álbuns, quando disponíveis. Os dados de cadastro do Synchro são preservados.
+Em `/frontend/pages/perfil.html`, **Conectar ao lastFM** aparece enquanto a conta não tiver uma sessão Last.fm autorizada. Um nome preenchido no cadastro não conta como conexão. Após autorizar no Last.fm, o usuário volta ao perfil e o Synchro salva foto, nome no Last.fm, país e contagens de scrobbles, artistas, músicas e álbuns, quando disponíveis. Os dados de cadastro do Synchro são preservados.
 
 **Atualizar dados do Last.fm** busca os números novamente e salva a data da atualização. Se a API falhar, os dados anteriores continuam visíveis. Perfis públicos exibem os dados salvos sem controles de conexão ou atualização.
 

@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Música - Synchro</title>
+
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/musica.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/seletor-nota.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-musica.css">
+    <script src="/frontend/assets/js/explorar/tema-global.js"></script>
+
+    <link
+            href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+            rel="stylesheet"
+    >
+
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    >
+<link rel="stylesheet" href="/frontend/assets/css/auth.css">
+<link rel="stylesheet" href="/frontend/assets/css/features.css">
+<script src="/frontend/assets/js/features.js?v=20261105-catalog-interactions-1" defer></script>
+<script src="/frontend/assets/js/auth.js" defer></script>
+<link rel="stylesheet" href="/frontend/assets/css/musica.css">
+<link rel="stylesheet" href="../assets/css/playlists.css">
+<link rel="stylesheet" href="../assets/css/search.css">
+</head>
+
+<body class="synchro-musica">
+<div class="feature-session"><div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div><div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div></div>
+
+<div class="container">
+
+    <!-- MENU LATERAL -->
+    <aside class="sidebar">
+            <div class="logo">
+                    <i class='bx bx-pulse'></i>
+                <a href="/#">SYNCHRO</a>
+            </div>
+
+            <div class="menu">
+                <h5>Menu</h5>
+                <ul>
+                    <li>
+                        <i class='bx bxs-bolt-circle'></i>
+                        <a href="/#">Explorar</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-volume-full'></i>
+                        <a href="/#">Gêneros</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-album'></i>
+                        <a href="/#">Álbuns</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-microphone'></i>
+                        <a href="/#">Artistas</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu">
+                <h5>Sua Biblioteca</h5>
+                <ul>
+                    <li>
+                        <i class='bx bx-undo'></i>
+                        <a href="/#">Recentes</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-photo-album'></i>
+                        <a href="/#">Avaliações</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-heart'></i>
+                        <a href="/#">Favoritos</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-folder'></i>
+                        <a href="/#">Local</a>
+                    </li>
+                    <li>
+                       <i class="fa-solid fa-ticket"></i>
+                        <a href="/#">Shows perto de você</a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="menu">
+                <h5>Playlist</h5>
+                <ul>
+                    <li>
+                        <i class='bx bxs-plus-square'></i>
+                        <!-- Gerado por IA: abre o formulário de criação de playlist. -->
+                        <a href="/#" data-create-playlist aria-haspopup="dialog">Criar uma nova</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <!-- Gerado por IA: lista as playlists da conta. -->
+                        <a href="/frontend/pages/playlists.html" data-my-playlists>Suas Playlists</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="/#">Recomendados</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="/#">Playlists do Synchro</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-footer">
+                <a href="/#">Legal</a>
+                <a href="/#">Centro de Privacidade</a>
+                <a href="/#">Política de Privacidade</a>
+                <a href="/#">Cookies</a>
+                <a href="/#">Sobre Anúncios</a>
+                <a href="/#">Acessibilidades</a>
+            </div>
+            <button class="nav-language-button">
+                <i class="fa-solid fa-globe"></i>
+                Português do Brasil
+            </button>
+
+        </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main>
+
+        <header class="search-bar">
+
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                        class="search"
+                        type="text"
+                        placeholder="O que você quer ouvir?"
+                        aria-label="Buscar música"
+                >
+            </div>
+
+            <div class="nav-links">
+                <button class="menu-toggle" type="button">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
+                <a href="/frontend/pages/explorar.html">Início</a>
+                <a href="#">Músicas</a>
+                <a href="#">Artistas</a>
+            </div>
+
+            <a href="/frontend/pages/perfil.html" class="user">
+                <i class="fa-solid fa-circle-user"></i>
+            </a>
+
+        </header>
+
+        <!-- INFORMAÇÕES PRINCIPAIS -->
+        <section class="music-header">
+
+            <div class="music-cover">
+                <img
+                        id="musicImage"
+                        alt="Capa do álbum"
+                        hidden
+                >
+
+                <div id="musicPlaceholder" class="music-placeholder">
+                    <i class="bx bx-music"></i>
+                </div>
+            </div>
+
+            <div class="music-info">
+
+                <span class="music-label">MÚSICA</span>
+
+                <h1 id="musicName">Carregando...</h1>
+
+                <a id="musicArtist" href="#">
+                    Carregando artista...
+                </a>
+
+                <p id="musicAlbum"></p>
+
+                <div id="favoriteAlbumArea" hidden>
+                    <button
+                            id="favoriteAlbumBtn"
+                            class="music-favorite-button"
+                            type="button"
+                            aria-pressed="false"
+                            disabled
+                    >
+                        <i class="bx bx-heart"></i>
+                        Favoritar álbum
+                    </button>
+
+                    <p
+                            id="favoriteAlbumFeedback"
+                            class="music-favorite-feedback"
+                            role="status"
+                            aria-live="polite"
+                    ></p>
+                </div>
+
+
+                <div id="musicTags" class="music-tags"></div>
+
+
+                <div class="music-actions"><button id="addToPlaylistBtn" type="button" disabled>Adicionar à playlist</button><span id="catalogTitle" hidden></span><p id="playlistResolveStatus" role="status"></p>
+
+                    <button
+                            id="favoriteTrackBtn"
+                            class="music-favorite-button"
+                            type="button"
+                            aria-pressed="false"
+                            disabled
+                    >
+                        <i class="bx bx-heart"></i>
+                        Favoritar
+                    </button>
+
+                    <a
+                            id="lastfmLink"
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            hidden
+                    >
+                        <i class="bx bx-link-external"></i>
+                        Abrir no Last.fm
+                    </a>
+
+                </div>
+
+                <p
+                        id="favoriteTrackFeedback"
+                        class="music-favorite-feedback"
+                        role="status"
+                        aria-live="polite"
+                ></p>
+
+
+            </div>
+
+        </section>
+
+        <!-- ESTATÍSTICAS -->
+        <section class="music-section">
+
+            <h2>Estatísticas</h2>
+
+            <div class="music-stats">
+
+                <div class="stat-card">
+                    <i class="bx bx-headphone"></i>
+                    <span>Ouvintes</span>
+                    <strong id="musicListeners">—</strong>
+                </div>
+
+                <div class="stat-card">
+                    <i class="bx bx-play-circle"></i>
+                    <span>Reproduções</span>
+                    <strong id="musicPlaycount">—</strong>
+                </div>
+
+                <div class="stat-card">
+                    <i class="bx bx-time-five"></i>
+                    <span>Duração</span>
+                    <strong id="musicDuration">—</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- SOBRE A MÚSICA -->
+        <section class="music-section">
+
+            <h2>Sobre a música</h2>
+
+            <p id="musicBiography" class="music-biography">
+                Carregando informações...
+            </p>
+
+        </section>
+
+        <!-- AVALIACOES DA COMUNIDADE -->
+        <section class="music-section" id="musicReviewSection">
+
+            <h2>Avaliações da comunidade</h2>
+
+            <p id="musicReviewStatus" role="status">
+                Verificando se esta música está cadastrada no Synchro...
+            </p>
+
+            <div id="musicReviewControls" hidden>
+
+                <p id="musicReviewAverage"></p>
+
+                <button
+                        id="openMusicReview"
+                        class="music-review-button"
+                        type="button">
+                    <i class="fa-solid fa-star"></i>
+                    Avaliar música
+                </button>
+
+                <div id="musicReviewEditor" hidden>
+                    <h3>Sua avaliação</h3>
+
+                    <label for="musicReviewRating">
+                        Nota de 0 a 10
+                    </label>
+
+                    <input
+                            id="musicReviewRating"
+                            type="number"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="8"
+                    >
+
+                    <label for="musicReviewText">
+                        Comentário
+                    </label>
+
+                    <textarea
+                            id="musicReviewText"
+                            rows="4"
+                            maxlength="1000"
+                            placeholder="O que você achou desta música?"
+                    ></textarea>
+
+                    <div class="music-review-actions">
+                        <button id="saveMusicReview" type="button">
+                            Publicar avaliação
+                        </button>
+
+                        <button id="cancelMusicReview" type="button">
+                            Cancelar
+                        </button>
+                    </div>
+
+                    <p id="musicReviewFeedback" role="status"></p>
+                </div>
+
+            </div>
+
+            <div id="musicReviewList"></div>
+
+        </section>
+
+        <!-- AVISO -->
+        <p class="music-note">
+            Informações obtidas pela API do Last.fm.
+        </p>
+
+    </main>
+
+</div>
+
+<script src="/frontend/assets/js/explorar/musica.js?v=2"></script>
+<script src="/frontend/assets/js/search.js?v=20261105-single-search-1"></script>
+<script src="/frontend/assets/js/explorar/seletor-nota.js"></script>
+<script src="/frontend/assets/js/explorar/avaliacoes-musica.js?v=2"></script>
+<script src="/frontend/assets/js/explorar/favoritos-musica.js?v=2"></script>
+<script src="/frontend/assets/js/explorar/favoritos-album.js?v=2"></script>
+<script src="/frontend/assets/js/explorar/navegacao-global.js"></script>
+<script src="/frontend/assets/js/explorar/recentes.js?v=2"></script>
+<dialog id="songPlaylistDialog" class="song-playlist-dialog" aria-labelledby="songPlaylistHeading">
+        <form id="songPlaylistForm">
+            <h2 id="songPlaylistHeading">Adicionar à playlist</h2>
+            <p id="songPlaylistDescription"></p>
+            <fieldset id="songPlaylistChoices" disabled>
+                <legend>Escolha uma playlist</legend>
+                <div id="songPlaylistCards" class="song-playlist-cards"></div>
+            </fieldset>
+            <p id="songPlaylistFeedback" role="status" aria-live="polite"></p>
+            <a id="songPlaylistLogin" href="login.html" hidden>Entrar na minha conta</a>
+            <a id="songPlaylistLibrary" href="playlists.html" hidden>Criar uma playlist na minha biblioteca</a>
+            <div class="song-playlist-actions">
+                <button id="songPlaylistClose" type="button">Fechar</button>
+                <button id="songPlaylistRetry" type="button" hidden>Tentar novamente</button>
+                <button id="songPlaylistSubmit" type="submit" disabled>Adicionar</button>
+            </div>
+        </form>
+    </dialog>
+<script src="/frontend/assets/js/song-playlists.js?v=20261101-4"></script>
+<script src="/frontend/assets/js/discovery-playlists.js?v=2"></script>
+<script src="/frontend/assets/js/playlists.js"></script>
+<script src="/frontend/assets/js/song-details.js?v=20261105-catalog-interactions-1"></script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+/* Estilos exclusivos da biblioteca de favoritos. A base vem de style.css. */
+.favorites-main { min-width: 0; width: 100%; padding-bottom: 52px; }
+.favorites-topbar { display: flex; justify-content: flex-end; align-items: center; gap: 24px; padding: 30px 4px 14px; }
+.favorites-home-link, .favorites-profile-link { text-decoration: none; color: #ddd; font-weight: 600; }
+.favorites-home-link:hover, .favorites-profile-link:hover { color: #ff315b; }
+.favorites-profile-link { font-size: 27px; }
+.favorites-menu-toggle { display: none; border: none; background: #252525; padding: 10px 13px; border-radius: 9px; color: white; cursor: pointer; }
+.favorites-heading { margin: 25px 0 27px; padding: 35px; background: linear-gradient(125deg, #321824, #171717 65%); border: 1px solid #333; border-radius: 20px; }
+.favorites-eyebrow { color: #e9a6b8; font-size: 12px; font-weight: bold; letter-spacing: 2px; }
+.favorites-heading h1 { color: #fff; margin: 12px 0 10px; font-size: clamp(28px, 4vw, 46px); }
+.favorites-heading h1 i { color: #ff315b; vertical-align: middle; }
+.favorites-heading p { color: #bdbdbd; margin-top: 8px; }
+.favorites-count { font-size: 14px; }
+.favorites-feedback { color: #bdbdbd; padding: 22px 0; }
+.favorites-feedback a { color: #ff6585; text-decoration: underline; }
+.favorites-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 20px; }
+.favorite-card { min-width: 0; border-radius: 14px; background: #202020; overflow: hidden; border: 1px solid #333; transition: transform .2s, border-color .2s; }
+.favorite-card:hover { transform: translateY(-4px); border-color: #b44864; }
+.favorite-card-link { text-decoration: none; color: #fff; display: block; }
+.favorite-card-photo { aspect-ratio: 1 / 1; width: 100%; object-fit: cover; display: block; background: #303030; }
+.favorite-card-info { padding: 15px; }
+.favorite-card-info h2 { font-size: 18px; overflow-wrap: anywhere; margin: 0 0 8px; }
+.favorite-card-info p { color: #a8a8a8; font-size: 13px; }
+.fav-menu-active a, .fav-menu-active i { color: #ff557a !important; }
+@media (max-width: 900px) {
+  .favorites-heading { padding: 24px; }
+  .favorites-topbar { justify-content: space-between; }
+  .favorites-menu-toggle { display: inline-flex; }
+}
+@media (max-width: 600px) {
+  .favorites-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .favorite-card-info { padding: 12px; }
+  .favorite-card-info h2 { font-size: 16px; }
+}
+
+/* Pesquisa da biblioteca de favoritos */
+
+.favorites-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 150px;
+  max-width: 420px;
+  margin: 0 16px;
+  padding: 0 14px;
+  background: #242424;
+  border: 1px solid #383838;
+  border-radius: 24px;
+  box-sizing: border-box;
+}
+
+.favorites-search-box > i {
+  color: #aaa;
+  font-size: 15px;
+}
+
+.favorites-search-box .search {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+}
+
+.favorites-search-box .search::placeholder {
+  color: #aaa;
+}
+
+.favorites-search-box:focus-within {
+  border-color: #888;
+}
+
+@media (max-width: 600px) {
+  .favorites-search-box {
+    margin: 0 8px;
+  }
+
+  .favorites-search-box .search {
+    font-size: 13px;
+  }
+
+  .favorites-home-link {
+    font-size: 0;
+  }
+
+  .favorites-home-link i {
+    font-size: 18px;
+  }
+}
+
+/* CATEGORIAS DA BIBLIOTECA */
+
+.favorites-category {
+  margin-bottom: 45px;
+}
+
+.favorites-category-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.favorites-category-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 23px;
+  margin: 0;
+}
+
+.favorites-category-heading h2 i {
+  color: #ff557a;
+}
+
+#favoriteTracksCount {
+  color: #a9a9a9;
+  font-size: 13px;
+}
+
+/* CARTOES DE MUSICAS FAVORITAS */
+
+.favorite-track-card {
+  background: #211f24;
+}
+
+.favorite-track-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+          135deg,
+          #3b2530,
+          #211f26 65%,
+          #17171a
+  );
+}
+
+.favorite-track-cover i {
+  color: #ff6588;
+  font-size: 70px;
+}
+
+.favorite-track-type {
+  display: inline-block;
+  margin-top: 12px;
+
+  color: #ff839e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.favorite-track-card:hover {
+  border-color: #ff557a;
+}
+
+@media (max-width: 600px) {
+  .favorites-category-heading h2 {
+    font-size: 19px;
+  }
+
+  .favorite-track-cover i {
+    font-size: 52px;
+  }
+}
+
+/* CAPA DAS MUSICAS FAVORITAS */
+
+.favorite-track-cover {
+  position: relative;
+  overflow: hidden;
+}
+
+.favorite-track-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
+  transition: transform 0.3s ease;
+}
+
+.favorite-track-card:hover .favorite-track-image {
+  transform: scale(1.05);
+}
+
+/* ALBUNS FAVORITOS */
+
+#favoriteAlbumsCount {
+  color: #a9a9a9;
+  font-size: 13px;
+}
+
+.favorite-album-card {
+  background: #211f24;
+}
+
+.favorite-album-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background: linear-gradient(
+          135deg,
+          #39252f,
+          #211e26 65%,
+          #17171a
+  );
+}
+
+.favorite-album-cover > i {
+  font-size: 70px;
+  color: #ff6588;
+}
+
+.favorite-album-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+
+  transition: transform 0.3s ease;
+}
+
+.favorite-album-card:hover .favorite-album-image {
+  transform: scale(1.05);
+}
+
+.favorite-album-type {
+  display: block;
+  margin-top: 12px;
+
+  color: #ff839e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.favorite-album-link {
+  display: inline-block;
+  margin-top: 12px;
+
+  color: #d5c3cc;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.favorite-album-link:hover {
+  color: #ff6588;
+  text-decoration: underline;
+}
+
+.favorite-album-card:hover {
+  border-color: #ff557a;
+}
+
+/* CARTOES DE ALBUNS CLICAVEIS */
+
+.favorite-album-card .favorite-card-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: #ffffff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.favorite-album-card:hover {
+  border-color: #ff557a;
+}
+
+.favorite-album-card:focus-within {
+  outline: 2px solid #ff6588;
+  outline-offset: 3px;
+}
+
+/* ==========================================
+   ORGANIZACAO DA BIBLIOTECA DE FAVORITOS
+   ========================================== */
+
+.favorites-main {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Separacao consistente entre categorias */
+
+.favorites-category {
+  width: 100%;
+  margin-bottom: 55px;
+}
+
+.favorites-category-heading {
+  margin-bottom: 22px;
+}
+
+/* Grade uniforme para os cartoes */
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(
+        auto-fill,
+        minmax(190px, 1fr)
+    );
+  gap: 22px;
+  align-items: start;
+}
+
+/* Impede cartoes excessivamente largos */
+
+.favorite-card {
+  width: 100%;
+  min-width: 0;
+  max-width: 260px;
+  justify-self: start;
+}
+
+/* Mantem capas proporcionais */
+
+.favorite-track-cover,
+.favorite-album-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+/* Espacamento para telas menores */
+
+@media (max-width: 600px) {
+
+  .favorites-grid {
+    grid-template-columns: repeat(
+            2,
+            minmax(0, 1fr)
+        );
+    gap: 14px;
+  }
+
+  .favorite-card {
+    max-width: none;
+  }
+
+  .favorites-category {
+    margin-bottom: 40px;
+  }
+}

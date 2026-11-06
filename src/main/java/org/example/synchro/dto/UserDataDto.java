@@ -35,6 +35,9 @@ public class UserDataDto implements Serializable {
     private Integer lastFmTracks;
     private Integer lastFmAlbums;
     private Instant lastFmUpdatedAt;
+    private String biography;
+    private String profileImageUrl;
+    private String bannerImageUrl;
 
     public UserDataDto(){}
 
@@ -50,5 +53,8 @@ public class UserDataDto implements Serializable {
         this.lastFmTracks = data.getLastFmTracks();
         this.lastFmAlbums = data.getLastFmAlbums();
         this.lastFmUpdatedAt = data.getLastFmUpdatedAt();
+        this.biography = data.getBiography();
+        this.profileImageUrl = data.getProfileImageUrl();
+        this.bannerImageUrl = data.getBannerImageUrl();
     }
 }

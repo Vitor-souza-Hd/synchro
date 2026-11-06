@@ -208,7 +208,7 @@ class LastFmProfileTests {
 
     private static void assertRedirect(HttpResponse<String> response, String result) {
         assertEquals(303, response.statusCode(), response.body());
-        assertEquals("/frontend/pages/user.html?lastfm=" + result, response.headers().firstValue("Location").orElseThrow());
+        assertEquals("/frontend/pages/perfil.html?lastfm=" + result, response.headers().firstValue("Location").orElseThrow());
         assertEquals("", response.body());
     }
 

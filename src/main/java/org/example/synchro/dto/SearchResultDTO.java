@@ -19,6 +19,7 @@ public class SearchResultDTO {
     private List<AlbumResult> albums = new ArrayList<>();
     private String source = "lastfm";
     private String warning;
+    private boolean refreshing;
 
     public SearchResultDTO() {
     }

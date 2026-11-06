@@ -1,0 +1,387 @@
+
+/* ==========================================
+   SYNCHRO - MODO CLARO DA PAGINA DE MUSICA
+   ========================================== */
+
+/* FUNDO E CONTEUDO */
+
+html.synchro-light body.synchro-musica {
+    background: #f5eef2;
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-musica .container main {
+    color: #30202b;
+    min-width: 0;
+}
+
+/* MENU LATERAL */
+
+html.synchro-light
+.synchro-musica .container .sidebar {
+    background: #29212e;
+    border-color: #493745;
+    backdrop-filter: none;
+}
+
+html.synchro-light
+.synchro-musica .sidebar .menu h5 {
+    color: #e2b5cb;
+}
+
+html.synchro-light
+.synchro-musica .sidebar .menu li a,
+html.synchro-light
+.synchro-musica .sidebar .menu li i {
+    color: #f8f4f7;
+}
+
+html.synchro-light
+.synchro-musica .sidebar .menu li:hover a,
+html.synchro-light
+.synchro-musica .sidebar .menu li:hover i {
+    color: #ff91b0;
+}
+
+html.synchro-light
+.synchro-musica .sidebar .logo a,
+html.synchro-light
+.synchro-musica .sidebar .logo i {
+    color: #ff6588;
+}
+
+html.synchro-light
+.synchro-musica .nav-footer a {
+    color: #d6c4d0;
+}
+
+/* BARRA DE PESQUISA */
+
+html.synchro-light
+.synchro-musica .search-box {
+    background: #ffffff;
+    border-color: #dfcbd6;
+    box-shadow: 0 3px 12px rgba(64,30,49,.06);
+}
+
+html.synchro-light
+.synchro-musica .search {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-musica .search::placeholder {
+    color: #756573;
+}
+
+html.synchro-light
+.synchro-musica .search-box i,
+html.synchro-light
+.synchro-musica .search-bar .user i {
+    color: #49313f;
+}
+
+html.synchro-light
+.synchro-musica .search-bar .nav-links a {
+    color: #554250;
+}
+
+html.synchro-light
+.synchro-musica .search-bar .nav-links a:hover {
+    color: #b63e6a;
+}
+
+/* CABECALHO DA MUSICA */
+
+html.synchro-light
+.synchro-musica .music-header {
+    background: linear-gradient(
+            125deg,
+            #f1d7e3,
+            #ffffff 75%
+    );
+    border: 1px solid #e3cbd8;
+    box-shadow: 0 5px 18px rgba(55,25,42,.05);
+}
+
+html.synchro-light
+.synchro-musica .music-info h1 {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-musica .music-label {
+    color: #a13f68;
+}
+
+html.synchro-light
+.synchro-musica #musicArtist {
+    color: #81334f;
+}
+
+html.synchro-light
+.synchro-musica #musicArtist:hover {
+    color: #b83d6c;
+}
+
+html.synchro-light
+.synchro-musica #musicAlbum {
+    color: #65515e;
+}
+
+/* CAPA E PLACEHOLDER */
+
+html.synchro-light
+.synchro-musica .music-cover {
+    background: #e7cfdb;
+    box-shadow: 0 12px 30px rgba(55,25,42,.13);
+}
+
+html.synchro-light
+.synchro-musica .music-placeholder,
+html.synchro-light
+.synchro-musica .music-placeholder i {
+    color: #aa5076;
+}
+
+/* GENEROS MUSICAIS */
+
+html.synchro-light
+.synchro-musica .music-tags span {
+    background: #f6e6ee;
+    color: #843a5b;
+    border: 1px solid #e1bbcd;
+}
+
+/* SECOES */
+
+html.synchro-light
+.synchro-musica .music-section h2 {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-musica .music-biography {
+    color: #554651;
+}
+
+html.synchro-light
+.synchro-musica .music-note {
+    color: #756572;
+}
+
+/* ESTATISTICAS */
+
+html.synchro-light
+.synchro-musica .stat-card {
+    background: #ffffff;
+    border: 1px solid #e3d3dc;
+    box-shadow: 0 4px 14px rgba(55,25,42,.05);
+}
+
+html.synchro-light
+.synchro-musica .stat-card i {
+    color: #bd416d;
+}
+
+html.synchro-light
+.synchro-musica .stat-card span {
+    color: #715d69;
+}
+
+html.synchro-light
+.synchro-musica .stat-card strong {
+    color: #30202b;
+}
+
+/* FAVORITOS */
+
+html.synchro-light
+.synchro-musica .music-favorite-button {
+    background: #ffffff;
+    color: #4a3040;
+    border-color: #dcbccc;
+}
+
+html.synchro-light
+.synchro-musica .music-favorite-button i {
+    color: #ad416a;
+}
+
+html.synchro-light
+.synchro-musica .music-favorite-button:hover:not(:disabled) {
+    background: #fbeaf2;
+    border-color: #bf4c77;
+}
+
+html.synchro-light
+.synchro-musica .music-favorite-button.is-favorite,
+html.synchro-light
+.synchro-musica #favoriteAlbumBtn.is-favorite {
+    background: #f9e0ea;
+    color: #9e2753;
+    border-color: #bf4c77;
+}
+
+html.synchro-light
+.synchro-musica .music-favorite-feedback {
+    color: #705665;
+}
+
+/* LINK LAST.FM - CONTINUA COM CONTRASTE */
+
+html.synchro-light
+.synchro-musica #lastfmLink {
+    background: #c72f5b;
+    color: #ffffff;
+}
+
+html.synchro-light
+.synchro-musica #lastfmLink i {
+    color: #ffffff;
+}
+
+html.synchro-light
+.synchro-musica #lastfmLink:hover {
+    background: #a91f49;
+}
+
+/* ==========================================
+   AVALIACOES DA COMUNIDADE
+   ========================================== */
+
+/* Mensagens e media */
+
+html.synchro-light
+.synchro-musica #musicReviewStatus,
+html.synchro-light
+.synchro-musica #musicReviewAverage,
+html.synchro-light
+.synchro-musica #musicReviewFeedback,
+html.synchro-light
+.synchro-musica #musicReviewList > p {
+    color: #66515f;
+}
+
+/* Cartoes de avaliacoes */
+
+html.synchro-light
+.synchro-musica .music-review-card {
+    background: linear-gradient(
+            135deg,
+            #ffffff,
+            #fff5f9
+    );
+    color: #30202b;
+    border: 1px solid #e2ccd7;
+    border-left: 4px solid #bf4775;
+    box-shadow: 0 5px 18px rgba(55,25,42,.06);
+}
+
+html.synchro-light
+.synchro-musica .music-review-card h3 {
+    color: #a52f5c;
+}
+
+html.synchro-light
+.synchro-musica .music-review-card p {
+    color: #4d3b47;
+}
+
+/* Botoes de avaliacao */
+
+html.synchro-light
+.synchro-musica .music-review-button,
+html.synchro-light
+.synchro-musica .music-review-actions button,
+html.synchro-light
+.synchro-musica .music-review-card button {
+    background: #ffffff;
+    color: #4a3040;
+    border-color: #d9bdca;
+}
+
+html.synchro-light
+.synchro-musica .music-review-button:hover,
+html.synchro-light
+.synchro-musica .music-review-actions button:hover,
+html.synchro-light
+.synchro-musica .music-review-card button:hover {
+    background: #f9e5ee;
+    border-color: #bf4775;
+    color: #912e56;
+}
+
+/* Formulario de avaliacao */
+
+html.synchro-light
+.synchro-musica #musicReviewEditor {
+    background: #ffffff;
+    border: 1px solid #e2ccd7;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 5px 18px rgba(55,25,42,.05);
+}
+
+html.synchro-light
+.synchro-musica #musicReviewEditor h3,
+html.synchro-light
+.synchro-musica #musicReviewEditor label {
+    color: #30202b;
+}
+
+html.synchro-light
+.synchro-musica #musicReviewRating,
+html.synchro-light
+.synchro-musica #musicReviewText {
+    background: #fffafd;
+    color: #30202b;
+    border-color: #d6b9c8;
+}
+
+html.synchro-light
+.synchro-musica #musicReviewText::placeholder {
+    color: #806a78;
+}
+
+html.synchro-light
+.synchro-musica #musicReviewRating:focus,
+html.synchro-light
+.synchro-musica #musicReviewText:focus {
+    outline: 2px solid #d86a94;
+    outline-offset: 2px;
+}
+
+/* Seletor visual de notas
+   Preserva as cores originais das barras. */
+
+html.synchro-light
+.synchro-musica .synchro-rating-number {
+    color: #493843;
+}
+
+html.synchro-light
+.synchro-musica .synchro-rating-option.selected
+.synchro-rating-number {
+    color: var(--rating-color);
+}
+
+html.synchro-light
+.synchro-musica .synchro-rating-option:focus-visible {
+    outline-color: #aa3a67;
+}
+
+/* Celular */
+
+@media (max-width: 768px) {
+    html.synchro-light
+    .synchro-musica .search-bar {
+        background: rgba(245,238,242,.96);
+    }
+
+    html.synchro-light
+    .synchro-musica .menu-toggle i {
+        color: #30202b;
+    }
+}

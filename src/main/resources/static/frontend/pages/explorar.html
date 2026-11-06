@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNCHRO</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-home.css">
+    <script src="/frontend/assets/js/explorar/tema-global.js"></script>
+<link rel="stylesheet" href="/frontend/assets/css/auth.css">
+<link rel="stylesheet" href="/frontend/assets/css/features.css">
+<script src="/frontend/assets/js/features.js?v=20261105-catalog-interactions-1" defer></script>
+<script src="/frontend/assets/js/auth.js" defer></script>
+<link rel="stylesheet" href="/frontend/assets/css/search.css">
+</head>
+<body class="synchro-home">
+<div class="feature-session"><div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div><div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div></div>
+    <div class="container">
+        <!--BACKGROUND VIDEO-->
+        <video autoplay loop muted playsinline class="background-video">
+            <source src="/frontend/assets/videos/background-blur-dark.mp4" type="video/mp4">
+        </video>
+        <!-- SIDEBAR MENU -->
+        <aside class="sidebar">
+            <div class="logo">
+                    <i class='bx bx-pulse'></i>
+                <a href="/frontend/pages/explorar.html">SYNCHRO</a>
+            </div>
+
+
+            <div class="menu">
+                <h5>Menu</h5>
+
+                <ul>
+                    <li>
+                        <i class="bx bxs-bolt-circle"></i>
+                        <a href="/frontend/pages/explorar.html">Explorar</a>
+                    </li>
+
+                    <li>
+                        <i class="bx bxs-volume-full"></i>
+                        <a href="/frontend/pages/explorar.html#generos">Gêneros</a>
+                    </li>
+
+                    <li>
+                        <i class="bx bxs-album"></i>
+                        <a href="/frontend/pages/explorar.html#albuns">Álbuns</a>
+                    </li>
+
+                    <li>
+                        <i class="bx bxs-microphone"></i>
+                        <a href="/frontend/pages/explorar.html#artistas">Artistas</a>
+                    </li>
+                </ul>
+            </div>
+
+
+            <div class="menu">
+                <h5>Sua Biblioteca</h5>
+                <ul>
+                    <li>
+                        <i class='bx bx-undo'></i>
+                        <a href="/frontend/pages/recentes.html">Recentes</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-photo-album'></i>
+                        <a href="#">Avaliações</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-heart'></i>
+                        <a href="/frontend/pages/favoritos.html">Favoritos</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-folder'></i>
+                        <a href="#">Local</a>
+                    </li>
+                    <li>
+                       <i class="fa-solid fa-ticket"></i>
+                        <a href="#">Shows perto de você</a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="menu">
+                <h5>Playlist</h5>
+                <ul>
+                    <li>
+                        <i class='bx bxs-plus-square'></i>
+                        <a href="#">Criar uma nova</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="#">Suas Playlists</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="#">Recomendados</a>
+                    </li>
+                    <li>
+                        <i class='bx bxs-caret-right-circle'></i>
+                        <a href="#">Playlists do Synchro</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-footer">
+                <a href="#">Legal</a>
+                <a href="#">Centro de Privacidade</a>
+                <a href="#">Política de Privacidade</a>
+                <a href="#">Cookies</a>
+                <a href="#">Sobre Anúncios</a>
+                <a href="#">Acessibilidades</a>
+            </div>
+            <button class="nav-language-button">
+                <i class="fa-solid fa-globe"></i>
+                Português do Brasil
+            </button>
+            
+        </aside>
+        
+        <!-- HEADER -->
+        <main>
+        <header class="search-bar">
+            <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                        id="pesquisa"
+                        class="search"
+                        type="text"
+                        placeholder="O que você quer ouvir?"
+                        aria-label="Buscar música"
+                >
+            </div>
+            <div class="nav-links">
+                
+                <button class="menu-toggle">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <i class="fa-solid fa-users"></i>
+                <a href="/frontend/pages/configuracoes.html"
+                   class="settings-shortcut"
+                   aria-label="Abrir configurações"
+                   title="Configurações">
+                    <i class="fa-solid fa-gear"></i>
+                </a>
+                <a href="#pesquisa">Músicas</a>
+                <a href="#artistas">Artistas</a>
+                <a href="#">Revisões</a>
+            </div>       
+
+                        <a href="/frontend/pages/perfil.html" class="user">
+                            <i class="fa-solid fa-circle-user"></i>
+                        </a>
+                      
+        </header>
+        <!--PRINCIPAL-->
+        <section class="content">
+            <h2 id="artistas">Artistas Populares</h2>
+            <div class="artists">
+                <!--Inserir dados com JS-->
+            </div>
+            <h2 id="albuns">Álbuns Populares</h2>
+            <div class="albums">
+                <!--Inserir dados com JS-->
+            </div>
+            <h2 id="generos">Gêneros Populares</h2>
+            <div class="genres">
+                <!--Inserir dados com JS-->
+            </div>
+        </section>
+
+            <section
+                    id="sobre"
+                    style="
+        margin: 60px 0 30px;
+        padding: 28px;
+        border: 1px solid #444;
+        border-radius: 16px;
+        background: rgba(30, 25, 35, 0.85);
+        color: white;
+    "
+            >
+                <h2>Sobre o Synchro</h2>
+
+                <p style="margin-top: 16px; line-height: 1.7;">
+                    O Synchro é uma rede social musical criada
+                    para conectar pessoas por meio de seus
+                    gostos musicais.
+                </p>
+
+                <p style="margin-top: 12px; line-height: 1.7;">
+                    Aqui você pode descobrir artistas, músicas
+                    e álbuns, organizar seus favoritos,
+                    compartilhar opiniões e explorar
+                    novas experiências musicais.
+                </p>
+            </section>
+
+        </main>
+    </div>
+           
+    
+
+    <script src="/frontend/assets/js/explorar/script2.js?v=20261105-artist-photos-1"></script>
+    <script src="/frontend/assets/js/search.js?v=20261105-single-search-1"></script>
+    <script src="/frontend/assets/js/explorar/navegacao.js"></script>
+    <script src="/frontend/assets/js/explorar/navegacao-global.js"></script>
+</body>
+</html>

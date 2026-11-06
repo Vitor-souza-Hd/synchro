@@ -84,6 +84,14 @@ class SearchJsonTests {
             assertEquals(200, response.statusCode(), response.body());
             assertTrue(response.headers().firstValue("content-type").orElse("").contains("application/json"));
             JsonNode json = new ObjectMapper().readTree(response.body());
+            long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(3);
+            while (json.path("refreshing").asBoolean()) {
+                assertTrue(System.nanoTime() < deadline, "Offline queries must settle");
+                Thread.sleep(10);
+                response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/search?q=radio")).build(),
+                        HttpResponse.BodyHandlers.ofString());
+                json = new ObjectMapper().readTree(response.body());
+            }
             assertEquals("local", json.path("source").asText());
             assertTrue(json.path("warning").asText().contains("indisponível"));
             assertEquals(2, json.path("songs").size());

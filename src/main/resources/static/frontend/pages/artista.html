@@ -24,7 +24,7 @@
     <!-- Início do trecho adicionado por IA -->
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
     <link rel="stylesheet" href="/frontend/assets/css/catalog.css?v=20261028-artist-contrast-2">
-    <script src="/frontend/assets/js/search.js" defer></script>
+    <script src="/frontend/assets/js/search.js?v=20261105-single-search-1" defer></script>
     <!-- Fim do trecho adicionado por IA -->
     <link rel="stylesheet" href="/frontend/assets/css/auth.css?v=20261029-1">
     <script src="/frontend/assets/js/auth.js?v=20261029-1" defer></script>
@@ -33,6 +33,9 @@
     <!-- Gerado por IA: atualização da compactação de imagens. -->
     <!-- Gerado por IA: correção do salvamento de alterações. -->
     <script src="/frontend/assets/js/playlists.js?v=20261101-4" defer></script>
+<link rel="stylesheet" href="/frontend/assets/css/features.css?v=20261105-artist-lastfm-1">
+<script src="/frontend/assets/js/features.js?v=20261105-catalog-interactions-1" defer></script>
+<script src="/frontend/assets/js/explorar/tema-global.js"></script>
 </head>
 
 <body>
@@ -224,9 +227,9 @@
 
                 </div>
 
-                <a href="user.html" class="user">
+                <a href="perfil.html" class="user" aria-label="Meu perfil">
 
-                    <i class="fa-solid fa-circle-user"></i>
+                    <i class="fa-solid fa-circle-user" aria-hidden="true"></i> Meu perfil
 
                 </a>
                         <div class="session-actions" hidden>
@@ -274,6 +277,7 @@
                         <i class='bx bx-heart'></i>
                         Favoritar
                     </button>
+                    <a id="artistLastFmLink" class="artist-lastfm-link" target="_blank" rel="noopener noreferrer" hidden>Ver no Last.fm</a>
 
                     <button class="open-review" type="button">
                         <i class='bx bx-plus'></i>
@@ -394,7 +398,7 @@
 </div>
 
     <!-- Início do trecho alterado por IA -->
-    <script src="../assets/js/artista.js?v=20261028-artist-loading-2"></script>
+    <script src="../assets/js/artista.js?v=20261105-artist-gallery-1"></script>
     <!-- Fim do trecho alterado por IA -->
 </body>
 

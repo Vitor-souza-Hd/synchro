@@ -50,7 +50,7 @@ const { chromium } = require('playwright');
         assert.equal(await page.locator('#playlistParticipation').textContent(), 'Você participa desta playlist e pode editá-la.');
         assert.equal(await page.locator('.playlist-track').count(), 3);
         assert.equal(await page.locator('#playlistCollaborators a').count(), 2);
-        assert.equal(await page.locator('.playlist-track').first().getAttribute('href'), 'musica.html?id=42');
+        assert.equal(await page.locator('.playlist-track').first().getAttribute('href'), 'detalhes-musica.html?id=42');
         assert.equal(await page.locator('.playlist-track').last().locator('span').last().textContent(), '—');
         assert.ok(await page.locator('#detailPlaylistBanner').isVisible());
         assert.ok(await page.locator('#detailPlaylistCover').evaluate(image => image.complete && image.naturalWidth > 0));

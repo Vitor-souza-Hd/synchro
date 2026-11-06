@@ -47,7 +47,7 @@
 
     function userLink(user) {
         const link = document.createElement('a');
-        link.href = `user.html?user=${encodeURIComponent(user.id)}`;
+        link.href = `perfil.html?user=${encodeURIComponent(user.id)}`;
         link.textContent = user.username || 'Usuário';
         return link;
     }
@@ -100,7 +100,7 @@
         songs.forEach((song, index) => {
             const row = document.createElement('a');
             row.className = 'playlist-track';
-            row.href = `musica.html?id=${encodeURIComponent(song.id)}`;
+            row.href = `detalhes-musica.html?id=${encodeURIComponent(song.id)}`;
             const number = document.createElement('span');
             number.className = 'playlist-track-number';
             number.textContent = String(index + 1).padStart(2, '0');

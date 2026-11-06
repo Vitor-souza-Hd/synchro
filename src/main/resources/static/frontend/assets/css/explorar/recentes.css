@@ -1,0 +1,176 @@
+
+/* SYNCHRO - HISTORICO DE RECENTES */
+
+.recentes-main {
+    min-width: 0;
+}
+
+.recentes-header {
+    margin: 30px 0;
+    padding: 32px;
+    border-radius: 18px;
+    border: 1px solid #44313b;
+    background: linear-gradient(
+            125deg, #321d29, #181818
+    );
+    color: white;
+}
+
+.recentes-header > span {
+    color: #ff91ab;
+    font-size: 12px;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.recentes-header h1 {
+    font-size: clamp(30px, 4vw, 46px);
+    margin: 14px 0;
+}
+
+.recentes-header p {
+    color: #c5bfc4;
+    line-height: 1.5;
+}
+
+.recentes-toolbar {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+#recentesCount {
+    color: #d0c8cd;
+}
+
+#limparRecentes {
+    padding: 11px 16px;
+    border: 1px solid #714356;
+    background: #35202c;
+    color: #fff;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#limparRecentes:hover:not(:disabled) {
+    background: #542b3d;
+}
+
+#limparRecentes:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#recentesEmpty {
+    color: #c5c0c5;
+    padding: 22px 0;
+}
+
+#recentesEmpty[hidden] {
+    display: none;
+}
+
+.recentes-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(190px, 1fr)
+    );
+    gap: 22px;
+    margin-bottom: 45px;
+}
+
+.recentes-card {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #393039;
+    background: #211f24;
+    border-radius: 14px;
+    color: white;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.recentes-card:hover {
+    border-color: #ff527a;
+    transform: translateY(-4px);
+}
+
+.recentes-card:focus-visible {
+    outline: 2px solid #ff6588;
+    outline-offset: 3px;
+}
+
+.recentes-cover {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+            135deg, #442838, #24202b
+    );
+}
+
+.recentes-cover i {
+    color: #ff6588;
+    font-size: 72px;
+}
+
+.recentes-info {
+    padding: 16px;
+}
+
+.recentes-info h3 {
+    font-size: 17px;
+    overflow-wrap: anywhere;
+}
+
+.recentes-info p {
+    margin: 8px 0;
+    color: #c0b6be;
+    font-size: 13px;
+}
+
+.recentes-info small {
+    color: #ff91ab;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+@media (max-width: 600px) {
+    .recentes-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .recentes-header {
+        padding: 22px;
+    }
+}
+
+/* CAPAS REAIS DO HISTORICO */
+
+.recentes-cover {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+}
+
+.recentes-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.recentes-card:hover .recentes-image {
+    transform: scale(1.05);
+}

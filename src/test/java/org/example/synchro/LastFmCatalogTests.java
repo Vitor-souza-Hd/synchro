@@ -25,6 +25,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 class LastFmCatalogTests {
+    private org.example.synchro.dto.SearchResultDTO awaitSearch(LastFmCatalogService service, String term) throws Exception {
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(8);
+        while (System.nanoTime() < deadline) {
+            var result = service.search(term);
+            if (!result.isRefreshing()) return result;
+            Thread.sleep(20);
+        }
+        throw new AssertionError("Search did not finish");
+    }
     @TestConfiguration
     @EnableAutoConfiguration
     @EntityScan("org.example.synchro.entities")
@@ -32,6 +41,65 @@ class LastFmCatalogTests {
     @Import({LastFmConfig.class, LastFmHistoryClient.class, LastFmCatalogService.class, LastFmCatalogStore.class,
             SearchResource.class, CatalogResource.class, org.example.synchro.resources.exception.ResourceExceptionHandler.class})
     static class Config {}
+
+    @Test
+    void interactionsPersistWithoutExternalCallsAndKeepExistingMetadata() throws Exception {
+        try (var app = new SpringApplicationBuilder(Config.class).web(WebApplicationType.SERVLET).run(
+                "--spring.profiles.active=lastfm-import", "--spring.main.web-application-type=servlet", "--server.port=0",
+                "--spring.datasource.url=jdbc:h2:mem:catalog-interactions", "--spring.jpa.hibernate.ddl-auto=create-drop",
+                "--spring.jpa.open-in-view=false", "--lastfm.api-key=")) {
+            String base = "http://localhost:" + app.getEnvironment().getProperty("local.server.port");
+            var http = HttpClient.newHttpClient();
+            var json = new ObjectMapper();
+            java.util.function.Function<String, HttpResponse<String>> post = body -> {
+                try {
+                    return http.send(HttpRequest.newBuilder(URI.create(base + "/catalog/interactions"))
+                            .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(body)).build(),
+                            HttpResponse.BodyHandlers.ofString());
+                } catch (Exception error) { throw new RuntimeException(error); }
+            };
+            for (String type : List.of("artist", "album", "track")) {
+                String name = type.equals("artist") ? "Viewed Artist" : "Viewed " + type;
+                String body = json.writeValueAsString(Map.of("type", type, "name", name, "artist", "Viewed Artist"));
+                var first = post.apply(body);
+                assertEquals(200, first.statusCode(), first.body());
+                long id = json.readTree(first.body()).path("id").asLong();
+                assertTrue(id > 0);
+                var repeated = post.apply(json.writeValueAsString(Map.of("type", type, "name", "  " + name.toUpperCase() + "  ",
+                        "artist", "viewed artist")));
+                assertEquals(200, repeated.statusCode(), repeated.body());
+                assertEquals(id, json.readTree(repeated.body()).path("id").asLong());
+            }
+            assertEquals(1, app.getBean(ArtistaRepository.class).count());
+            assertEquals(1, app.getBean(AlbumRepository.class).count());
+            assertEquals(1, app.getBean(MusicaRepository.class).count());
+            assertEquals(400, post.apply("{\"type\":\"track\",\"name\":\"Missing artist\"}").statusCode());
+            assertEquals(400, post.apply("{\"type\":\"unknown\",\"name\":\"Invalid\"}").statusCode());
+            var catalog = app.getBean(LastFmCatalogService.class);
+            catalog.persistDiscovery("track.getinfo", """
+                {"track":{"name":"Viewed track","artist":{"name":"Viewed Artist"},"duration":"120000",
+                  "listeners":"42","wiki":{"summary":"Saved description"},
+                  "album":{"title":"Viewed album","artist":"Viewed Artist",
+                    "image":[{"#text":"https://example.test/cover.jpg"}]}}}
+                """);
+            var song = app.getBean(MusicaRepository.class).findByTitulo("Viewed track");
+            long id = catalog.register("track", "Viewed track", "Viewed Artist", null, null);
+            assertEquals(song.getId(), id);
+            var detail = http.send(HttpRequest.newBuilder(URI.create(base + "/catalog/songs/" + id)).build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, detail.statusCode());
+            var saved = json.readTree(detail.body());
+            assertEquals("Saved description", saved.path("descricao").asText());
+            assertEquals("PT2M", saved.path("duracao").asText());
+            assertEquals(42, saved.path("lastFm").path("listeners").asInt());
+            assertEquals("Viewed album", saved.path("album").path("titulo").asText());
+            assertEquals("https://example.test/cover.jpg", saved.path("lastFm").path("imageUrl").asText());
+            catalog.persistDiscovery("artist.getinfo", "{\"error\":6}");
+            catalog.persistDiscovery("album.getinfo", "{\"album\":{}}");
+            assertEquals(1, app.getBean(ArtistaRepository.class).count());
+            assertEquals(1, app.getBean(MusicaRepository.class).count());
+            assertEquals(0, app.getBean(LastFmScrobbleRepository.class).count(), "Interactions are not listening history");
+        }
+    }
 
     @Test
     void searchesEnrichesPersistsAndDeduplicatesWithSafeJsonAndOfflineFallback() throws Exception {
@@ -93,6 +161,10 @@ class LastFmCatalogTests {
             var http = HttpClient.newHttpClient();
             var response = http.send(HttpRequest.newBuilder(URI.create(base + "/search?q=Starboy")).build(), HttpResponse.BodyHandlers.ofString());
             assertEquals(200, response.statusCode(), response.body());
+            var basic = awaitSearch(service, "Starboy");
+            assertEquals(3, calls.get(), "Search returns basic results without downloading every result's metadata");
+            service.enrich("track", basic.getSongs().get(0).id());
+            response = http.send(HttpRequest.newBuilder(URI.create(base + "/search?q=Starboy")).build(), HttpResponse.BodyHandlers.ofString());
             var json = mapper.readTree(response.body());
             assertTrue(json.path("warning").isNull(), response.body());
             assertEquals(1, json.path("songs").size());
@@ -114,7 +186,9 @@ class LastFmCatalogTests {
             int before = calls.get();
             assertEquals(song.path("id").asLong(), service.search("  STARBOY  ").getSongs().get(0).id());
             assertEquals(before, calls.get(), "Identical search uses short-lived cache");
-            service.search("different query");
+            service.enrich("track", song.path("id").asLong());
+            assertEquals(before, calls.get(), "Fresh metadata must not be downloaded twice");
+            awaitSearch(service, "different query");
             assertEquals(2, songs.count(), "Different search must reuse existing names");
             assertEquals(before + 3, calls.get(), "Fresh metadata must not be downloaded twice");
             assertEquals("The Weeknd", songs.findByTitulo("Starboy").getLastFm().getArtistName());
@@ -124,7 +198,7 @@ class LastFmCatalogTests {
             assertEquals(200, detail.statusCode());
             assertEquals(2463433L, mapper.readTree(detail.body()).path("lastFm").path("listeners").asLong());
             offline.set(true);
-            var fallback = service.search("Star");
+            var fallback = awaitSearch(service, "Star");
             assertEquals("local", fallback.getSource());
             assertFalse(fallback.getSongs().isEmpty());
             assertNotNull(fallback.getWarning());

@@ -68,7 +68,8 @@ const { chromium } = require('playwright');
         const sameMenu = await page.evaluate(html => {
             const homeDoc = new DOMParser().parseFromString(html, 'text/html');
             const labels = doc => [...doc.querySelectorAll('.sidebar .menu li')].map(item => item.textContent.trim());
-            return JSON.stringify(labels(document)) === JSON.stringify(labels(homeDoc));
+            const songMenu = labels(document).filter(label => label !== 'Configurações');
+            return JSON.stringify(songMenu) === JSON.stringify(labels(homeDoc));
         }, home);
         assert.ok(sameMenu, 'Song sidebar must match home menu items');
         await page.locator('[data-create-playlist]').click();

@@ -79,7 +79,9 @@ public class LastFmCatalogStore {
         var artist = artists.findByNomeKey(CatalogName.key(name))
                 .orElseGet(() -> artists.saveAndFlush(new Artista(name, null, null)));
         metadata(artist.getLastFm(), node, complete);
-        if (artist.getLastFm().getImageUrl() != null) artist.setImgUrl(artist.getLastFm().getImageUrl());
+        if (!ArtistPhotoStore.hasUsableImage(artist.getImgUrl()) && ArtistPhotoStore.hasUsableImage(artist.getLastFm().getImageUrl())) {
+            artist.setImgUrl(artist.getLastFm().getImageUrl());
+        }
         String bio = description(node.path("bio"));
         if (!bio.isBlank()) artist.setBiografia(bio);
         return artist;
@@ -134,7 +136,7 @@ public class LastFmCatalogStore {
         String artist = artistName(node);
         if (!artist.isBlank()) song.addArtista(namedArtist(artist));
         if (node.path("album").isObject() && !text(node.path("album"), "title").isBlank()) {
-            song.setAlbum(album(node.path("album"), false));
+            if (complete || song.getAlbum() == null) song.setAlbum(album(node.path("album"), false));
             if (!image(node.path("album")).isBlank()) song.getLastFm().setImageUrl(image(node.path("album")));
         }
         if (complete) {

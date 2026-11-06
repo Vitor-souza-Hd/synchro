@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SYNCHRO - Artista</title>
+
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/artista.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-artista.css">
+    <script src="/frontend/assets/js/explorar/tema-global.js"></script>
+
+    <link
+            href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+            rel="stylesheet"
+    >
+
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    >
+<link rel="stylesheet" href="/frontend/assets/css/auth.css">
+<link rel="stylesheet" href="/frontend/assets/css/features.css?v=20261105-artist-lastfm-1">
+<script src="/frontend/assets/js/features.js?v=20261105-catalog-interactions-1" defer></script>
+<script src="/frontend/assets/js/auth.js" defer></script>
+<link rel="stylesheet" href="/frontend/assets/css/search.css">
+</head>
+
+<body class="synchro-artista">
+<div class="feature-session"><div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div><div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div></div>
+
+<div class="container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            <i class="bx bx-pulse"></i>
+            <a href="/frontend/pages/explorar.html">SYNCHRO</a>
+        </div>
+
+        <div class="menu">
+            <h5>Menu</h5>
+
+            <ul>
+                <li>
+                    <i class="bx bxs-bolt-circle"></i>
+                    <a href="/frontend/pages/explorar.html">Explorar</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-volume-full"></i>
+                    <a href="#">Gêneros</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-album"></i>
+                    <a href="#">Álbuns</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-microphone"></i>
+                    <a href="#">Artistas</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu">
+            <h5>Sua Biblioteca</h5>
+
+            <ul>
+                <li>
+                    <i class="bx bx-undo"></i>
+                    <a href="/frontend/pages/recentes.html">Recentes</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-photo-album"></i>
+                    <a href="#">Avaliações</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-heart"></i>
+                    <a href="/frontend/pages/favoritos.html">Favoritos</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-folder"></i>
+                    <a href="#">Local</a>
+                </li>
+
+                <li>
+                    <i class="fa-solid fa-ticket"></i>
+                    <a href="#">Shows perto de você</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu">
+            <h5>Playlist</h5>
+
+            <ul>
+                <li>
+                    <i class="bx bxs-plus-square"></i>
+                    <a href="#">Criar uma nova</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="#">Suas Playlists</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="#">Recomendados</a>
+                </li>
+
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="#">Playlists do Synchro</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="nav-footer">
+            <a href="#">Legal</a>
+            <a href="#">Centro de Privacidade</a>
+            <a href="#">Política de Privacidade</a>
+            <a href="#">Cookies</a>
+            <a href="#">Sobre Anúncios</a>
+            <a href="#">Acessibilidades</a>
+        </div>
+
+        <button class="nav-language-button">
+            <i class="fa-solid fa-globe"></i>
+            Português do Brasil
+        </button>
+
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main>
+
+        <header class="search-bar">
+
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                        class="search"
+                        type="text"
+                        placeholder="O que você quer ouvir?"
+                        aria-label="Buscar música"
+                >
+            </div>
+
+            <div class="nav-links">
+
+                <button class="menu-toggle" type="button">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
+                <i class="fa-solid fa-users"></i>
+                <i class="fa-solid fa-gear"></i>
+
+                <a href="#">Músicas</a>
+                <a href="#">Artistas</a>
+                <a href="#">Revisões</a>
+
+            </div>
+
+            <a href="/frontend/pages/perfil.html" class="user">
+                <i class="fa-solid fa-circle-user"></i>
+            </a>
+
+        </header>
+
+        <!-- CABEÇALHO DO ARTISTA -->
+        <section class="artist-header">
+
+            <div class="artist-image">
+                <img id="artistImage" src="" alt="">
+            </div>
+
+            <div class="artist-info">
+
+                <span class="artist-label">ARTISTA</span>
+
+                <h1 id="artistName">Carregando...</h1>
+
+                <div id="artistTags" class="tags"></div>
+
+                <button id="favoriteBtn" type="button">
+                    <i class="bx bx-heart"></i>
+                    Favoritar
+                </button>
+                <a id="artistLastFmLink" class="artist-lastfm-link" target="_blank" rel="noopener noreferrer" hidden>Ver no Last.fm</a>
+
+            </div>
+
+        </section>
+
+        <!-- MÚSICAS -->
+        <section class="artist-section">
+
+            <h2>Músicas populares</h2>
+
+            <div id="tracks" class="tracks">
+                <!-- Carregado pelo JavaScript -->
+            </div>
+
+        </section>
+
+        <!-- ÁLBUNS -->
+        <section class="artist-section">
+
+            <h2>Álbuns populares</h2>
+
+            <div id="albums" class="albums">
+                <!-- Carregado pelo JavaScript -->
+            </div>
+
+        </section>
+
+        <!-- BIOGRAFIA -->
+        <section class="artist-section biography">
+
+            <h2>Sobre o artista</h2>
+
+            <p id="biography">
+                Carregando informações...
+            </p>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="/frontend/assets/js/explorar/artista.js?v=20261105-artist-gallery-1"></script>
+<script src="/frontend/assets/js/search.js?v=20261105-single-search-1"></script>
+<script src="/frontend/assets/js/explorar/recentes.js"></script>
+<script src="/frontend/assets/js/explorar/navegacao-global.js"></script>
+
+<script>
+    const menuToggle = document.querySelector(".menu-toggle");
+    const sidebar = document.querySelector(".sidebar");
+
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener("click", () => {
+            sidebar.classList.toggle("active");
+        });
+    }
+</script>
+
+</body>
+</html>
