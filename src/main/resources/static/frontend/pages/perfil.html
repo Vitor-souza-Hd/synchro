@@ -6,9 +6,12 @@
     <title>Meu perfil | Synchro</title>
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-usuario.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=20261106-sidebar-items-only-9">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-usuario.css?v=20261105-compact-profile-1">
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
+    <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
+    <script src="/frontend/assets/js/playlists.js?v=20261105-profile-sidebar-8" defer></script>
     <script src="/frontend/assets/js/explorar/tema-global.js"></script>
 <link rel="stylesheet" href="/frontend/assets/css/auth.css">
 <link rel="stylesheet" href="/frontend/assets/css/features.css">
@@ -20,16 +23,46 @@
 <p id="profileStatus" role="status">Carregando perfil…</p>
 <p id="profileError" role="alert" hidden></p>
 <div class="container" id="profilePage" hidden>
+    <aside class="sidebar" id="profileSidebar" aria-label="Menu principal">
+        <button class="profile-menu-close" type="button" aria-label="Fechar menu lateral">&times;</button>
+        <div class="logo"><i class="bx bx-pulse" aria-hidden="true"></i><a href="/frontend/pages/explorar.html">SYNCHRO</a></div>
+        <nav class="menu" aria-label="Explorar catálogo">
+            <h5>Menu</h5>
+            <ul>
+                <li><i class="bx bxs-bolt-circle" aria-hidden="true"></i><a href="/frontend/pages/explorar.html">Explorar</a></li>
+                <li><i class="bx bxs-volume-full" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#generos">Gêneros</a></li>
+                <li><i class="bx bxs-album" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#albuns">Álbuns</a></li>
+                <li><i class="bx bxs-microphone" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#artistas">Artistas</a></li>
+            </ul>
+        </nav>
+        <nav class="menu" aria-label="Sua biblioteca">
+            <h5>Sua Biblioteca</h5>
+            <ul>
+                <li><i class="bx bx-undo" aria-hidden="true"></i><a href="/frontend/pages/recentes.html">Recentes</a></li>
+                <li><i class="bx bxs-photo-album" aria-hidden="true"></i><a href="/frontend/pages/perfil.html#minhas-avaliacoes">Avaliações</a></li>
+                <li><i class="bx bxs-heart" aria-hidden="true"></i><a href="/frontend/pages/favoritos.html">Favoritos</a></li>
+                <li><i class="bx bxs-cog" aria-hidden="true"></i><a href="/frontend/pages/configuracoes.html">Configurações</a></li>
+            </ul>
+        </nav>
+        <nav class="menu" aria-label="Playlists">
+            <h5>Playlists</h5>
+            <ul>
+                <li><i class="bx bxs-plus-square" aria-hidden="true"></i><button type="button" data-create-playlist aria-haspopup="dialog">Criar uma nova</button></li>
+                <li><i class="bx bxs-playlist" aria-hidden="true"></i><a href="/frontend/pages/playlists.html" data-my-playlists>Suas playlists</a></li>
+            </ul>
+        </nav>
+    </aside>
+    <main>
     <header class="top-header">
-        <div class="logo"><i class="bx bx-pulse"></i><a href="/frontend/pages/explorar.html">SYNCHRO</a></div>
+        <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-controls="profileSidebar" aria-expanded="false"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input class="search" type="text" placeholder="O que você quer ouvir?" aria-label="Buscar música">
         </div>
-        <div class="nav-links">
-            <a href="/frontend/pages/explorar.html" aria-label="Início"><i class="fa-solid fa-house"></i></a>
-            <i class="fa-solid fa-bars"></i>
-            <i class="fa-solid fa-users"></i>
+        <nav class="nav-links" aria-label="Navegação do site">
+            <a href="/index.html">Início</a>
+            <a href="/frontend/pages/explorar.html#pesquisa">Músicas</a>
+            <a href="/frontend/pages/explorar.html#artistas">Artistas</a>
             <a
                     href="/frontend/pages/configuracoes.html"
                     aria-label="Abrir configurações"
@@ -37,10 +70,8 @@
             >
                 <i class="fa-solid fa-gear"></i>
             </a>
-            <a href="#">Templates</a><a href="#">Eventos</a><a href="#">Comunidade</a>
-        </div>
+        </nav>
     </header>
-    <main>
         <header>
             <section class="profile-header">
                 <div class="banner-background"></div>
@@ -54,9 +85,34 @@
                     </div>
                     <div class="banner-info">
                         <h1 id="profileHeading">Meu perfil</h1>
-<div id="accountInfo"><p id="profileEmail"></p><p id="profileBirthDay"></p><p id="profileGender"></p></div>
-<div class="profile-biography owner-only">
+                        <div class="profile-biography owner-only">
                             <p id="profileBiography" style="white-space: pre-wrap;"></p>
+                        </div>
+                        <p id="profileLastFm"></p>
+                        <p id="lastFmStatus" class="lastfm-status" role="status" aria-live="polite" hidden></p>
+                        <div id="lastFmDetails" class="lastfm-details" hidden>
+                            <a id="lastFmProfileLink" target="_blank" rel="noopener noreferrer">Ver perfil no Last.fm ↗</a>
+                        </div>
+
+                        <div class="profile-stats">
+                            <div><h3 id="profileScrobbles">—</h3><p>Synchs</p></div>
+                            <div><h3 id="profileArtists">—</h3><p>Artistas</p></div>
+                            <div id="lastFmTracksStat" hidden><h3 id="profileTracks">—</h3><p>Faixas</p></div>
+                            <div id="lastFmAlbumsStat"><h3 id="profileAlbums">—</h3><p>Álbuns</p></div>
+                        </div>
+                        <span>PERFIL</span>
+                    </div>
+                </div>
+            </section>
+        </header>
+        <details class="profile-settings owner-only" id="profileSettings">
+            <summary><i class="fa-solid fa-gear" aria-hidden="true"></i> Configurações do perfil</summary>
+            <div class="profile-settings-content">
+                <div id="accountInfo">
+                    <h2>Dados da conta</h2>
+                    <p id="profileEmail"></p><p id="profileBirthDay"></p><p id="profileGender"></p>
+                </div>
+                <div class="profile-biography-editor">
                             <button id="editBiographyButton" type="button"><i class="fa-solid fa-pen"></i> Editar biografia</button>
                             <div id="biographyEditor" hidden>
                                 <label for="biographyInput">Sua biografia</label>
@@ -124,32 +180,21 @@
                             </div>
 
                         </div>
-
-                        <p id="profileLastFm"></p>
-                        <div class="lastfm-actions" id="lastFmActions" hidden>
+                <div class="profile-lastfm-settings">
+                    <h2>Last.fm</h2>
+                    <div class="lastfm-actions" id="lastFmActions" hidden>
                             <button type="button" id="connectLastFm" class="lastfm-button" hidden>Conectar ao lastFM</button>
                             <button type="button" id="syncLastFm" class="lastfm-button lastfm-button-secondary" hidden>Atualizar dados do Last.fm</button>
                         </div>
-                        <p id="lastFmStatus" class="lastfm-status" role="status" aria-live="polite" hidden></p>
-                        <div id="lastFmDetails" class="lastfm-details" hidden>
-                            <a id="lastFmProfileLink" target="_blank" rel="noopener noreferrer">Ver perfil no Last.fm ↗</a>
-                            <p id="lastFmRealName" hidden></p>
-                            <p id="lastFmCountry" hidden></p>
-                            <p id="lastFmUpdatedAt" hidden></p>
-                        </div>
-
-                        
-                        <div class="profile-stats">
-                            <div><h3 id="profileScrobbles">—</h3><p>Synchs</p></div>
-                            <div><h3 id="profileArtists">—</h3><p>Artistas</p></div>
-                            <div id="lastFmTracksStat" hidden><h3 id="profileTracks">—</h3><p>Faixas</p></div>
-                            <div id="lastFmAlbumsStat"><h3 id="profileAlbums">—</h3><p>Álbuns</p></div>
-                        </div>
-                        <span>PERFIL</span>
+                    <div id="lastFmAccountInfo" hidden>
+                        <p id="lastFmRealName" hidden></p>
+                        <p id="lastFmCountry" hidden></p>
+                        <p id="lastFmUpdatedAt" hidden></p>
                     </div>
                 </div>
-            </section>
-        </header>
+                <a class="profile-account-settings" href="/frontend/pages/configuracoes.html">Mais configurações da conta</a>
+            </div>
+        </details>
         <section class="top-artists owner-only">
             <h2>Seus Artistas Favoritos do Momento</h2>
             <div class="artist"><!-- Last.fm --></div>
@@ -201,8 +246,8 @@
     </main>
 </div>
 
-<script src="/frontend/assets/js/user.js"></script>
-<script src="/frontend/assets/js/explorar/user3.js"></script>
+<script src="/frontend/assets/js/user.js?v=20261105-profile-sidebar-8"></script>
+<script src="/frontend/assets/js/explorar/user3.js?v=20261105-unified-artist-1"></script>
 <script src="/frontend/assets/js/search.js?v=20261105-single-search-1"></script>
 <script src="/frontend/assets/js/explorar/foto-perfil.js"></script>
 <script src="/frontend/assets/js/explorar/generos-perfil.js"></script>

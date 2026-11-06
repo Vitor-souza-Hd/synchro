@@ -132,7 +132,7 @@ document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
     };
 
     function artistLink(name) {
-        return '/frontend/pages/detalhes-artista.html?artist=' +
+        return '/frontend/pages/artista.html?artist=' +
             encodeURIComponent(name);
     }
 

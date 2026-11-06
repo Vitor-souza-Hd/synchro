@@ -71,19 +71,21 @@
                 subtitle: artist,
                 url: `/frontend/pages/album-explorar.html?artist=${encodeURIComponent(artist)}&album=${encodeURIComponent(album)}`
             };
-        } else if (file === "/frontend/pages/detalhes-artista.html" && artist) {
+        } else if (["/frontend/pages/artista.html", "/frontend/pages/detalhes-artista.html"].includes(file) && artist) {
             item = {
                 type: "Artista",
                 title: artist,
                 subtitle: "Artista",
-                url: `/frontend/pages/detalhes-artista.html?artist=${encodeURIComponent(artist)}`
+                url: params.has('id') ? '/frontend/pages/artista.html?id=' + encodeURIComponent(params.get('id'))
+                    : `/frontend/pages/artista.html?artist=${encodeURIComponent(artist)}`
             };
         }
 
         if (!item) return;
 
         const history = readHistory().filter(
-            previous => previous.url !== item.url
+            previous => previous.url !== item.url && !(item.type === 'Artista' && previous.type === 'Artista'
+                && previous.title?.trim().toLowerCase() === item.title.trim().toLowerCase())
         );
 
         history.unshift({
@@ -132,12 +134,15 @@
 
             // Permite somente as páginas conhecidas.
             const url = new URL(item.url, location.href);
+            if (item.type === 'Artista' && url.pathname === '/frontend/pages/detalhes-artista.html') {
+                url.pathname = '/frontend/pages/artista.html';
+            }
             const file = url.pathname;
 
             const allowed = {
                 "Música": "/frontend/pages/detalhes-musica.html",
                 "Álbum": "/frontend/pages/album-explorar.html",
-                "Artista": "/frontend/pages/detalhes-artista.html"
+                "Artista": "/frontend/pages/artista.html"
             };
 
             if (
@@ -198,8 +203,9 @@
     }
 
     document.addEventListener("synchro:song", ({detail: {params}}) => trackPage(params));
+    document.addEventListener('synchro:artist', ({detail}) => trackPage(new URLSearchParams({artist: detail.name, id: detail.id})));
     document.addEventListener("DOMContentLoaded", () => {
-        if (!location.pathname.endsWith('/detalhes-musica.html')) trackPage();
+        if (!['/detalhes-musica.html', '/artista.html'].some(page => location.pathname.endsWith(page))) trackPage();
         renderHistory();
     });
 })();

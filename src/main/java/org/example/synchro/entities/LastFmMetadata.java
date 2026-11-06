@@ -22,9 +22,9 @@ public class LastFmMetadata {
     private Long listeners;
     @Column(name = "lastfm_playcount")
     private Long playcount;
-    @Column(name = "lastfm_tags_json", columnDefinition = "text")
+    @Column(name = "lastfm_tags_json", columnDefinition = "text", length = Integer.MAX_VALUE)
     private String tagsJson;
-    @Column(name = "lastfm_raw_json", columnDefinition = "text")
+    @Column(name = "lastfm_raw_json", columnDefinition = "text", length = Integer.MAX_VALUE)
     private String rawJson;
     @Column(name = "lastfm_updated_at")
     private Instant updatedAt;

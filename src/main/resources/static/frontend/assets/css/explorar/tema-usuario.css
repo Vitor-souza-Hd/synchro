@@ -5,6 +5,16 @@
 
 /* FUNDO PRINCIPAL */
 
+html.synchro-light .synchro-usuario .profile-settings {
+    background: #ffffff;
+    color: #30202b;
+    border-color: #dfcbd6;
+}
+
+html.synchro-light .synchro-usuario .profile-account-settings {
+    color: #743352;
+}
+
 html.synchro-light body.synchro-usuario {
     background: #f5eef2;
     color: #30202b;

@@ -29,7 +29,7 @@ public class Artista implements Serializable {
     private void normalizeName() { nomeKey = CatalogName.key(nome); }
     @Column(length = 2048)
     private String imgUrl;
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "text", length = Integer.MAX_VALUE)
     private String Biografia;
 
     @Embedded

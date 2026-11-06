@@ -42,7 +42,7 @@ const { chromium } = require('playwright');
                 scrobbles = 4000;
                 return route.fulfill({ json: profile() });
             }
-            if (url.pathname.endsWith('.js') && !/\/(auth|user)\.js$/.test(url.pathname)) {
+            if (url.pathname.endsWith('.js') && !/\/(auth|user|playlists)\.js$/.test(url.pathname)) {
                 return route.fulfill({ contentType: 'application/javascript', body: '' });
             }
             const root = path.resolve(__dirname, '../src/main/resources/static');
@@ -52,13 +52,100 @@ const { chromium } = require('playwright');
             return route.fulfill({ contentType, body: fs.readFileSync(file) });
         });
         const url = 'http://synchro.test/frontend/pages/perfil.html';
+        async function openSettings() {
+            await page.locator('#profilePage').waitFor();
+            const settings = page.locator('#profileSettings');
+            if (await settings.getAttribute('open') === null) await settings.locator('summary').click();
+        }
+        async function checkBannerHeight() {
+            const header = await page.locator('.profile-header').boundingBox();
+            const background = await page.locator('.banner-background').boundingBox();
+            const content = await page.locator('#profilePage > main').evaluate(main => {
+                const rect = main.getBoundingClientRect();
+                const style = getComputedStyle(main);
+                const left = parseFloat(style.paddingLeft), right = parseFloat(style.paddingRight);
+                return {x: rect.x + left, width: rect.width - left - right};
+            });
+            assert.ok(Math.abs(header.x - content.x) < 1 && Math.abs(header.width - content.width) < 1,
+                'Profile banner must follow the shared site content width and margins');
+            assert.ok(header.height >= 375, 'Banner must retain the requested height at every screen width');
+            assert.ok(background.y <= header.y && background.y + background.height >= header.y + header.height,
+                'Background image must cover the entire banner height');
+        }
+        async function waitForMenuLayout() {
+            await page.waitForFunction(() => {
+                const root = document.getElementById('profilePage');
+                const main = root.querySelector('main').getBoundingClientRect();
+                const sidebar = document.getElementById('profileSidebar').getBoundingClientRect();
+                const collapsed = root.classList.contains('sidebar-collapsed');
+                const gap = parseFloat(getComputedStyle(root).columnGap);
+                const expectedLeft = root.getBoundingClientRect().x + (collapsed ? 0 : sidebar.width + gap);
+                const sidebarIsAligned = collapsed || Math.abs(sidebar.x - root.getBoundingClientRect().x) < 1;
+                return sidebarIsAligned && Math.abs(main.x - expectedLeft) < 1;
+            });
+        }
         await page.goto(url);
         const connect = page.getByRole('button', { name: 'Conectar ao lastFM', exact: true });
         const sync = page.getByRole('button', { name: 'Atualizar dados do Last.fm', exact: true });
+        await page.locator('#profilePage').waitFor();
+        assert.equal(await page.locator('#profileSettings').getAttribute('open'), null, 'Profile settings start closed');
+        assert.equal(await connect.isVisible(), false, 'Connection controls stay inside closed settings');
+        const desktopToggle = page.locator('.menu-toggle');
+        assert.equal(await desktopToggle.getAttribute('aria-expanded'), 'true', 'Desktop menu starts expanded');
+        const expandedWidth = (await page.locator('#profilePage > main').boundingBox()).width;
+        await desktopToggle.click();
+        await waitForMenuLayout();
+        assert.equal(await page.locator('#profileSidebar').evaluate(sidebar => sidebar.inert), true);
+        assert.ok((await page.locator('#profilePage > main').boundingBox()).width > expandedWidth, 'Retracting the menu expands the content');
+        await page.screenshot({path: 'target/profile-sidebar-collapsed.png'});
+        await page.reload();
+        await page.locator('#profilePage').waitFor();
+        assert.equal(await desktopToggle.getAttribute('aria-expanded'), 'false', 'Desktop menu preference survives reload');
+        await desktopToggle.click();
+        await waitForMenuLayout();
+        const playlistMenu = page.getByRole('navigation', {name: 'Playlists', exact: true});
+        assert.equal(await playlistMenu.getByRole('link', {name: 'Suas playlists'}).getAttribute('href'), '/frontend/pages/playlists.html');
+        await playlistMenu.getByRole('button', {name: 'Criar uma nova'}).click();
+        const playlistDialog = page.getByRole('dialog', {name: 'Criar playlist', exact: true});
+        await playlistDialog.waitFor();
+        await page.keyboard.press('Escape');
+        await playlistDialog.waitFor({state: 'hidden'});
+        assert.equal(await desktopToggle.getAttribute('aria-expanded'), 'true', 'Dismissing the playlist dialog does not collapse the menu');
+        assert.ok((await page.locator('.profile-header').boundingBox()).height <= 400, 'Desktop banner fits the profile header');
+        await checkBannerHeight();
+        for (const width of [320, 390, 768, 769, 1280, 1348, 1600, 2560]) {
+            await page.setViewportSize({width, height: 850});
+            if (width > 768) await waitForMenuLayout();
+            await checkBannerHeight();
+            assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Site layout fits the screen');
+            if (width === 390) await page.screenshot({path: 'target/profile-banner-responsive-mobile.png'});
+            if (width === 1348) {
+                await page.screenshot({path: 'target/profile-site-layout.png'});
+            }
+        }
+        await page.setViewportSize({width: 1280, height: 850});
+        await page.screenshot({ path: 'target/profile-banner-compact.png' });
+        await openSettings();
         await connect.waitFor();
         assert.equal(await sync.isVisible(), false, 'A manually entered username must not count as authorized');
         await page.screenshot({ path: 'target/lastfm-disconnected-desktop.png' });
         await page.setViewportSize({ width: 390, height: 844 });
+        await checkBannerHeight();
+        const menuToggle = page.getByRole('button', {name: 'Abrir menu', exact: true});
+        await menuToggle.click();
+        assert.equal(await page.locator('.menu-toggle').getAttribute('aria-expanded'), 'true');
+        assert.equal(await page.locator('#profileSidebar').evaluate(sidebar => sidebar.inert), false);
+        await page.keyboard.press('Escape');
+        assert.equal(await page.locator('#profileSidebar').evaluate(sidebar => sidebar.inert), true);
+        await menuToggle.click();
+        await page.getByRole('button', {name: 'Fechar menu lateral', exact: true}).click();
+        assert.equal(await page.locator('.menu-toggle').getAttribute('aria-expanded'), 'false');
+        await menuToggle.click();
+        await page.screenshot({path: 'target/profile-sidebar-mobile-open.png'});
+        await playlistMenu.getByRole('button', {name: 'Criar uma nova'}).click();
+        await playlistDialog.waitFor();
+        assert.equal(await page.locator('.menu-toggle').getAttribute('aria-expanded'), 'false', 'Opening the playlist form closes the mobile drawer');
+        await playlistDialog.getByRole('button', {name: 'Cancelar', exact: true}).click();
         await connect.scrollIntoViewIfNeeded();
         const bounds = await connect.boundingBox();
         assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= 390);
@@ -79,11 +166,13 @@ const { chromium } = require('playwright');
         await page.waitForURL('https://www.last.fm/**');
         assert.equal(authCalls, 2);
         await page.goBack();
+        await openSettings();
         await connect.waitFor();
         assert.equal(await connect.isEnabled(), true, 'Back from Last.fm must allow another connection attempt');
 
         connected = true;
         await page.goto(url + '?lastfm=connected');
+        await openSettings();
         await sync.waitFor();
         await page.getByText('Last.fm conectado! Seus dados já estão no perfil.').waitFor();
         assert.equal(new URL(page.url()).search, '');
@@ -98,6 +187,13 @@ const { chromium } = require('playwright');
         await page.screenshot({ path: 'target/lastfm-connected-mobile.png', fullPage: true });
         await page.setViewportSize({ width: 1280, height: 850 });
         await page.screenshot({ path: 'target/lastfm-connected-desktop.png' });
+        await page.locator('#profileSettings > summary').click();
+        assert.equal(await sync.isVisible(), false, 'Settings can be hidden again');
+        await page.screenshot({ path: 'target/profile-banner-compact-connected.png' });
+        await page.evaluate(() => document.documentElement.classList.add('synchro-light'));
+        await page.screenshot({ path: 'target/profile-banner-compact-light.png' });
+        await page.evaluate(() => document.documentElement.classList.remove('synchro-light'));
+        await openSettings();
 
         failSync = true;
         await sync.click();
@@ -112,6 +208,7 @@ const { chromium } = require('playwright');
         assert.equal(await page.locator('#profileScrobbles').textContent(), '4.000');
         assert.equal(syncCalls, 2);
         await page.reload();
+        await openSettings();
         await sync.waitFor();
         assert.equal(await page.locator('#profileScrobbles').textContent(), '4.000');
 
@@ -121,8 +218,10 @@ const { chromium } = require('playwright');
         assert.equal(await sync.isVisible(), false);
         assert.equal(await page.locator('#profileEmail').isVisible(), false);
         assert.equal(await page.locator('#lastFmDetails').isVisible(), true);
+        assert.equal(await page.locator('#profileSettings').isVisible(), false, 'Public profiles hide owner settings');
         connected = false;
         await page.goto(url + '?lastfm=invalid_state');
+        await openSettings();
         await connect.waitFor();
         assert.match(await page.locator('#lastFmStatus').textContent(), /expirou/);
         for (const [result, message] of [
@@ -132,13 +231,14 @@ const { chromium } = require('playwright');
             ['unavailable', 'O Last.fm está temporariamente indisponível.']
         ]) {
             await page.goto(url + '?lastfm=' + result);
+            await openSettings();
             await connect.waitFor();
             assert.ok((await page.locator('#lastFmStatus').textContent()).startsWith(message));
             assert.equal(await connect.isEnabled(), true);
             assert.equal(new URL(page.url()).search, '');
         }
         assert.deepEqual(errors, []);
-        console.log('PASS: connect, redirect, callback, imported data, persisted display, loading/retry, public profile, photo fallback and mobile/desktop layout.');
+        console.log('PASS: profile data, search layout, desktop menu collapse and saved preference, mobile drawer, playlist dialog, Last.fm connection/sync, public profile and photo fallback.');
     } finally {
         await browser.close();
     }

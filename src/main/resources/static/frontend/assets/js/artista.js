@@ -1,597 +1,212 @@
-const artistsData = {
-
-    "Bad Bunny": {
-        name: "Bad Bunny",
-        image: "../assets/images/badbunny.jpg",
-        genre: ["Reggaeton", "Trap", "Latin"],
-
-        bio: "Bad Bunny é um cantor, rapper e produtor porto-riquenho conhecido por sua contribuição para o reggaeton e para a música latina contemporânea.",
-
-        tracks: [
-            "DtMF",
-            "BAILE INoLVIDABLE",
-            "NUEVAYoL",
-            "MONACO",
-            "WHERE SHE GOES"
-        ],
-
-        albums: [
-            {
-                name: "Debí Tirar Más Fotos",
-                image: "../assets/images/DebíTirarMásFotos.png"
-            },
-            {
-                name: "Un Verano Sin Ti",
-                image: "../assets/images/un-verano-sin-ti.png"
-            },
-            {
-                name: "Nadie Sabe Lo Que Va a Pasar Mañana",
-                image: "../assets/images/nadie-sabe.png"
-            }
-        ]
-    },
-
-
-    "Rihanna": {
-        name: "Rihanna",
-        image: "../assets/images/rihanna.jpg",
-        genre: ["Pop", "R&B", "Hip-Hop"],
-
-        bio: "Rihanna é uma cantora, compositora, atriz e empresária barbadense, conhecida por sua influência na música pop e R&B.",
-
-        tracks: [
-            "Umbrella",
-            "Diamonds",
-            "We Found Love",
-            "Love on the Brain",
-            "Work"
-        ],
-
-        albums: [
-            {
-                name: "Anti",
-                image: "../assets/images/anti.png"
-            },
-            {
-                name: "Good Girl Gone Bad",
-                image: "../assets/images/good-girl.jpg"
-            },
-            {
-                name: "Loud",
-                image: "../assets/images/loud.png"
-            }
-        ]
-    },
-
-
-    "Justin Bieber": {
-        name: "Justin Bieber",
-        image: "../assets/images/justin.jpg",
-        genre: ["Pop", "R&B"],
-
-        bio: "Justin Bieber é um cantor canadense que alcançou reconhecimento internacional ainda jovem e se tornou um dos principais nomes da música pop.",
-
-        tracks: [
-            "Baby",
-            "Sorry",
-            "Love Yourself",
-            "Peaches",
-            "What Do You Mean?"
-        ],
-
-        albums: [
-            {
-                name: "Justice",
-                image: "../assets/images/justice.png"
-            },
-            {
-                name: "Purpose",
-                image: "../assets/images/purpose.png"
-            },
-            {
-                name: "Believe",
-                image: "../assets/images/belive.jpg"
-            }
-        ]
-    },
-
-
-    "Billie Eilish": {
-        name: "Billie Eilish",
-        image: "../assets/images/billieeilish.jpg",
-        genre: ["Pop", "Alternative", "Electropop"],
-
-        bio: "Billie Eilish é uma cantora e compositora norte-americana conhecida por seu estilo musical alternativo e sua estética marcante.",
-
-        tracks: [
-            "BIRDS OF A FEATHER",
-            "bad guy",
-            "lovely",
-            "Happier Than Ever",
-            "when the party's over"
-        ],
-
-        albums: [
-            {
-                name: "HIT ME HARD AND SOFT",
-                image: "../assets/images/hit-me-hard.jpg"
-            },
-            {
-                name: "Happier Than Ever",
-                image: "../assets/images/happier-than-ever.jpg"
-            },
-            {
-                name: "WHEN WE ALL FALL ASLEEP, WHERE DO WE GO?",
-                image: "../assets/images/when-we-fall-asleep.png"
-            }
-        ]
-    },
-
-
-    "Kendrick Lamar": {
-        name: "Kendrick Lamar",
-        image: "../assets/images/kendricklamar.jpg",
-        genre: ["Hip-Hop", "Rap", "West Coast"],
-
-        bio: "Kendrick Lamar é um rapper e compositor norte-americano conhecido por suas letras socialmente conscientes e por sua influência no hip-hop.",
-
-        tracks: [
-            "Not Like Us",
-            "HUMBLE.",
-            "DNA.",
-            "Money Trees",
-            "Alright"
-        ],
-
-        albums: [
-            {
-                name: "GNX",
-                image: "../assets/images/gnx.png"
-            },
-            {
-                name: "DAMN.",
-                image: "../assets/images/damn.png"
-            },
-            {
-                name: "good kid, m.A.A.d city",
-                image: "../assets/images/good-kid.jpg"
-            }
-        ]
-    },
-
-    "The Weeknd": {
-        name: "The Weeknd",
-        image: "../assets/images/theweeknd.jpg",
-        genre: ["R&B", "Soul Pop", "Dance"],
-
-        bio: "Abel Makkonen Tesfaye, conhecido profissionalmente como The Weeknd, é um cantor, compositor, ator e produtor musical canadense.",
-
-        tracks: [
-            "Starboy",
-            "One Of The Girls",
-            "Blinding Lights",
-            "Die For You",
-            "Timeless (feat Playboi Carti)"
-        ],
-
-        albums: [
-            {
-                name: "After Hours",
-                image: "../assets/images/after-hours.png"
-            },
-            {
-                name: "Hurry Up Tomorrow",
-                image: "../assets/images/hurry-up.png"
-            },
-            {
-                name: "Starboy",
-                image: "../assets/images/starboy.png"
-            }
-        ]
-    }
-
-};
-
-
-// =====================================================
-// PEGAR O ARTISTA PELA URL
-// =====================================================
-
 const params = new URLSearchParams(window.location.search);
-document.querySelector('.menu-toggle')?.addEventListener('click', () => {
-    document.querySelector('.sidebar')?.classList.toggle('active');
-});
-
-const artistNameFromUrl = (params.get("artist") || '').trim();
+const artistNameFromUrl = (params.get('artist') || '').trim();
+let artistName = artistNameFromUrl;
+let artist = null;
+let historyRecorded = false;
+let popularLoaded = false;
 const artistPhotoRequests = new Map();
-let artistName = artistNameFromUrl || '';
-
-let artist = Object.values(artistsData).find(item => item.name.toLowerCase() === artistNameFromUrl.toLowerCase());
+const placeholder = '../assets/images/artist-placeholder.svg';
+const artistImages = {
+    'bad bunny': '../assets/images/badbunny.jpg', 'rihanna': '../assets/images/rihanna.jpg',
+    'justin bieber': '../assets/images/justin.jpg', 'billie eilish': '../assets/images/billieeilish.jpg',
+    'kendrick lamar': '../assets/images/kendricklamar.jpg', 'the weeknd': '../assets/images/theweeknd.jpg'
+};
 const artistStatus = document.createElement('p');
 artistStatus.setAttribute('role', 'status');
-artistStatus.style.color = '#cbc4d6';
+artistStatus.className = 'artist-status';
 document.querySelector('.artist-header').before(artistStatus);
+document.querySelector('.menu-toggle')?.addEventListener('click', () => document.querySelector('.sidebar')?.classList.toggle('active'));
 
 function setArtistLoading(loading) {
     document.querySelector('.artist-header').setAttribute('aria-busy', String(loading));
-    document.querySelectorAll('.artist-section').forEach(section => { section.hidden = loading; });
+    document.querySelectorAll('.artist-section').forEach(section => {
+        if (section.dataset.popular !== 'true') section.hidden = loading;
+    });
     document.getElementById('favoriteBtn').disabled = loading;
     document.querySelectorAll('.open-review').forEach(button => { button.disabled = loading; });
 }
 
 async function loadCatalogArtist() {
     const id = params.get('id');
-    if (!id && !artistNameFromUrl) {
-        artistStatus.textContent = 'Selecione um artista nos resultados da pesquisa.';
-        return;
-    }
     setArtistLoading(true);
-    artistStatus.textContent = 'Carregando informações do artista…';
     document.getElementById('artistName').textContent = 'Carregando...';
-    document.getElementById('artistImage').src = '../assets/images/catalog-placeholder.svg';
+    document.getElementById('artistImage').src = placeholder;
     try {
+        if (!id && !artistNameFromUrl) throw new Error('Selecione um artista nos resultados da pesquisa.');
+        if (id !== null && !/^\d+$/.test(id)) throw new Error('Identificador de artista inválido.');
+        artistStatus.textContent = 'Carregando informações do artista…';
         if (!id && window.SynchroCatalog) await window.SynchroCatalog.record({type: 'artist', name: artistNameFromUrl});
         const endpoint = id ? `/catalog/artists/${encodeURIComponent(id)}`
             : `/catalog/artists/by-name?name=${encodeURIComponent(artistNameFromUrl)}`;
-        const response = await fetch(endpoint, { headers: { Accept: 'application/json' }, cache: 'no-store' });
-        if (response.status === 404 && artist && !id) {
-            carregarPaginaArtista(artist);
-            setArtistLoading(false);
-            artistStatus.textContent = '';
-            return;
-        }
+        const response = await fetch(endpoint, {headers: {Accept: 'application/json'}, cache: 'no-store'});
         if (!response.ok) throw new Error(response.status === 404 ? 'Artista não encontrado' : 'Não foi possível carregar o artista.');
-        const data = await response.json();
-        renderCatalogArtist(data);
-        refreshCatalogArtist(data.artist.id, endpoint);
+        renderCatalogArtist(await response.json());
+        refreshCatalogArtist(artist.id, endpoint);
+        loadPopularArtistData();
     } catch (error) {
         document.querySelector('.artist-header').setAttribute('aria-busy', 'false');
         document.getElementById('artistName').textContent = error.message;
+        document.getElementById('artistLastFmLink').hidden = true;
         artistStatus.textContent = error.message === 'Artista não encontrado'
-            ? 'Este artista não está disponível. Volte à pesquisa e selecione um resultado atualizado.'
-            : 'Ocorreu uma falha ao carregar o artista. Recarregue a página para tentar novamente.';
+            ? 'Este artista não está disponível. Volte à pesquisa e selecione outro resultado.' : error.message;
     }
 }
 
 async function refreshCatalogArtist(id, endpoint) {
     try {
-        const refreshed = await fetch(`/catalog/artists/${encodeURIComponent(id)}/refresh`, {method: 'POST'});
-        if (!refreshed.ok) return;
+        const refresh = await fetch(`/catalog/artists/${encodeURIComponent(id)}/refresh`, {method: 'POST'});
+        if (!refresh.ok) return;
         const response = await fetch(endpoint, {headers: {Accept: 'application/json'}, cache: 'no-store'});
         if (response.ok) renderCatalogArtist(await response.json());
-    } catch { /* Optional metadata must not hide an already rendered artist. */ }
+    } catch { /* Saved content remains usable while external data is unavailable. */ }
+}
+
+function plainText(value) {
+    const doc = new DOMParser().parseFromString(value || '', 'text/html');
+    doc.querySelectorAll('script, style, iframe').forEach(node => node.remove());
+    return (doc.body.textContent || '').trim();
+}
+
+function usablePhoto(url) {
+    return typeof url === 'string' && /^(https?:\/\/|\/frontend\/|\.\.\/assets\/)/i.test(url)
+        && !/placeholder\.svg|2a96cbd8b46e442fc41c2b86b821562f|placehold\.co/.test(url);
 }
 
 function renderCatalogArtist(data) {
-        const saved = data.artist;
-        artistName = saved.nome;
-        artist = {
-            name: saved.nome,
-            lastFmUrl: saved.lastFm?.url,
-            image: saved.imgUrl || artistsData[saved.nome]?.image || '../assets/images/catalog-placeholder.svg',
-            bio: new DOMParser().parseFromString(saved.biografia || 'Biografia não disponível no catálogo.', 'text/html').body.textContent,
-            genre: saved.lastFm?.tags || [],
-            tracks: data.musicas.map(item => ({ id: item.id, name: item.titulo })),
-            albums: data.albums.map(item => ({ id: item.id, name: item.titulo, image: item.lastFm?.imageUrl || '../assets/images/catalog-placeholder.svg' }))
-        };
-        carregarPaginaArtista(artist);
-        loadCatalogArtistPhoto(saved);
-        setArtistLoading(false);
-        artistStatus.textContent = '';
-        atualizarBotaoFavorito();
-        artistLabel.textContent = artistName;
+    const saved = data.artist;
+    const previousPhoto = artist?.name === saved.nome && usablePhoto(artist.image) ? artist.image : null;
+    artistName = saved.nome;
+    artist = {id: saved.id, name: saved.nome, lastFmUrl: saved.lastFm?.url,
+        image: usablePhoto(saved.imgUrl) ? saved.imgUrl : previousPhoto || artistImages[saved.nome.toLowerCase()] || placeholder,
+        bio: plainText(saved.biografia) || 'Biografia não disponível no catálogo.', genre: saved.lastFm?.tags || []};
+    document.title = `SYNCHRO - ${artistName}`;
+    document.getElementById('artistName').textContent = artistName;
+    document.getElementById('biography').textContent = artist.bio;
+    artistLabel.textContent = artistName;
+    const tags = document.getElementById('artistTags');
+    tags.replaceChildren();
+    artist.genre.slice(0, 6).forEach(name => { const tag = document.createElement('span'); tag.textContent = name; tags.append(tag); });
+    const image = document.getElementById('artistImage');
+    image.alt = 'Imagem de ' + artistName;
+    image.onerror = () => { image.onerror = null; image.src = placeholder; loadCatalogArtistPhoto(true); };
+    image.src = artist.image;
+    updateLastFmLink();
+    renderStatistics(saved.lastFm || {});
+    renderCatalogTracks(data.musicas || []);
+    renderCatalogAlbums(data.albums || []);
+    setArtistLoading(false);
+    artistStatus.textContent = '';
+    window.SynchroFeatures.bindFavorite(document.getElementById('favoriteBtn'), {kind: 'artists', artist: artistName});
+    if (!usablePhoto(artist.image)) loadCatalogArtistPhoto();
+    if (!historyRecorded) {
+        historyRecorded = true;
+        document.dispatchEvent?.(new CustomEvent('synchro:artist', {detail: {id: saved.id, name: saved.nome}}));
+    }
 }
 
-function loadCatalogArtistPhoto(saved) {
-    if (artist.image && !/placeholder\.svg|2a96cbd8b46e442fc41c2b86b821562f|placehold\.co/.test(artist.image)) return;
-    if (!artistPhotoRequests.has(saved.id)) {
-        artistPhotoRequests.set(saved.id, fetch('/catalog/artists/' + encodeURIComponent(saved.id) + '/photo')
+function updateLastFmLink() {
+    const link = document.getElementById('artistLastFmLink');
+    let url = 'https://www.last.fm/music/' + encodeURIComponent(artistName);
+    try {
+        const provided = new URL(artist.lastFmUrl);
+        if (provided.protocol === 'https:' && ['last.fm', 'www.last.fm'].includes(provided.hostname)
+            && !provided.username && !provided.password && provided.pathname.startsWith('/music/')) url = provided.href;
+    } catch { /* Use the artist name if the provider has not returned a URL. */ }
+    link.href = url; link.hidden = false;
+}
+
+function renderStatistics(meta) {
+    const number = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))
+        && Number(value) >= 0 ? Number(value).toLocaleString('pt-BR') : null;
+    const listeners = number(meta.listeners), plays = number(meta.playcount);
+    const stats = document.getElementById('artistStatistics');
+    stats.textContent = [listeners === null ? null : listeners + ' ouvintes', plays === null ? null : plays + ' reproduções'].filter(Boolean).join(' · ');
+    stats.hidden = listeners === null && plays === null;
+}
+
+function loadCatalogArtistPhoto(refresh = false) {
+    const current = artist;
+    const key = current.id + ':' + refresh;
+    if (!artistPhotoRequests.has(key)) artistPhotoRequests.set(key,
+        fetch('/catalog/artists/' + encodeURIComponent(current.id) + '/photo' + (refresh ? '?refresh=true' : ''))
             .then(response => response.ok ? response.json() : null).catch(() => null));
-    }
-    artistPhotoRequests.get(saved.id).then(photo => {
-        if (artistName !== saved.nome || photo?.status !== 'found' || !/^https:\/\//i.test(photo.imgUrl)) return;
+    artistPhotoRequests.get(key).then(photo => {
+        if (artist.id !== current.id || photo?.status !== 'found' || !usablePhoto(photo.imgUrl)) return;
         artist.image = photo.imgUrl;
-        document.getElementById('artistImage').src = photo.imgUrl;
+        const image = document.getElementById('artistImage');
+        image.onerror = () => { image.onerror = null; image.src = placeholder; };
+        image.src = photo.imgUrl;
     });
 }
-// Run after the rest of the page's event handlers and labels have been initialized.
+
+function mediaLink(href, name, className) {
+    const link = document.createElement('a'); link.href = href; link.className = className;
+    link.textContent = name; return link;
+}
+
+function renderCatalogTracks(tracks) {
+    const container = document.getElementById('tracks'); container.replaceChildren();
+    tracks.forEach((track, index) => container.append(mediaLink('detalhes-musica.html?id=' + encodeURIComponent(track.id),
+        `${String(index + 1).padStart(2, '0')} · ${track.titulo}`, 'track catalog-link')));
+    if (!tracks.length) container.textContent = 'Nenhuma música cadastrada para este artista.';
+}
+
+function albumCard(href, title, image) {
+    const link = document.createElement('a'); link.href = href; link.className = 'album-card catalog-link';
+    const cover = document.createElement('img'); cover.src = usablePhoto(image) ? image : '../assets/images/catalog-placeholder.svg'; cover.alt = 'Capa de ' + title;
+    cover.onerror = () => { cover.onerror = null; cover.src = '../assets/images/catalog-placeholder.svg'; };
+    const name = document.createElement('h3'); name.textContent = title;
+    link.append(cover, name); return link;
+}
+
+function renderCatalogAlbums(albums) {
+    const container = document.getElementById('albums'); container.replaceChildren();
+    albums.forEach(album => container.append(albumCard('album.html?id=' + encodeURIComponent(album.id), album.titulo, album.lastFm?.imageUrl)));
+    if (!albums.length) container.textContent = 'Nenhum álbum cadastrado para este artista.';
+}
+
+async function discovery(method) {
+    const url = new URL('/last-fm/discovery', window.location.origin);
+    url.searchParams.set('method', method); url.searchParams.set('artist', artistName); url.searchParams.set('autocorrect', '1');
+    const response = await fetch(url.href, {headers: {Accept: 'application/json'}});
+    if (!response.ok) throw new Error('Consulta indisponível');
+    const data = await response.json(); if (data.error) throw new Error('Consulta indisponível'); return data;
+}
+
+function items(value) { return Array.isArray(value) ? value : value ? [value] : []; }
+
+function loadPopularArtistData() {
+    if (popularLoaded) return;
+    popularLoaded = true;
+    discovery('artist.gettoptracks').then(data => {
+        const container = document.getElementById('artistTopTracks'); container.replaceChildren();
+        const seen = new Set();
+        items(data.toptracks?.track).filter(track => track?.name?.trim()).filter(track => {
+            const key = track.name.trim().toLowerCase(); if (seen.has(key)) return false; seen.add(key); return true;
+        }).slice(0, 10).forEach((track, index) => {
+            const name = typeof track.artist === 'string' ? track.artist : track.artist?.name || artistName;
+            container.append(mediaLink('detalhes-musica.html?' + new URLSearchParams({track: track.name, artist: name}),
+                `${String(index + 1).padStart(2, '0')} · ${track.name}`, 'track catalog-link'));
+        });
+        document.getElementById('artistTopTracksSection').hidden = container.childElementCount === 0;
+    }).catch(() => {});
+    discovery('artist.gettopalbums').then(data => {
+        const container = document.getElementById('artistTopAlbums'); container.replaceChildren();
+        const seen = new Set();
+        items(data.topalbums?.album).filter(album => album?.name?.trim() && album.name !== '(null)').filter(album => {
+            const key = album.name.trim().toLowerCase(); if (seen.has(key)) return false; seen.add(key); return true;
+        }).slice(0, 6).forEach(album => {
+            const name = typeof album.artist === 'string' ? album.artist : album.artist?.name || artistName;
+            const image = items(album.image).map(image => image['#text']).filter(usablePhoto).pop();
+            container.append(albumCard('album-explorar.html?' + new URLSearchParams({album: album.name, artist: name}), album.name, image));
+        });
+        document.getElementById('artistTopAlbumsSection').hidden = container.childElementCount === 0;
+    }).catch(() => {});
+}
+
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadCatalogArtist);
 else queueMicrotask(loadCatalogArtist);
 
-
-// =====================================================
-// VERIFICAR SE O ARTISTA EXISTE
-// =====================================================
-
-if (!artist) {
-
-        const artistNameElement =
-        document.getElementById("artistName");
-
-    if (artistNameElement) {
-        artistNameElement.textContent =
-            params.has('id') || artistNameFromUrl ? "Carregando..." : "Selecione um artista";
-    }
-
-} else {
-
-    carregarPaginaArtista(artist);
-
-}
-
-
-// =====================================================
-// CARREGAR PÁGINA DO ARTISTA
-// =====================================================
-
-function carregarPaginaArtista(artist) {
-
-    const lastFmLink = document.getElementById('artistLastFmLink');
-    if (lastFmLink && artist.name) {
-        let url = 'https://www.last.fm/music/' + encodeURIComponent(artist.name);
-        try {
-            const provided = new URL(artist.lastFmUrl);
-            if (provided.protocol === 'https:' && ['last.fm', 'www.last.fm'].includes(provided.hostname)
-                && !provided.username && !provided.password && provided.pathname.startsWith('/music/')) url = provided.href;
-        } catch { /* The artist name still supplies a direct Last.fm link. */ }
-        lastFmLink.href = url;
-        lastFmLink.hidden = false;
-    }
-
-    document.title =
-        `SYNCHRO - ${artist.name}`;
-
-
-    // NOME DO ARTISTA
-
-    const artistNameElement =
-        document.getElementById("artistName");
-
-    if (artistNameElement) {
-
-        artistNameElement.textContent =
-            artist.name;
-
-    }
-
-
-    // IMAGEM DO ARTISTA
-
-    const artistImage =
-        document.getElementById("artistImage");
-
-    if (artistImage) {
-
-        artistImage.src =
-            artist.image;
-
-        artistImage.alt =
-            artist.name;
-        artistImage.onerror = () => { artistImage.onerror = null; artistImage.src = '../assets/images/catalog-placeholder.svg'; };
-
-    }
-
-
-    // BIOGRAFIA
-
-    const biography =
-        document.getElementById("biography");
-
-    if (biography) {
-
-        biography.textContent =
-            artist.bio;
-
-    }
-
-
-    // GÊNEROS / TAGS
-
-    carregarTags(
-        artist.genre
-    );
-
-
-    // MÚSICAS
-
-    carregarMusicas(
-        artist.tracks,
-        artist.name
-    );
-
-
-    // ÁLBUNS
-
-    carregarAlbuns(
-        artist.albums,
-        artist.name
-    );
-
-}
-
-
-// =====================================================
-// CARREGAR TAGS
-// =====================================================
-
-function carregarTags(tags) {
-
-    const container =
-        document.getElementById("artistTags");
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = "";
-
-
-    tags.forEach(tag => {
-
-        const span =
-            document.createElement("span");
-
-        span.textContent =
-            tag;
-
-        container.appendChild(span);
-
-    });
-
-}
-
-
-// =====================================================
-// CARREGAR MÚSICAS
-// =====================================================
-
-function carregarMusicas(tracks, artistName) {
-
-    const container =
-        document.getElementById("tracks");
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = "";
-
-
-    tracks.forEach((track, index) => {
-        if (typeof track === 'object') {
-            const link = document.createElement('a');
-            link.className = 'track catalog-link';
-            link.href = `detalhes-musica.html?id=${encodeURIComponent(track.id)}`;
-            link.textContent = `${String(index + 1).padStart(2, '0')} · ${track.name}`;
-            container.append(link);
-            return;
-        }
-
-        const div =
-            document.createElement("div");
-
-        div.className =
-            "track";
-
-
-        div.innerHTML = `
-
-            <span class="track-number">
-                ${String(index + 1).padStart(2, "0")}
-            </span>
-
-            <div class="track-info">
-
-                <strong>
-                    ${track}
-                </strong>
-
-                <span>
-                    ${artistName}
-                </span>
-
-            </div>
-
-            <button
-                type="button"
-                class="play-button"
-                title="Reproduzir"
-            >
-
-                <i class="bx bx-play"></i>
-
-            </button>
-
-        `;
-
-
-        container.appendChild(div);
-
-    });
-    if (!tracks.length) container.textContent = 'Nenhuma música cadastrada para este artista.';
-
-}
-
-
-// =====================================================
-// CARREGAR ÁLBUNS
-// =====================================================
-
-function carregarAlbuns(albums, artistName) {
-
-    const container =
-        document.getElementById("albums");
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = "";
-
-
-    albums.forEach(album => {
-        if (album.id != null) {
-            const link = document.createElement('a');
-            link.className = 'album-card catalog-link';
-            link.href = `album.html?id=${encodeURIComponent(album.id)}`;
-            const image = document.createElement('img');
-            image.src = album.image;
-            image.alt = '';
-            const title = document.createElement('h3');
-            title.textContent = album.name;
-            link.append(image, title);
-            container.append(link);
-            return;
-        }
-
-        const div =
-            document.createElement("div");
-
-        div.className =
-            "album-card";
-
-
-        div.innerHTML = `
-
-            <img
-                src="${album.image}"
-                onerror="this.onerror=null;this.src='../assets/images/music.png';"
-                alt="${album.name}"
-            >
-
-            <h3>
-                ${album.name}
-            </h3>
-
-            <p>
-                ${artistName}
-            </p>
-
-        `;
-
-
-        container.appendChild(div);
-
-    });
-    if (!albums.length) container.textContent = 'Nenhum álbum cadastrado para este artista.';
-
-}
-
-// =====================================================
-// BOTÃO FAVORITAR
-// =====================================================
-
-const favoriteBtn =
-    document.getElementById("favoriteBtn");
-
-function atualizarBotaoFavorito() {
-    if (favoriteBtn && artist) {
-        window.SynchroFeatures.bindFavorite(favoriteBtn, {kind:'artists',artist:artist.name});
-        let details=document.querySelector('.artist-header .feature-detail-link');
-        if(!details){details=document.createElement('a');details.className='feature-detail-link';details.textContent='Explorar músicas e álbuns do artista';document.querySelector('.artist-header').append(details);}
-        details.href='/frontend/pages/detalhes-artista.html?artist='+encodeURIComponent(artist.name);
-    }
-}
 
 //Janela modal de Reviews
 

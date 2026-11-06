@@ -1,4 +1,54 @@
 document.addEventListener("DOMContentLoaded", loadCurrentUserProfile);
+document.addEventListener("DOMContentLoaded", initializeProfileMenu);
+
+function initializeProfileMenu() {
+    const button = document.querySelector('.menu-toggle');
+    const sidebar = document.getElementById('profileSidebar');
+    const page = document.getElementById('profilePage');
+    if (!button || !sidebar || !page) return;
+    const mobile = window.matchMedia('(max-width: 768px)');
+    const preferenceKey = 'synchro:profile-sidebar:collapsed:v1';
+    let desktopCollapsed = false;
+    let mobileOpen = false;
+    try { desktopCollapsed = localStorage.getItem(preferenceKey) === 'true'; } catch { /* Use the expanded menu when storage is unavailable. */ }
+    const isOpen = () => mobile.matches ? mobileOpen : !desktopCollapsed;
+    function render() {
+        const open = isOpen();
+        page.classList.toggle('sidebar-collapsed', !open);
+        sidebar.classList.toggle('active', mobile.matches && open);
+        sidebar.inert = !open;
+        sidebar.setAttribute('aria-hidden', String(!open));
+        button.setAttribute('aria-expanded', String(open));
+        button.setAttribute('aria-label', mobile.matches
+            ? open ? 'Fechar menu' : 'Abrir menu'
+            : open ? 'Recolher menu' : 'Expandir menu');
+    }
+    function setOpen(open) {
+        if (mobile.matches) mobileOpen = open;
+        else {
+            desktopCollapsed = !open;
+            try { localStorage.setItem(preferenceKey, String(desktopCollapsed)); } catch { /* The current page still works without saving the preference. */ }
+        }
+        render();
+    }
+    button.addEventListener('click', () => setOpen(!isOpen()));
+    document.querySelector('.profile-menu-close')?.addEventListener('click', () => {
+        setOpen(false);
+        button.focus();
+    });
+    sidebar.addEventListener('click', event => {
+        if (mobile.matches && event.target.closest('a, [data-create-playlist]')) setOpen(false);
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && isOpen() && !document.querySelector('dialog[open]')) {
+            setOpen(false);
+            button.focus();
+        }
+    });
+    mobile.addEventListener('change', () => { mobileOpen = false; render(); });
+    render();
+}
+
 const isPublicProfile = new URLSearchParams(window.location.search).has('user');
 // Cada aba do perfil compartilha a resposta entre rankings, gêneros e contadores.
 const profileRankings = new Map();
@@ -110,6 +160,7 @@ function renderLastFm(user) {
     document.getElementById('connectLastFm').hidden = isPublicProfile || connected;
     document.getElementById('syncLastFm').hidden = isPublicProfile || !connected;
     document.getElementById('lastFmDetails').hidden = !connected;
+    document.getElementById('lastFmAccountInfo').hidden = !connected;
     document.getElementById('lastFmTracksStat').hidden = !connected || data.lastFmTracks == null;
     document.getElementById('lastFmAlbumsStat').hidden = !connected || data.lastFmAlbums == null;
     setProfileText('profileTracks', formatCount(data.lastFmTracks));

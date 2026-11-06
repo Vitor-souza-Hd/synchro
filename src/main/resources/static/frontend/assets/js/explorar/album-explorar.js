@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     artistEl.textContent = artist;
 
     artistEl.href =
-        "/frontend/pages/detalhes-artista.html?artist=" +
+        "/frontend/pages/artista.html?artist=" +
         encodeURIComponent(artist);
 
     document.title = `${album} - Synchro`;

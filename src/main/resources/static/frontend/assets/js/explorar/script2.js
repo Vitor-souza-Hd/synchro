@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     artistCard.classList.add("artist-card");
 
                     // Link interno do Synchro
-                    const linkInterno = `/frontend/pages/detalhes-artista.html?artist=${encodeURIComponent(artist.nome)}`;
+                    const linkInterno = `/frontend/pages/artista.html?artist=${encodeURIComponent(artist.nome)}`;
 
                     const link = document.createElement('a');
                     link.href = linkInterno;

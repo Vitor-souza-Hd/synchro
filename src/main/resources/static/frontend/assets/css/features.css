@@ -20,3 +20,6 @@ html.synchro-light body:not([class*="synchro-"]) :is(h1,h2,h3,h4,p,label,a,span)
 .artist-lastfm-link:hover { background: #a48ac722; }
 .artist-lastfm-link:focus-visible { outline: 2px solid #cbb5f5; outline-offset: 3px; }
 .artist-info .button { flex-wrap: wrap; align-items: center; }
+.artist-header, .artist-section, .artist-status { color: #f5f3ff; }
+.artist-statistics, .artist-status { opacity: .85; line-height: 1.6; }
+.artist-section[hidden], .artist-statistics[hidden] { display: none !important; }

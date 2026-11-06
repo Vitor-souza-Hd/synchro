@@ -126,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const link = document.createElement("a");
         link.className = "favorite-card-link";
         link.href =
-            `/frontend/pages/detalhes-artista.html?artist=${encodeURIComponent(name)}`;
+            `/frontend/pages/artista.html?artist=${encodeURIComponent(name)}`;
 
         const img = document.createElement("img");
         img.className = "favorite-card-photo";

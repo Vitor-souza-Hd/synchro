@@ -117,7 +117,7 @@ document.addEventListener("synchro:song", ({detail: {params, song}}) => {
         document.title = item.titulo + ' | Synchro';
         const artists = document.getElementById('musicArtist');
         artists.textContent = artistName || 'Artista não informado';
-        if (artistName) artists.href = 'detalhes-artista.html?artist=' + encodeURIComponent(artistName);
+        if (artistName) artists.href = 'artista.html?artist=' + encodeURIComponent(artistName);
         else artists.removeAttribute('href');
         if (item.album) {
             const link = document.createElement('a');
@@ -255,7 +255,7 @@ document.addEventListener("synchro:song", ({detail: {params, song}}) => {
             artistElement.textContent = artista;
 
             artistElement.href =
-                `/frontend/pages/detalhes-artista.html?artist=${encodeURIComponent(artista)}`;
+                `/frontend/pages/artista.html?artist=${encodeURIComponent(artista)}`;
 
             // ESTATÍSTICAS
             document.getElementById("musicListeners").textContent =

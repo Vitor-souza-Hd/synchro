@@ -17,13 +17,6 @@ body{
     min-height: 100vh;
     overflow-x: hidden;
 }
-.container{
-    width: 100%;
-    max-width: 1400px;
-
-    margin: 0 auto;
-    padding: 20px;
-}
 .container .logo{
     display: flex;
     flex-direction: row;
@@ -139,10 +132,11 @@ body{
 /* BANNER */
 
 .profile-header{
+    --profile-banner-height: 375px;
     position: relative;
 
     width: 100%;
-    min-height: 320px;
+    min-height: var(--profile-banner-height);
 
     border-radius: 24px;
 
@@ -195,7 +189,7 @@ body{
     z-index: 2;
 
     width: 100%;
-    min-height: 320px;
+    min-height: var(--profile-banner-height);
 
     display: flex;
     align-items: flex-end;
@@ -213,7 +207,8 @@ body{
     display: flex;
     flex-direction: column;
 
-    margin-bottom: 20px;
+    margin-bottom: 0;
+    min-width: 0;
 }
 
 .banner-info span{
@@ -266,7 +261,7 @@ body{
 }
 .user-card h3{
     font-size: 32px;
-    color: rgba(255, 255, 255, 0.575);
+    color: rgba(255, 255, 255, 0.85);
     text-align: center;
     
 }
@@ -297,7 +292,7 @@ body{
 /* PROFILE STATS */
 .profile-stats{
     display: flex;
-    gap: 30px;
+    gap: 24px;
 
     margin-top: 20px;
 
@@ -342,7 +337,7 @@ body{
 
     scroll-behavior: smooth;
 
-    padding: 10px;
+    padding: 10px 0;
 }
 
 .review-card, .artist-card, .playlist-card {
@@ -647,10 +642,6 @@ body{
 
 @media (min-width: 1600px){
 
-    .container{
-        max-width: 1800px;
-    }
-
     .top-header{
         padding: 20px 10px;
     }
@@ -660,12 +651,8 @@ body{
     }
 
     /* BANNER */
-    .profile-header{
-        min-height: 420px;
-    }
-
     .banner-content{
-        padding: 60px;
+        padding: 40px;
         gap: 40px;
     }
 
@@ -713,10 +700,6 @@ body{
 /* MONITORES GRANDES */
 @media (min-width: 1400px){
 
-    .container{
-        max-width: 1700px;
-    }
-
     .top-header{
         padding: 30px 10px;
     }
@@ -726,12 +709,8 @@ body{
     }
 
     /* BANNER */
-    .profile-header{
-        min-height: 420px;
-    }
-
     .banner-content{
-        padding: 60px;
+        padding: 40px;
         gap: 40px;
     }
 
@@ -777,12 +756,8 @@ body{
 /* ULTRAWIDE / 4K */
 @media (min-width: 1920px){
 
-    .container{
-        max-width: 2400px;
-    }
-
     .banner-info h1{
-        font-size: clamp(40px, 5vw, 100px);
+        font-size: clamp(56px, 5vw, 100px);
     }
 
     .artist,
@@ -933,12 +908,12 @@ body{
 /* BIOGRAFIA EDITAVEL */
 
 .profile-biography {
-    margin-bottom: 18px;
+    margin-bottom: 0;
     max-width: 460px;
 }
 
 #profileBiography {
-    margin: 0 0 12px;
+    margin: 8px 0 0;
     overflow-wrap: anywhere;
     line-height: 1.6;
 }
@@ -1001,77 +976,7 @@ body{
     margin: 12px 0 18px;
     max-width: 460px;
 
-<div class="profile-banner-editor">
-<button id="editBannerButton" type="button">
-<i class="fa-solid fa-image"></i>
-Alterar banner
-</button>
-
-<div id="bannerEditor" hidden>
-<label for="bannerUrlInput">
-URL HTTPS da imagem de capa
-</label>
-
-<input
-id="bannerUrlInput"
-type="url"
-maxlength="2000"
-placeholder="https://exemplo.com/banner.jpg"
->
-
-<div class="banner-actions">
-<button id="saveBannerButton" type="button">
-Salvar banner
-</button>
-
-<button id="removeBannerButton" type="button">
-Remover
-</button>
-
-<button id="cancelBannerButton" type="button">
-Cancelar
-</button>
-</div>
-
-<p id="bannerFeedback" role="status"></p>
-</div>
-</div>
-
-    /* CORRECAO DE VISIBILIDADE DO EDITOR DO BANNER */
-
-.profile-banner-editor {
-    position: relative;
-    z-index: 5;
-    display: block;
-    margin: 12px 0 18px;
 }
-
-    #editBannerButton {
-        display: inline-flex;
-        align-items: center;
-        gap: 9px;
-        color: #ffffff;
-        background: #292929;
-        border: 1px solid #555;
-        border-radius: 10px;
-        padding: 10px 15px;
-        cursor: pointer;
-    }
-
-    #editBannerButton:hover {
-        border-color: #ff315e;
-        background: #35252d;
-    }
-
-    #bannerEditor[hidden] {
-        display: none;
-    }
-
-}
-
-
-
-
 
 #photoEditor[hidden] {
     display: none;
@@ -1234,6 +1139,119 @@ Cancelar
 
 html:not(.own-profile) .owner-only { display: none !important; }
 #profilePage[hidden], #lastFmActions[hidden], #lastFmActions button[hidden], #lastFmDetails[hidden], .profile-stats [hidden] { display: none; }
-#profilePage { min-width: 0; }
+#profilePage {
+    --profile-sidebar-width: 260px;
+    min-width: 0;
+    grid-template-columns: var(--profile-sidebar-width) minmax(0, 1fr);
+    transition: grid-template-columns .2s ease, column-gap .2s ease;
+}
+.synchro-usuario .container main { min-width: 0; }
+.synchro-usuario .container .sidebar { min-width: 0; justify-content: flex-start; }
+.synchro-usuario .top-header { padding: 10px; justify-content: space-between; color: #fff; }
+.synchro-usuario .top-header .menu-toggle { display: inline-flex; position: static; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; min-height: 44px; margin: 0; color: inherit; }
+.synchro-usuario .menu-toggle svg { width: 24px; height: 24px; }
+.synchro-usuario .top-header .search-box { min-width: 0; max-width: none; }
+.synchro-usuario .top-header .nav-links { flex-shrink: 0; }
+.synchro-usuario .top-header .nav-links a { font-size: 16px; }
+.profile-menu-close { display: none; }
+#profileSidebar {
+    width: var(--profile-sidebar-width);
+    max-width: var(--profile-sidebar-width);
+    padding: 26px 32px;
+    background: #202020;
+    overflow-y: auto;
+    transition: transform .2s ease, visibility .2s ease;
+}
+#profileSidebar .logo { flex-wrap: wrap; gap: 7.8px; margin-bottom: 52px; }
+#profileSidebar .logo a { max-width: 100%; font-size: 26px; overflow-wrap: anywhere; }
+#profileSidebar .logo > i { font-size: 39px; }
+#profileSidebar .menu { margin-bottom: 28px; }
+#profileSidebar .menu h5 { font-size: 17.264px; margin-bottom: 15.6px; overflow-wrap: anywhere; }
+#profileSidebar .menu li { gap: 26px; margin-bottom: 15.6px; }
+#profileSidebar .menu li > i { flex: 0 0 20.8px; font-size: 20.8px; text-align: center; }
+#profileSidebar .menu :is(a, button) { font: inherit; font-size: 18.2px; line-height: 1.4; font-weight: 700; color: #fff; }
+#profileSidebar .menu button { padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+#profileSidebar .menu :is(a, button):hover { color: #1ffee4; }
+#profileSidebar :is(a, button):focus-visible { outline: 2px solid #d7b5f5; outline-offset: 4px; }
+@media (min-width: 769px) {
+    #profileSidebar { position: sticky; top: 0; height: 100dvh; align-self: start; }
+    #profilePage.sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr); column-gap: 0; }
+    #profilePage.sidebar-collapsed #profileSidebar { visibility: hidden; transform: translateX(-100%); }
+}
+@media (min-width: 1920px) {
+    #profilePage { --profile-sidebar-width: 280px; }
+    #profileSidebar .logo a { font-size: 39px; }
+    #profileSidebar .logo > i { font-size: 52px; }
+    #profileSidebar .menu h5 { font-size: 31.2px; }
+    #profileSidebar .menu li > i { flex-basis: 32.5px; font-size: 32.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #profilePage, #profileSidebar { transition: none; }
+}
 .lastfm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 #lastFmStatus, #lastFmDetails { overflow-wrap: anywhere; }
+
+/* Keep profile controls outside the compact banner, closed until requested. */
+.profile-settings {
+    margin-bottom: 24px;
+    border: 1px solid #39323f;
+    border-radius: 16px;
+    background: #17151c;
+    color: #eee9f2;
+}
+
+.profile-settings summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.profile-settings summary::-webkit-details-marker { display: none; }
+.profile-settings summary::after { content: "›"; margin-left: auto; font-size: 24px; }
+.profile-settings[open] summary::after { transform: rotate(90deg); }
+.profile-settings summary:focus-visible { outline: 2px solid #d7b5f5; outline-offset: 3px; border-radius: 16px; }
+
+.profile-settings-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 24px;
+    padding: 4px 18px 20px;
+}
+
+.profile-settings-content > div { min-width: 0; }
+.profile-settings-content h2 { margin: 0 0 12px; font-size: 18px; color: inherit; }
+.profile-settings-content p { margin-top: 8px; line-height: 1.5; overflow-wrap: anywhere; }
+.profile-settings-content :is(.profile-photo-editor, .profile-banner-editor) { margin: 0; max-width: none; }
+.profile-settings-content .lastfm-button { margin-top: 0; }
+.profile-settings-content .biography-actions { flex-wrap: wrap; }
+.profile-account-settings { grid-column: 1 / -1; color: #dbc3f4; text-decoration: underline; text-underline-offset: 3px; }
+#lastFmProfileLink { display: inline-block; margin-top: 8px; color: #e5d4ff; }
+#profileBiography:empty { display: none; }
+.banner-info h1, .user-card :is(h3, p) { overflow-wrap: anywhere; }
+
+@media (max-width: 768px) {
+    .synchro-usuario .container main { padding: 20px 15px; }
+    .synchro-usuario .container .sidebar { max-height: 100dvh; overflow-y: auto; }
+    #profileSidebar { left: 0; width: min(var(--profile-sidebar-width), calc(100vw - 24px)); transform: translateX(-100%); visibility: hidden; }
+    #profileSidebar.active { transform: translateX(0); visibility: visible; }
+    #profileSidebar .logo { padding-top: 32px; }
+    .profile-menu-close { display: block; position: absolute; top: 12px; right: 12px; min-width: 44px; min-height: 44px; background: transparent; border: 0; color: white; font: inherit; font-size: 36.4px; cursor: pointer; }
+    .synchro-usuario .top-header { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 10px 0; }
+    .synchro-usuario .top-header .nav-links { grid-column: 1 / -1; }
+    .synchro-usuario .top-header .nav-links a { font-size: 14px; }
+    .banner-content { flex-direction: column; align-items: center; gap: 24px; padding: 28px 20px; }
+    #profileIdentity { min-width: 0; max-width: 100%; align-self: center; margin: 0; }
+    .user-card img { width: 144px; height: 144px; }
+    .user-card h3 { font-size: 28px; }
+    .user-card p { font-size: 16px; }
+    .banner-info { width: 100%; }
+    .banner-info h1 { font-size: 34px; }
+    .banner-info p { font-size: 16px; }
+    .profile-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    .profile-stats div { min-width: 0; padding: 12px; }
+    .profile-stats h3 { font-size: 22px; overflow-wrap: anywhere; }
+    .profile-stats p { font-size: 13px; }
+}

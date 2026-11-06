@@ -16,7 +16,8 @@ public abstract class Midia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
     private String titulo;
-    @Column(columnDefinition = "text")
+    // Explicit length lets schema updates widen legacy varchar(255) columns too.
+    @Column(columnDefinition = "text", length = Integer.MAX_VALUE)
     private String descricao;
 
     @Embedded
