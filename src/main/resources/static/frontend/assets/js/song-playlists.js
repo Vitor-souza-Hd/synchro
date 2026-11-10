@@ -34,6 +34,8 @@
         const preview = document.createElement('span');
         preview.className = 'song-playlist-preview';
         const banner = document.createElement('img');
+        banner.loading = 'lazy';
+        banner.decoding = 'async';
         banner.className = 'song-playlist-banner';
         banner.alt = '';
         const bannerUrl = imageUrl(playlist.banner);
@@ -41,6 +43,8 @@
         if (bannerUrl) banner.src = bannerUrl;
         banner.onerror = () => { banner.hidden = true; };
         const cover = document.createElement('img');
+        cover.loading = 'lazy';
+        cover.decoding = 'async';
         cover.className = 'song-playlist-cover';
         cover.alt = '';
         cover.src = imageUrl(playlist.capa) || '../assets/images/catalog-placeholder.svg';
@@ -49,7 +53,7 @@
         title.textContent = playlist.titulo;
         const count = document.createElement('span');
         count.className = 'song-playlist-count';
-        count.textContent = `${playlist.musicas?.length || 0} música(s)`;
+        count.textContent = `${playlist.totalMusicas ?? 0} música(s)`;
         preview.append(banner, cover);
         label.append(radio, preview, title, count);
         return label;
@@ -76,7 +80,7 @@
         retry.hidden = true;
         feedback.textContent = 'Carregando suas playlists…';
         try {
-            const response = await fetch('/playlists/me', {
+            const response = await fetch('/playlists/me/summary', {
                 credentials: 'same-origin',
                 headers: { Accept: 'application/json' },
                 cache: 'no-store',

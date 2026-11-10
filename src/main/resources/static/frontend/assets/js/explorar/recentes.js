@@ -52,24 +52,25 @@
 
         let item;
 
-        if (file === "/frontend/pages/detalhes-musica.html" && track && (artist || params.has('id'))) {
+        if (file === "/frontend/pages/musica.html" && track && (artist || params.has('id'))) {
             item = {
                 type: "Música",
                 title: track,
                 subtitle: artist || 'Artista não informado',
                 url: params.has('id')
-                    ? '/frontend/pages/detalhes-musica.html?id=' + encodeURIComponent(params.get('id'))
-                    : `/frontend/pages/detalhes-musica.html?artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}`
+                    ? '/frontend/pages/musica.html?id=' + encodeURIComponent(params.get('id'))
+                    : `/frontend/pages/musica.html?artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}`
             };
         } else if (
-            file === "/frontend/pages/album-explorar.html" &&
-            artist && album
+            ["/frontend/pages/album-explorar.html", "/frontend/pages/album.html"].includes(file) &&
+            album && (artist || params.has("id"))
         ) {
             item = {
                 type: "Álbum",
                 title: album,
-                subtitle: artist,
-                url: `/frontend/pages/album-explorar.html?artist=${encodeURIComponent(artist)}&album=${encodeURIComponent(album)}`
+                subtitle: artist || "",
+                url: params.has("id") ? "/frontend/pages/album.html?id=" + encodeURIComponent(params.get("id"))
+                    : `/frontend/pages/album-explorar.html?artist=${encodeURIComponent(artist)}&album=${encodeURIComponent(album)}`
             };
         } else if (["/frontend/pages/artista.html", "/frontend/pages/detalhes-artista.html"].includes(file) && artist) {
             item = {
@@ -134,20 +135,26 @@
 
             // Permite somente as páginas conhecidas.
             const url = new URL(item.url, location.href);
+            if (item.type === 'Música' && url.pathname === '/frontend/pages/detalhes-musica.html') {
+                url.pathname = '/frontend/pages/musica.html';
+            }
             if (item.type === 'Artista' && url.pathname === '/frontend/pages/detalhes-artista.html') {
                 url.pathname = '/frontend/pages/artista.html';
+            }
+            if (item.type === "Álbum" && url.pathname === "/frontend/pages/detalhes-album.html") {
+                url.pathname = "/frontend/pages/album.html";
             }
             const file = url.pathname;
 
             const allowed = {
-                "Música": "/frontend/pages/detalhes-musica.html",
+                "Música": "/frontend/pages/musica.html",
                 "Álbum": "/frontend/pages/album-explorar.html",
                 "Artista": "/frontend/pages/artista.html"
             };
 
             if (
                 url.origin !== location.origin ||
-                file !== allowed[item.type]
+                (file !== allowed[item.type] && !(item.type === "Álbum" && file === "/frontend/pages/album.html"))
             ) {
                 continue;
             }
@@ -180,11 +187,13 @@
             link.append(iconArea, info);
             grid.appendChild(link);
 
-// Carrega a capa real do item.
-            window.SynchroRecentCover?.load(
-                item,
-                iconArea
-            );
+            const imageKinds = {"Música": "track", "Álbum": "album", "Artista": "artist"};
+            const artist = item.type === "Artista" ? title.textContent :
+                url.searchParams.get("artist") || (item.subtitle === "Artista não informado" ? "" : item.subtitle) || "";
+            window.SynchroFavoriteImages?.show(iconArea, {
+                kind: imageKinds[item.type], title: title.textContent, artist, id: url.searchParams.get("id"),
+                className: "recentes-image", alt: ""
+            });
         }
 
         clear.onclick = () => {
@@ -202,10 +211,13 @@
         };
     }
 
+    document.addEventListener("synchro:album", ({detail: {id, album}}) => trackPage(new URLSearchParams({
+        id, album: album.titulo, artist: album.lastFm?.artistName || album.artistas?.[0]?.nome || ""
+    })));
     document.addEventListener("synchro:song", ({detail: {params}}) => trackPage(params));
     document.addEventListener('synchro:artist', ({detail}) => trackPage(new URLSearchParams({artist: detail.name, id: detail.id})));
     document.addEventListener("DOMContentLoaded", () => {
-        if (!['/detalhes-musica.html', '/artista.html'].some(page => location.pathname.endsWith(page))) trackPage();
+        if (!['/musica.html', '/artista.html'].some(page => location.pathname.endsWith(page))) trackPage();
         renderHistory();
     });
 })();

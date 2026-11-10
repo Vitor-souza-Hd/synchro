@@ -16,6 +16,13 @@ const { chromium } = require('playwright');
         let authCalls = 0;
         let syncCalls = 0;
         let scrobbles = 3210;
+        const playlists = [{
+            id: 3, titulo: 'Minha playlist', musicas: [],
+            capa: '/frontend/assets/images/user/userphoto.jpg',
+            banner: '/frontend/assets/images/user/banner.jpg'
+        }];
+        let failPlaylists = false;
+        let playlistReads = 0;
         const profile = () => ({ username: 'alice', email: 'alice@example.com', birthDay: '2000-01-01',
             lastFmUsername: connected ? 'lastfm-listener' : 'name-only', lastFmConnected: connected,
             data: { fullName: 'Alice Souza', gender: 'female', scrobbles: connected ? scrobbles : 0,
@@ -28,6 +35,16 @@ const { chromium } = require('playwright');
             if (url.hostname !== 'synchro.test') return route.abort();
             if (url.pathname === '/auth/cookie') return route.fulfill({ body: 'ok' });
             if (url.pathname === '/users/me' || url.pathname === '/catalog/users/2') return route.fulfill({ json: profile() });
+            if (url.pathname === '/playlists/me/summary') {
+                playlistReads++;
+                return failPlaylists ? route.fulfill({ status: 503, json: {} }) : route.fulfill({ json: playlists });
+            }
+            if (url.pathname === '/playlists/new-playlist') {
+                assert.equal(route.request().method(), 'POST');
+                const created = { id: 4, titulo: route.request().postDataJSON().titulo, musicas: [] };
+                playlists.unshift(created);
+                return route.fulfill({ status: 201, json: created });
+            }
             if (url.pathname === '/last-fm/auth/login') {
                 authCalls++;
                 await new Promise(resolve => setTimeout(resolve, 150));
@@ -42,13 +59,13 @@ const { chromium } = require('playwright');
                 scrobbles = 4000;
                 return route.fulfill({ json: profile() });
             }
-            if (url.pathname.endsWith('.js') && !/\/(auth|user|playlists)\.js$/.test(url.pathname)) {
+            if (url.pathname.endsWith('.js') && !/\/(auth|features|user|playlists)\.js$/.test(url.pathname)) {
                 return route.fulfill({ contentType: 'application/javascript', body: '' });
             }
             const root = path.resolve(__dirname, '../src/main/resources/static');
             const file = path.resolve(root, '.' + url.pathname);
             if (!file.startsWith(root + path.sep) || !fs.existsSync(file)) return route.fulfill({ status: 404, body: '' });
-            const contentType = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.jpg': 'image/jpeg' }[path.extname(file)] || 'application/octet-stream';
+            const contentType = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' }[path.extname(file)] || 'application/octet-stream';
             return route.fulfill({ contentType, body: fs.readFileSync(file) });
         });
         const url = 'http://synchro.test/frontend/pages/perfil.html';
@@ -88,6 +105,24 @@ const { chromium } = require('playwright');
         const connect = page.getByRole('button', { name: 'Conectar ao lastFM', exact: true });
         const sync = page.getByRole('button', { name: 'Atualizar dados do Last.fm', exact: true });
         await page.locator('#profilePage').waitFor();
+        const profilePlaylists = page.locator('.user-playlist .playlist');
+        const savedPlaylist = profilePlaylists.getByRole('link', { name: 'Minha playlist', exact: true });
+        await savedPlaylist.waitFor();
+        assert.equal(await savedPlaylist.getAttribute('href'), '/frontend/pages/playlists.html?id=3');
+        await savedPlaylist.scrollIntoViewIfNeeded();
+        for (const [selector, expected] of [
+            ['.profile-playlist-cover', playlists[0].capa],
+            ['.profile-playlist-banner', playlists[0].banner]
+        ]) {
+            const artwork = savedPlaylist.locator(selector);
+            await artwork.waitFor();
+            assert.equal(new URL(await artwork.getAttribute('src')).pathname, expected);
+            await artwork.evaluate(image => image.decode());
+        }
+        assert.ok(await savedPlaylist.evaluate(link => {
+            const title = link.querySelector('h3') || link;
+            return getComputedStyle(title).color !== getComputedStyle(document.body).backgroundColor;
+        }), 'Saved playlist titles are visible on the dark profile background');
         assert.equal(await page.locator('#profileSettings').getAttribute('open'), null, 'Profile settings start closed');
         assert.equal(await connect.isVisible(), false, 'Connection controls stay inside closed settings');
         const desktopToggle = page.locator('.menu-toggle');
@@ -145,7 +180,14 @@ const { chromium } = require('playwright');
         await playlistMenu.getByRole('button', {name: 'Criar uma nova'}).click();
         await playlistDialog.waitFor();
         assert.equal(await page.locator('.menu-toggle').getAttribute('aria-expanded'), 'false', 'Opening the playlist form closes the mobile drawer');
-        await playlistDialog.getByRole('button', {name: 'Cancelar', exact: true}).click();
+        await playlistDialog.getByLabel('Nome da playlist').fill('Nova playlist');
+        await playlistDialog.getByRole('button', { name: 'Criar playlist', exact: true }).click();
+        await playlistDialog.getByRole('button', { name: 'Concluir', exact: true }).click();
+        const newPlaylist = profilePlaylists.getByRole('link', { name: 'Nova playlist', exact: true });
+        await newPlaylist.waitFor();
+        assert.equal(await newPlaylist.locator('.profile-playlist-cover').getAttribute('src'),
+            '/frontend/assets/images/catalog-placeholder.svg');
+        assert.equal(await newPlaylist.locator('.profile-playlist-banner').isVisible(), false);
         await connect.scrollIntoViewIfNeeded();
         const bounds = await connect.boundingBox();
         assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= 390);
@@ -212,8 +254,11 @@ const { chromium } = require('playwright');
         await sync.waitFor();
         assert.equal(await page.locator('#profileScrobbles').textContent(), '4.000');
 
+        const readsBeforePublicProfile = playlistReads;
         await page.goto(url + '?user=2');
         await page.locator('#profilePage').waitFor();
+        assert.equal(await profilePlaylists.isVisible(), false);
+        assert.equal(playlistReads, readsBeforePublicProfile);
         assert.equal(await connect.isVisible(), false);
         assert.equal(await sync.isVisible(), false);
         assert.equal(await page.locator('#profileEmail').isVisible(), false);
@@ -237,8 +282,17 @@ const { chromium } = require('playwright');
             assert.equal(await connect.isEnabled(), true);
             assert.equal(new URL(page.url()).search, '');
         }
+        playlists.length = 0;
+        await page.goto(url);
+        await profilePlaylists.getByRole('status').filter({ hasText: 'Você ainda não tem playlists.' }).waitFor();
+        failPlaylists = true;
+        await page.reload();
+        await profilePlaylists.getByRole('status').filter({ hasText: 'Não foi possível carregar suas playlists.' }).waitFor();
+        const managePlaylists = page.locator('.profile-playlist-heading').getByRole('link', { name: 'Gerenciar playlists' });
+        await managePlaylists.waitFor();
+        assert.equal(await managePlaylists.getAttribute('href'), '/frontend/pages/playlists.html');
         assert.deepEqual(errors, []);
-        console.log('PASS: profile data, search layout, desktop menu collapse and saved preference, mobile drawer, playlist dialog, Last.fm connection/sync, public profile and photo fallback.');
+        console.log('PASS: profile playlists load and refresh after creation, empty and error states, profile navigation, Last.fm connection/sync, public profile and photo fallback.');
     } finally {
         await browser.close();
     }

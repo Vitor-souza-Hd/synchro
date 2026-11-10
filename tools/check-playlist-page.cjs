@@ -24,7 +24,15 @@ const { chromium } = require('playwright');
             const url = new URL(route.request().url());
             if (url.origin !== 'http://synchro.test') return route.abort();
             if (url.pathname === '/auth/cookie') return route.fulfill({ body: 'ok' });
-            if (url.pathname === '/playlists/me') return route.fulfill({ status: listStatus, json: playlists });
+            if (url.pathname === '/playlists/me/summary') {
+                const summaries = playlists.map(({musicas, id, titulo, criador, capa, banner}) =>
+                    ({id, titulo, criador, capa, banner, totalMusicas: musicas.length}));
+                return route.fulfill({status: listStatus, json: summaries});
+            }
+            if (/^\/playlists\/me\/\d+$/.test(url.pathname)) {
+                const item = playlists.find(playlist => playlist.id === Number(url.pathname.split('/').pop()));
+                return item ? route.fulfill({json: item}) : route.fulfill({status: 404});
+            }
             if (url.pathname === '/playlists/update-playlist/7') {
                 const request = route.request().postDataJSON();
                 playlists[0] = { ...playlists[0], ...request, capa: playlists[0].capa, banner: playlists[0].banner };
@@ -50,7 +58,7 @@ const { chromium } = require('playwright');
         assert.equal(await page.locator('#playlistParticipation').textContent(), 'Você participa desta playlist e pode editá-la.');
         assert.equal(await page.locator('.playlist-track').count(), 3);
         assert.equal(await page.locator('#playlistCollaborators a').count(), 2);
-        assert.equal(await page.locator('.playlist-track').first().getAttribute('href'), 'detalhes-musica.html?id=42');
+        assert.equal(await page.locator('.playlist-track').first().getAttribute('href'), 'musica.html?id=42');
         assert.equal(await page.locator('.playlist-track').last().locator('span').last().textContent(), '—');
         assert.ok(await page.locator('#detailPlaylistBanner').isVisible());
         assert.ok(await page.locator('#detailPlaylistCover').evaluate(image => image.complete && image.naturalWidth > 0));

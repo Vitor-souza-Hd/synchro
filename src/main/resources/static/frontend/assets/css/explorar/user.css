@@ -374,6 +374,54 @@ body{
 .review-card img, .playlist-card img{
     border-radius: 8px;
 }
+.profile-playlist-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 12px;
+    margin-top: 20px;
+}
+.profile-playlist-heading h2 {
+    margin: 0;
+}
+.profile-playlist-manage {
+    color: #dbc3f4;
+    font-size: 13px;
+    line-height: 1.4;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+html.synchro-light .profile-playlist-manage {
+    color: #674476;
+}
+.profile-playlist-artwork {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    margin-bottom: 8px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: linear-gradient(120deg, #314c85, #513358);
+}
+.profile-playlist-artwork .profile-playlist-banner {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    border-radius: 0;
+}
+.profile-playlist-artwork .profile-playlist-cover {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    width: 42%;
+    max-width: 92px;
+    height: auto;
+    aspect-ratio: 1;
+    border: 2px solid #1c1c24;
+    background: #24242a;
+}
 .artist-card img{
     border-radius: 50%;
 }
@@ -1146,7 +1194,7 @@ html:not(.own-profile) .owner-only { display: none !important; }
     transition: grid-template-columns .2s ease, column-gap .2s ease;
 }
 .synchro-usuario .container main { min-width: 0; }
-.synchro-usuario .container .sidebar { min-width: 0; justify-content: flex-start; }
+.synchro-usuario .container .sidebar { min-width: 0; }
 .synchro-usuario .top-header { padding: 10px; justify-content: space-between; color: #fff; }
 .synchro-usuario .top-header .menu-toggle { display: inline-flex; position: static; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; min-height: 44px; margin: 0; color: inherit; }
 .synchro-usuario .menu-toggle svg { width: 24px; height: 24px; }
@@ -1157,20 +1205,12 @@ html:not(.own-profile) .owner-only { display: none !important; }
 #profileSidebar {
     width: var(--profile-sidebar-width);
     max-width: var(--profile-sidebar-width);
-    padding: 26px 32px;
     background: #202020;
     overflow-y: auto;
     transition: transform .2s ease, visibility .2s ease;
 }
-#profileSidebar .logo { flex-wrap: wrap; gap: 7.8px; margin-bottom: 52px; }
-#profileSidebar .logo a { max-width: 100%; font-size: 26px; overflow-wrap: anywhere; }
-#profileSidebar .logo > i { font-size: 39px; }
-#profileSidebar .menu { margin-bottom: 28px; }
-#profileSidebar .menu h5 { font-size: 17.264px; margin-bottom: 15.6px; overflow-wrap: anywhere; }
-#profileSidebar .menu li { gap: 26px; margin-bottom: 15.6px; }
-#profileSidebar .menu li > i { flex: 0 0 20.8px; font-size: 20.8px; text-align: center; }
-#profileSidebar .menu :is(a, button) { font: inherit; font-size: 18.2px; line-height: 1.4; font-weight: 700; color: #fff; }
-#profileSidebar .menu button { padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+#profileSidebar .logo { gap: 0; }
+#profileSidebar .menu button { font-size: 14px; font-weight: bold; color: #fff; padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
 #profileSidebar .menu :is(a, button):hover { color: #1ffee4; }
 #profileSidebar :is(a, button):focus-visible { outline: 2px solid #d7b5f5; outline-offset: 4px; }
 @media (min-width: 769px) {
@@ -1180,10 +1220,6 @@ html:not(.own-profile) .owner-only { display: none !important; }
 }
 @media (min-width: 1920px) {
     #profilePage { --profile-sidebar-width: 280px; }
-    #profileSidebar .logo a { font-size: 39px; }
-    #profileSidebar .logo > i { font-size: 52px; }
-    #profileSidebar .menu h5 { font-size: 31.2px; }
-    #profileSidebar .menu li > i { flex-basis: 32.5px; font-size: 32.5px; }
 }
 @media (prefers-reduced-motion: reduce) {
     #profilePage, #profileSidebar { transition: none; }
@@ -1237,8 +1273,7 @@ html:not(.own-profile) .owner-only { display: none !important; }
     .synchro-usuario .container .sidebar { max-height: 100dvh; overflow-y: auto; }
     #profileSidebar { left: 0; width: min(var(--profile-sidebar-width), calc(100vw - 24px)); transform: translateX(-100%); visibility: hidden; }
     #profileSidebar.active { transform: translateX(0); visibility: visible; }
-    #profileSidebar .logo { padding-top: 32px; }
-    .profile-menu-close { display: block; position: absolute; top: 12px; right: 12px; min-width: 44px; min-height: 44px; background: transparent; border: 0; color: white; font: inherit; font-size: 36.4px; cursor: pointer; }
+    .profile-menu-close { display: block; position: absolute; top: 12px; right: 4px; min-width: 44px; min-height: 44px; background: transparent; border: 0; color: white; font: inherit; font-size: 36.4px; cursor: pointer; }
     .synchro-usuario .top-header { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 10px 0; }
     .synchro-usuario .top-header .nav-links { grid-column: 1 / -1; }
     .synchro-usuario .top-header .nav-links a { font-size: 14px; }

@@ -1,4 +1,8 @@
 /* Estilos exclusivos da biblioteca de favoritos. A base vem de style.css. */
+.container .sidebar {
+  overflow-y: auto;
+}
+
 .favorites-main { min-width: 0; width: 100%; padding-bottom: 52px; }
 .favorites-topbar { display: flex; justify-content: flex-end; align-items: center; gap: 24px; padding: 30px 4px 14px; }
 .favorites-home-link, .favorites-profile-link { text-decoration: none; color: #ddd; font-weight: 600; }

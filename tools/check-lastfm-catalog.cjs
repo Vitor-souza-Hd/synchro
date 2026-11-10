@@ -21,7 +21,7 @@ const base = process.env.SYNCHRO_TEST_URL || 'http://localhost:8081';
         await page.getByText('Pressione Enter ou clique na lupa para pesquisar no Last.fm.').waitFor();
         assert.equal(searches, 0, 'Typing must not trigger API imports');
         await page.locator('input.search').press('Enter');
-        const result = page.locator('.synchro-search-results a[href*="detalhes-musica.html"]').filter({ hasText: 'Starboy' }).first();
+        const result = page.locator('.synchro-search-results a[href*="musica.html"]').filter({ hasText: 'Starboy' }).first();
         await result.waitFor();
         const href = await result.getAttribute('href');
         await result.click();
@@ -52,7 +52,7 @@ const base = process.env.SYNCHRO_TEST_URL || 'http://localhost:8081';
             id: 9999, titulo: 'Sem metadados', descricao: '<script>window.injected=true</script><b>Texto seguro</b>',
             artistas: [], lastFm: { tags: ['<img src=x onerror=alert(1)>'], url: 'javascript:alert(1)' }
         } }));
-        await page.goto(base + '/frontend/pages/detalhes-musica.html?id=9999', { waitUntil: 'domcontentloaded' });
+        await page.goto(base + '/frontend/pages/musica.html?id=9999', { waitUntil: 'domcontentloaded' });
         await page.locator('#musicName[data-song-id]').waitFor();
         assert.equal(await page.locator('#musicPlaycount').textContent(), '—');
         assert.equal(await page.locator('#lastFmLink').isVisible(), false);

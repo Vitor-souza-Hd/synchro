@@ -16,7 +16,8 @@ Execute na pasta do projeto com JDK 17 ou superior em `JAVA_HOME`:
 ```
 
 O usuário padrão é `jinka070`. Para outro usuário: `./import-lastfm.ps1 -Username nome`.
-A chave já configurada em `application.properties` é usada; `LASTFM_API_KEY` permite substituí-la sem editar arquivos.
+Defina a variável de ambiente `LASTFM_API_KEY` antes de importar. Para conectar contas no Synchro, configure também `LASTFM_SHARED_SECRET`.
+Em desenvolvimento local, o Spring também lê o arquivo `.lastfm.local.properties` na raiz do projeto, ignorado pelo Git. Use `synchro.local.lastfm.api-key` e `synchro.local.lastfm.shared-secret`. As variáveis de ambiente têm prioridade.
 
 O comando busca todas as páginas de `user.getRecentTracks`, com 200 registros por página e `extended=1`.
 Cria/reutiliza `Artista`, `Album` e `Musica` pelo nome/título, ignorando maiúsculas e espaços nas pontas.

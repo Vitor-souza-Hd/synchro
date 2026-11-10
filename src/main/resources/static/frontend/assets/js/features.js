@@ -100,20 +100,97 @@
         document.body.prepend(nav);
         const destinations = new Map([['explorar',base+'explorar.html'],['recentes',base+'recentes.html'],['favoritos',base+'favoritos.html'],['avaliações',base+'perfil.html#minhas-avaliacoes'],['suas playlists',base+'playlists.html'],['criar uma nova',base+'playlists.html']]);
         document.querySelectorAll('.sidebar a').forEach(a=>{if(a.hasAttribute('data-create-playlist'))return;const href=destinations.get(a.textContent.trim().toLowerCase());if(href)a.href=href;});
-        // Existing catalog links retain their IDs. Rich pages receive artist/title parameters.
-        const type=document.body.dataset.mediaType;
-        const id=new URLSearchParams(location.search).get('id');
-        if(type === 'album' && id){
-            const a=document.createElement('a');a.className='feature-detail-link';a.textContent='Ver avaliações, favoritos e detalhes';
-            const container=document.querySelector('#catalogContent'); container?.append(a);
-            a.href=base+'detalhes-album.html?id='+encodeURIComponent(id);
-        }
         document.addEventListener('synchro:own-profile', () => {
-            const profile=document.querySelector('.playlist');
-            if(profile)fetch('/playlists/me',{credentials:'same-origin'}).then(r=>r.ok?r.json():Promise.reject()).then(items=>{
-                profile.replaceChildren();for(const item of items){const a=document.createElement('a');a.className='feature-detail-link';a.href=base+'playlists.html?id='+encodeURIComponent(item.id);a.textContent=item.titulo;profile.append(a);}
-                const library=document.createElement('a');library.className='feature-detail-link';library.href=base+'playlists.html';library.textContent=items.length?'Gerenciar playlists':'Criar minha primeira playlist';profile.append(library);
-            }).catch(()=>{});
+            const grid = document.querySelector('.user-playlist .playlist');
+            if (!grid) return;
+
+            const playlistPage = base + 'playlists.html';
+            const status = document.createElement('p');
+            status.className = 'profile-empty';
+            status.setAttribute('role', 'status');
+
+            function playlistImage(value, className, fallback) {
+                const image = document.createElement('img');
+                image.className = className;
+                image.alt = '';
+                image.loading = 'lazy';
+
+                let src;
+                if (typeof value === 'string' && value.trim()) {
+                    if (/^data:image\/(png|jpeg|webp|gif);base64,/i.test(value)) {
+                        src = value;
+                    } else {
+                        try {
+                            const url = new URL(value, location.href);
+                            if (['http:', 'https:'].includes(url.protocol)) src = url.href;
+                        } catch { /* An invalid URL uses the fallback. */ }
+                    }
+                }
+
+                image.hidden = !src && !fallback;
+                if (!image.hidden) {
+                    image.addEventListener('error', () => {
+                        if (fallback && image.getAttribute('src') !== fallback) image.src = fallback;
+                        else image.hidden = true;
+                    });
+                    image.src = src || fallback;
+                }
+                return image;
+            }
+
+            function playlistLink(playlist) {
+                const link = document.createElement('a');
+                link.className = 'feature-detail-link playlist-card';
+                link.href = `${playlistPage}?id=${encodeURIComponent(playlist.id)}`;
+
+                const title = document.createElement('h3');
+                title.textContent = playlist.titulo || 'Playlist sem título';
+
+                const artwork = document.createElement('div');
+                artwork.className = 'profile-playlist-artwork';
+                artwork.append(
+                    playlistImage(playlist.banner, 'profile-playlist-banner'),
+                    playlistImage(playlist.capa, 'profile-playlist-cover', '/frontend/assets/images/catalog-placeholder.svg')
+                );
+                link.append(artwork, title);
+                return link;
+            }
+
+            let activeRequest;
+
+            async function loadPlaylists() {
+                activeRequest?.abort();
+                const request = new AbortController();
+                activeRequest = request;
+                status.textContent = 'Carregando suas playlists…';
+                grid.prepend(status);
+
+                try {
+                    const response = await fetch('/playlists/me/summary', {
+                        credentials: 'same-origin',
+                        cache: 'no-store',
+                        headers: { Accept: 'application/json' },
+                        signal: request.signal
+                    });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const playlists = await response.json();
+                    if (request.signal.aborted) return;
+                    if (!Array.isArray(playlists)) throw new Error('Lista de playlists inválida');
+
+                    const links = playlists.map(playlistLink);
+                    grid.replaceChildren(...links);
+                    if (!links.length) {
+                        status.textContent = 'Você ainda não tem playlists.';
+                        grid.prepend(status);
+                    }
+                } catch {
+                    if (request.signal.aborted) return;
+                    status.textContent = 'Não foi possível carregar suas playlists. Abra a biblioteca para tentar novamente.';
+                }
+            }
+
+            document.addEventListener('playlist-saved', loadPlaylists);
+            loadPlaylists();
         }, { once: true });
     });
 })();

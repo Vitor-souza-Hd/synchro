@@ -146,14 +146,18 @@ function mediaLink(href, name, className) {
 
 function renderCatalogTracks(tracks) {
     const container = document.getElementById('tracks'); container.replaceChildren();
-    tracks.forEach((track, index) => container.append(mediaLink('detalhes-musica.html?id=' + encodeURIComponent(track.id),
+    tracks.forEach((track, index) => container.append(mediaLink('musica.html?id=' + encodeURIComponent(track.id),
         `${String(index + 1).padStart(2, '0')} · ${track.titulo}`, 'track catalog-link')));
     if (!tracks.length) container.textContent = 'Nenhuma música cadastrada para este artista.';
 }
 
 function albumCard(href, title, image) {
     const link = document.createElement('a'); link.href = href; link.className = 'album-card catalog-link';
-    const cover = document.createElement('img'); cover.src = usablePhoto(image) ? image : '../assets/images/catalog-placeholder.svg'; cover.alt = 'Capa de ' + title;
+    const cover = document.createElement('img');
+    cover.loading = 'lazy';
+    cover.decoding = 'async';
+    cover.alt = 'Capa de ' + title;
+    cover.src = usablePhoto(image) ? image : '../assets/images/catalog-placeholder.svg';
     cover.onerror = () => { cover.onerror = null; cover.src = '../assets/images/catalog-placeholder.svg'; };
     const name = document.createElement('h3'); name.textContent = title;
     link.append(cover, name); return link;
@@ -185,7 +189,7 @@ function loadPopularArtistData() {
             const key = track.name.trim().toLowerCase(); if (seen.has(key)) return false; seen.add(key); return true;
         }).slice(0, 10).forEach((track, index) => {
             const name = typeof track.artist === 'string' ? track.artist : track.artist?.name || artistName;
-            container.append(mediaLink('detalhes-musica.html?' + new URLSearchParams({track: track.name, artist: name}),
+            container.append(mediaLink('musica.html?' + new URLSearchParams({track: track.name, artist: name}),
                 `${String(index + 1).padStart(2, '0')} · ${track.name}`, 'track catalog-link'));
         });
         document.getElementById('artistTopTracksSection').hidden = container.childElementCount === 0;

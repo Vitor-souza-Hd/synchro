@@ -26,7 +26,7 @@ const { chromium } = require('playwright');
             if (url.pathname === '/catalog/songs/42') return route.fulfill({ json: {
                 id: 42, titulo: 'Música de teste', artistas: [], lastFm: {}, genero: '', duracao: 'PT3M'
             } });
-            if (url.pathname === '/playlists/me') return route.fulfill({ status: listStatus, json: playlists });
+            if (url.pathname === '/playlists/me/summary') return route.fulfill({ status: listStatus, json: playlists });
             if (/^\/playlists\/\d+\/midias\/42$/.test(url.pathname)) {
                 saves.push({ method: route.request().method(), path: url.pathname });
                 await new Promise(resolve => setTimeout(resolve, 150));

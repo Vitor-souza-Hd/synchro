@@ -78,7 +78,35 @@ class PlaylistEditingTests {
             assertEquals("Atualizada", saved.get("titulo").asText());
             assertEquals(image, saved.get("capa").asText());
             assertEquals(image, saved.get("banner").asText());
+            var summary = client.send(HttpRequest.newBuilder(URI.create(base + "/playlists/me/summary"))
+                    .header("Cookie", "token_jwt=test-session").build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, summary.statusCode(), summary.body());
+            assertTrue(summary.body().length() < 1000, "The listing must not include the multi-megabyte images");
+            var card = mapper.readTree(summary.body()).get(0);
+            String cover = "/playlists/me/" + id + "/artwork/cover";
+            assertEquals(cover, card.get("capa").asText());
+            assertEquals(0, card.get("totalMusicas").asInt());
+            assertFalse(card.has("musicas"));
+
+            var detail = client.send(HttpRequest.newBuilder(URI.create(base + "/playlists/me/" + id))
+                    .header("Cookie", "token_jwt=test-session").build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, detail.statusCode());
+            assertEquals(cover, mapper.readTree(detail.body()).get("capa").asText());
+            var coverRequest = HttpRequest.newBuilder(URI.create(base + cover));
+            var artwork = client.send(coverRequest.copy().header("Cookie", "token_jwt=test-session").build(),
+                    HttpResponse.BodyHandlers.ofByteArray());
+            assertEquals(200, artwork.statusCode());
+            assertEquals("image/gif", artwork.headers().firstValue("Content-Type").orElseThrow());
+            assertEquals(2796204 / 4 * 3, artwork.body().length);
+            String etag = artwork.headers().firstValue("ETag").orElseThrow();
+            assertEquals(304, client.send(coverRequest.copy().header("Cookie", "token_jwt=test-session")
+                    .header("If-None-Match", etag).build(), HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertEquals(401, client.send(coverRequest.copy().build(), HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertEquals(404, client.send(coverRequest.copy().header("Cookie", "token_jwt=other-session")
+                    .header("If-None-Match", etag).build(), HttpResponse.BodyHandlers.discarding()).statusCode());
             app.getBean(PlaylistService.class).addUserToPlaylist("test-session", id, other.getId());
+            assertEquals(200, client.send(coverRequest.copy().header("Cookie", "token_jwt=other-session").build(),
+                    HttpResponse.BodyHandlers.discarding()).statusCode());
             var sharedUpdate = client.send(HttpRequest.newBuilder(URI.create(base + "/playlists/update-playlist/" + id))
                     .header("Cookie", "token_jwt=other-session").header("Content-Type", "application/json")
                     .PUT(HttpRequest.BodyPublishers.ofString("{\"titulo\":\"Editada por colaborador\"}"))

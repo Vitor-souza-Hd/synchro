@@ -59,9 +59,13 @@
         const artwork = document.createElement('div');
         artwork.className = 'playlist-library-artwork';
         const banner = document.createElement('img');
+        banner.loading = 'lazy';
+        banner.decoding = 'async';
         banner.className = 'playlist-card-banner';
         banner.alt = '';
         const cover = document.createElement('img');
+        cover.loading = 'lazy';
+        cover.decoding = 'async';
         cover.className = 'playlist-card-cover';
         cover.alt = '';
         setImage(banner, playlist.banner);
@@ -70,7 +74,7 @@
         const title = document.createElement('h2');
         title.textContent = playlist.titulo;
         const meta = document.createElement('p');
-        meta.textContent = `${playlist.musicas?.length || 0} música(s) · ${playlist.criador?.username || 'Usuário'}`;
+        meta.textContent = `${playlist.totalMusicas ?? 0} música(s) · ${playlist.criador?.username || 'Usuário'}`;
         link.append(artwork, title, meta);
         return link;
     }
@@ -100,7 +104,7 @@
         songs.forEach((song, index) => {
             const row = document.createElement('a');
             row.className = 'playlist-track';
-            row.href = `detalhes-musica.html?id=${encodeURIComponent(song.id)}`;
+            row.href = `musica.html?id=${encodeURIComponent(song.id)}`;
             const number = document.createElement('span');
             number.className = 'playlist-track-number';
             number.textContent = String(index + 1).padStart(2, '0');
@@ -138,7 +142,8 @@
             return;
         }
         try {
-            const response = await fetch('/playlists/me', {
+            const endpoint = id ? '/playlists/me/' + encodeURIComponent(id) : '/playlists/me/summary';
+            const response = await fetch(endpoint, {
                 credentials: 'same-origin', cache: 'no-store',
                 headers: { Accept: 'application/json' }, signal: request.signal
             });
@@ -147,25 +152,24 @@
                 login.hidden = false;
                 throw new Error('Entre na sua conta para ver suas playlists.');
             }
+            if (id && response.status === 404) {
+                detail.hidden = true;
+                status.textContent = 'Playlist não encontrada ou você não participa dela.';
+                return;
+            }
             if (!response.ok) throw new Error('Não foi possível carregar suas playlists. Tente novamente.');
-            const playlists = await response.json();
+            const data = await response.json();
             if (request.signal.aborted) return;
-            if (!Array.isArray(playlists)) throw new Error('Não foi possível carregar suas playlists. Tente novamente.');
             grid.replaceChildren();
             if (id) {
-                const playlist = playlists.find(item => String(item.id) === id);
-                if (!playlist) {
-                    library.hidden = true;
-                    detail.hidden = true;
-                    status.textContent = 'Playlist não encontrada ou você não participa dela.';
-                    return;
-                }
-                renderDetail(playlist);
-            } else {
-                playlists.forEach(playlist => grid.append(card(playlist)));
-                document.getElementById('playlistLibraryCount').textContent = `${playlists.length} playlist(s) na sua biblioteca`;
+                renderDetail(data);
+                status.textContent = '';
+                return;
             }
-            status.textContent = !id && !playlists.length ? 'Você ainda não participa de nenhuma playlist. Use “Criar playlist” para começar.' : '';
+            if (!Array.isArray(data)) throw new Error('Não foi possível carregar suas playlists. Tente novamente.');
+            data.forEach(playlist => grid.append(card(playlist)));
+            document.getElementById('playlistLibraryCount').textContent = `${data.length} playlist(s) na sua biblioteca`;
+            status.textContent = data.length ? '' : 'Você ainda não participa de nenhuma playlist. Use “Criar playlist” para começar.';
         } catch (error) {
             if (request.signal.aborted) return;
             detail.hidden = true;

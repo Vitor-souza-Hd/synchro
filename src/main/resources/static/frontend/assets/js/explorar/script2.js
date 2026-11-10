@@ -6,27 +6,27 @@ document.addEventListener("DOMContentLoaded", () => {
     // (O artistsData foi removido, agora puxamos do banco/Last.fm)
 
     const albumsData = [
-        { name: "Debí Tirar Más Fotos", artist: "Bad Bunny", image: "/frontend/assets/images/DebíTirarMásFotos.png", link: "https://open.spotify.com/intl-pt/track/3sK8wGT43QFpWrvNQsrQya?si=68653d6088a04bec" },
-        { name: "Mayhem", artist: "Lady Gaga", image: "/frontend/assets/images/mayhem.jpg", link: "https://open.spotify.com/intl-pt/album/2MHUaRi9OCyTN02SoyRRBJ?si=2182527c0b6240ca" },
+        { name: "Debí Tirar Más Fotos", artist: "Bad Bunny", image: "/frontend/assets/images/cards/DebíTirarMásFotos.webp", link: "https://open.spotify.com/intl-pt/track/3sK8wGT43QFpWrvNQsrQya?si=68653d6088a04bec" },
+        { name: "Mayhem", artist: "Lady Gaga", image: "/frontend/assets/images/cards/mayhem.webp", link: "https://open.spotify.com/intl-pt/album/2MHUaRi9OCyTN02SoyRRBJ?si=2182527c0b6240ca" },
         { name: "Lux", artist: "Rosalía", image: "/frontend/assets/images/lux.jpg", link: "https://open.spotify.com/intl-pt/album/3SUEJULSGgBDG1j4GQhfYY?si=cd1274117d6848c1" },
-        { name: "Getting Killed", artist: "Geese", image: "/frontend/assets/images/gettingkilled.jpg", link: "https://open.spotify.com/intl-pt/album/0eeXb23yMW6EaIgm63xxPC?si=26e487624a95463d" },
-        { name: "Starboy", artist: "The Weeknd", image: "/frontend/assets/images/starboy.png", link: "https://open.spotify.com/intl-pt/album/2ODvWsOgouMbaA5xf0RkJe?si=rlFEEWMEQnG4dz2sIhWL1g" },
-        { name: "Bleeds", artist: "Wednesday", image: "/frontend/assets/images/bleeds.png" }
+        { name: "Getting Killed", artist: "Geese", image: "/frontend/assets/images/cards/gettingkilled.webp", link: "https://open.spotify.com/intl-pt/album/0eeXb23yMW6EaIgm63xxPC?si=26e487624a95463d" },
+        { name: "Starboy", artist: "The Weeknd", image: "/frontend/assets/images/cards/starboy.webp", link: "https://open.spotify.com/intl-pt/album/2ODvWsOgouMbaA5xf0RkJe?si=rlFEEWMEQnG4dz2sIhWL1g" },
+        { name: "Bleeds", artist: "Wednesday", image: "/frontend/assets/images/cards/bleeds.webp" }
     ];
 
     const genresData = [
-        { name: "POP", image: "/frontend/assets/images/michael.jpg", link: "https://open.spotify.com/playlist/37i9dQZF1DX6aTaZa0K6VA?si=9a3f83c6bf56418e" },
-        { name: "MPB", image: "/frontend/assets/images/djavan.jpg", link: "https://open.spotify.com/playlist/37i9dQZF1DWZlBWh8A1Ygd?si=d4d90b4ba68b4a50" },
+        { name: "POP", image: "/frontend/assets/images/cards/michael.webp", link: "https://open.spotify.com/playlist/37i9dQZF1DX6aTaZa0K6VA?si=9a3f83c6bf56418e" },
+        { name: "MPB", image: "/frontend/assets/images/cards/djavan.webp", link: "https://open.spotify.com/playlist/37i9dQZF1DWZlBWh8A1Ygd?si=d4d90b4ba68b4a50" },
         { name: "FUNK", image: "/frontend/assets/images/funk.jpg", link: "https://open.spotify.com/playlist/37i9dQZF1DWTkIwO2HDifB?si=70f49f1ffd354005" },
-        { name: "ROCK", image: "/frontend/assets/images/queen.jpg", link: "https://open.spotify.com/playlist/37i9dQZF1DXcmaoFmN75bi?si=59cadc7d77c84749" },
-        { name: "RAP", image: "/frontend/assets/images/tupac.jpg", link: "https://open.spotify.com/playlist/37i9dQZF1DX186v583rmzp?si=fa1f1c99a2fd4f91" }
+        { name: "ROCK", image: "/frontend/assets/images/cards/queen.webp", link: "https://open.spotify.com/playlist/37i9dQZF1DXcmaoFmN75bi?si=59cadc7d77c84749" },
+        { name: "RAP", image: "/frontend/assets/images/cards/tupac.webp", link: "https://open.spotify.com/playlist/37i9dQZF1DX186v583rmzp?si=fa1f1c99a2fd4f91" }
     ];
 
     const reviewsData = [
         {
             user: "silverzenith",
-            userphoto: "/frontend/assets/images/user/users/silverzenith.png",
-            album: "/frontend/assets/images/user/tcfsr.png",
+            userphoto: "/frontend/assets/images/cards/user/users/silverzenith.webp",
+            album: "/frontend/assets/images/cards/user/tcfsr.webp",
             albumname: "Three Cheers for Sweet Revenge",
             artist: "My Chemical Romance",
             review: '"Um dos melhores álbuns conceituais da história, com certeza daria um bom filme"',
@@ -34,8 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             user: "disintelia",
-            userphoto: "/frontend/assets/images/user/users/disintelia.png",
-            album: "/frontend/assets/images/user/pornography.png",
+            userphoto: "/frontend/assets/images/cards/user/users/disintelia.webp",
+            album: "/frontend/assets/images/cards/user/pornography.webp",
             albumname: "Pornography",
             artist: "The Cure",
             review: '"Esse álbum tem uma atmosfera melancólica e fria tão perfeita e, apesar disso, consegue passar uma sensação tão aconchegante. Definitivamente supera o Disintegrated e é o melhor da discografia do The cure."',
@@ -43,8 +43,8 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             user: "jinka070",
-            userphoto: "/frontend/assets/images/user/users/jinka070.png",
-            album: "/frontend/assets/images/user/biohazard.png",
+            userphoto: "/frontend/assets/images/cards/user/users/jinka070.webp",
+            album: "/frontend/assets/images/cards/user/biohazard.webp",
             albumname: "BIOHAZARD",
             artist: "Trash Poll",
             review: '"somente a nata do nu metal brasileiro"',
@@ -52,8 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             user: "Tavio_OoO",
-            userphoto: "/frontend/assets/images/user/users/Tavio_OoO.png",
-            album: "/frontend/assets/images/user/bythewater.png",
+            userphoto: "/frontend/assets/images/cards/user/users/Tavio_OoO.webp",
+            album: "/frontend/assets/images/cards/user/bythewater.webp",
             albumname: "By The Water",
             artist: "Sondae",
             review: '"Ao contrário da maior parte dos álbuns cristãos que já ouvi, este apresenta um grande foco na musicalidade e sonoridade e não somente ao louvor, e só nisso já me ganhou, mas além disso, o conteúdo introspectivo retrata muito mais uma maior conexão com Jesus Cristo que religiosidade, tornando esse álbum uma joia rara em meio a tantos outros"',
@@ -61,8 +61,8 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             user: "Saii0710",
-            userphoto: "/frontend/assets/images/user/users/Saii0710.png",
-            album: "/frontend/assets/images/user/SSPSG.png",
+            userphoto: "/frontend/assets/images/cards/user/users/Saii0710.webp",
+            album: "/frontend/assets/images/cards/user/SSPSG.webp",
             albumname: "SE SONHOS PUDESSEM SER GUARDADOS",
             artist: "myseryswin",
             review: '"O álbum mostra o refinamento de Swin em comparação com seus projetos anteriores. Melhor música: feiticeiro(eu merecia essa dança tanto assim?)"',
@@ -70,8 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             user: "Alz7",
-            userphoto: "/frontend/assets/images/user/users/Alz7.png",
-            album: "/frontend/assets/images/user/sonofspergy.png",
+            userphoto: "/frontend/assets/images/cards/user/users/Alz7.webp",
+            album: "/frontend/assets/images/cards/user/sonofspergy.webp",
             albumname: "Son Of Spergy",
             artist: "Daniel Caesar",
             review: '" é o último álbum lançado de Daniel Caesar. Sendo um álbum que Daniel foca em contar a jornada de amadurecimento, fé e reconciliação. O álbum explora o peso dessa herança religiosa e familiar, abordando temas como masculinidade, erros do passado e a busca por perdão. O ritmo do projeto é intencionalmente lento, apostando em produções atmosféricas e vocais crus usando muito os corais gospels. Sendo um retrato honesto de um artista aprendendo a lidar com suas próprias fraquezas."',
@@ -104,9 +104,10 @@ document.addEventListener("DOMContentLoaded", () => {
             image.onerror = fallback;
             if (!Number.isSafeInteger(Number(artist.id)) || Number(artist.id) <= 0) return;
             const url = '/catalog/artists/' + encodeURIComponent(artist.id) + '/photo' + (refresh ? '?refresh=true' : '');
+            if (image.isConnected === false) return;
             if (!photoRequests.has(url)) photoRequests.set(url, fetch(url, {headers: {Accept: 'application/json'}})
                 .then(response => response.ok ? response.json() : null).catch(() => null));
-            photoRequests.get(url).then(photo => {
+            return photoRequests.get(url).then(photo => {
                 if (image.isConnected === false) return;
                 if (photo?.status === 'found' && usablePhoto(photo.imgUrl)) {
                     artist.imgUrl = photo.imgUrl;
@@ -116,7 +117,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         image.onerror = () => { fallback(); lookup(true); };
         image.src = usablePhoto(artist.imgUrl) ? artist.imgUrl : artistPlaceholder;
-        if (!usablePhoto(artist.imgUrl)) lookup();
+        if (!usablePhoto(artist.imgUrl)) {
+            const scheduler = window.SynchroImageVisibility;
+            if (scheduler) scheduler.whenNear(image, lookup);
+            else lookup();
+        }
     }
 
     // =========================================================
@@ -207,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             albumCard.innerHTML = `
                 <a href="${album.link || "#"}" target="_blank">
-                    <img src="${album.image}" alt="Imagem de ${album.name}">
+                    <img loading="lazy" decoding="async" src="${album.image}" alt="Imagem de ${album.name}">
                     <div>
                         <h3>${album.name}</h3>
                         <p>${album.artist}</p>
@@ -230,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             genreCard.innerHTML = `
                 <a href="${genre.link || "#"}" target="_blank">
-                    <img src="${genre.image}" alt="Imagem de ${genre.name}">
+                    <img loading="lazy" decoding="async" src="${genre.image}" alt="Imagem de ${genre.name}">
                     <div>
                         <h3>${genre.name}</h3>
                     </div>
@@ -252,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             reviewsCard.innerHTML = `
                 <div class="review-header">
-                    <img class="album-cover" src="${review.album}" alt="Imagem de ${review.albumname}">
+                    <img loading="lazy" decoding="async" class="album-cover" src="${review.album}" alt="Imagem de ${review.albumname}">
                     <div class="review-info">
                         <h3>${review.albumname}</h3>
                         <h5>${review.artist}</h5>
@@ -265,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <p class="review-text">${review.review}</p>
 
                 <div class="review-user">
-                    <img class="user-avatar" src="${review.userphoto}" alt="Imagem de ${review.user}">
+                    <img loading="lazy" decoding="async" class="user-avatar" src="${review.userphoto}" alt="Imagem de ${review.user}">
                     <span>${review.user}</span>
                 </div>
             `;

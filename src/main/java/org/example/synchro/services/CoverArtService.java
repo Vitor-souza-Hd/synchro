@@ -122,21 +122,8 @@ public class CoverArtService {
                         () -> buscarCapaSemCache(releaseGroupId)
                 )
                 .timeout(lookupTimeout)
-                .cache(
-                        resultado -> {
-
-                            if ("found".equals(
-                                    resultado.get("status")
-                            )) {
-                                return CACHE_CAPA_ENCONTRADA;
-                            }
-
-                            return CACHE_CAPA_NAO_ENCONTRADA;
-                        },
-                        // Falhas reais nao permanecem no cache.
-                        erro -> Duration.ZERO,
-                        () -> Duration.ZERO
-                );
+                .cacheInvalidateWhen(result -> Mono.delay("found".equals(result.get("status"))
+                        ? CACHE_CAPA_ENCONTRADA : CACHE_CAPA_NAO_ENCONTRADA).then());
     }
 
     // =========================================

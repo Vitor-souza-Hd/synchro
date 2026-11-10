@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             link.className = "album-explore-track";
 
             const url = new URL(
-                "/frontend/pages/detalhes-musica.html",
+                "/frontend/pages/musica.html",
                 location.href
             );
 

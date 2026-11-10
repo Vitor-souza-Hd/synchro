@@ -1,12 +1,5 @@
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("synchro:album", async ({detail: {id: albumId}}) => {
     const escapeHtml = window.SynchroFeatures.escapeHtml;
-    const params = new URLSearchParams(location.search);
-    const albumId = params.get("id");
-
-    const albumNameEl = document.getElementById("albumName");
-    const albumArtistEl = document.getElementById("albumArtist");
-    const trackListEl = document.getElementById("trackList");
-
     const status = document.getElementById("albumReviewStatus");
     const average = document.getElementById("albumReviewAverage");
     const rating = document.getElementById("albumReviewRating");
@@ -45,34 +38,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!response.ok) throw new Error("HTTP " + response.status);
         if (response.status === 204) return null;
         return response.json();
-    }
-
-    try {
-        const album = await requestJson(`/album/id/${albumId}`);
-        albumNameEl.textContent = album.titulo;
-        const artistas = album.artistas ? album.artistas.map(a => a.nome).join(', ') : 'Artista Desconhecido';
-        albumArtistEl.textContent = artistas;
-
-        trackListEl.innerHTML = '';
-        (album.musicas || []).forEach(musica => {
-            const query = musica.id ? new URLSearchParams({id: musica.id})
-                : new URLSearchParams({artist: artistas, track: musica.titulo});
-            const div = document.createElement('div');
-            div.style.cssText = 'display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid rgba(255,255,255,0.1);';
-            div.innerHTML = `
-                <div>
-                    <h3 style="color:white;">${escapeHtml(musica.titulo)}</h3>
-                    <p style="color:#b3b3b3; font-size:12px;">${escapeHtml(musica.duracao || '')}</p>
-                </div>
-                <a href="/frontend/pages/detalhes-musica.html?${escapeHtml(query.toString())}" style="color:#1db954;">
-                    Ver Música <i class="bx bx-right-arrow-alt"></i>
-                </a>
-            `;
-            trackListEl.appendChild(div);
-        });
-    } catch (error) {
-        albumNameEl.textContent = "Erro ao carregar álbum";
-        return;
     }
 
     try {
@@ -209,5 +174,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     status.textContent = "";
-    await Promise.all([loadReviews(), loadAverage()]);
-});
+    try {
+        await Promise.all([loadReviews(), loadAverage()]);
+    } catch {
+        status.textContent = "Não foi possível carregar as avaliações.";
+    }
+}, {once: true});

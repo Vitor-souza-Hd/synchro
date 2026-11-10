@@ -137,7 +137,7 @@ document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
     }
 
     function trackLink(artist, track) {
-        return '/frontend/pages/detalhes-musica.html?artist=' +
+        return '/frontend/pages/musica.html?artist=' +
             encodeURIComponent(artist) +
             '&track=' +
             encodeURIComponent(track);
@@ -260,9 +260,10 @@ document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
                 /^https:\/\//i.test(imageUrl)
             ) {
                 const image = document.createElement('img');
+                image.loading = 'lazy';
+                image.decoding = 'async';
                 image.src = imageUrl;
                 image.alt = 'Foto de ' + item.name;
-                image.loading = 'lazy';
 
                 link.appendChild(image);
             }

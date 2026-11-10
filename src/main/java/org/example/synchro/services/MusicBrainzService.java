@@ -221,13 +221,7 @@ public class MusicBrainzService {
                         )
 
                         .timeout(lookupTimeout)
-                        .cache(
-                                json -> respostaVazia(json)
-                                        ? CACHE_VAZIO
-                                        : CACHE_POSITIVO,
-                                erro -> Duration.ZERO,
-                                () -> Duration.ZERO
-                        )
+                        .cacheInvalidateWhen(json -> Mono.delay(respostaVazia(json) ? CACHE_VAZIO : CACHE_POSITIVO).then())
         );
     }
 

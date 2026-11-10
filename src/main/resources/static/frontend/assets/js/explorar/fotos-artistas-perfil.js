@@ -337,7 +337,7 @@ document.addEventListener("synchro:own-profile", () => {
             const currentImg = img;
 
             function lookupPhoto(refresh = false) {
-                findPhoto(name, refresh).then(url => {
+                return findPhoto(name, refresh).then(url => {
 
                 if (!currentImg.isConnected) return;
 
@@ -366,7 +366,9 @@ document.addEventListener("synchro:own-profile", () => {
                 if (currentImg.complete && currentImg.naturalWidth === 0) currentImg.onerror();
             } else {
                 currentImg.src = placeholder;
-                lookupPhoto();
+                const scheduler = window.SynchroImageVisibility;
+                if (scheduler) scheduler.whenNear(currentImg, lookupPhoto);
+                else lookupPhoto();
             }
         });
     }

@@ -70,7 +70,7 @@
             function render(data) {
                 const groups = [
                     ['Músicas', data.songs, item => item.titulo,
-                        item => [item.lastFm?.artistName || item.artistas?.map(artist => artist.nome).join(', '), item.album?.titulo].filter(Boolean).join(' · '), 'detalhes-musica'],
+                        item => [item.lastFm?.artistName || item.artistas?.map(artist => artist.nome).join(', '), item.album?.titulo].filter(Boolean).join(' · '), 'musica'],
                     ['Artistas', data.artists, item => item.nome, () => 'Artista', 'artista'],
                     ['Álbuns', data.albums, item => item.titulo,
                         item => item.lastFm?.artistName || item.artistas?.map(artist => artist.nome).join(', ') || 'Álbum', 'album'],

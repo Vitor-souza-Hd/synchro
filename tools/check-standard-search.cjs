@@ -68,7 +68,7 @@ const flatten = node => [node, ...node.children.flatMap(flatten)];
     assert.deepEqual(flatten(panel).filter(node => node.tag === 'h3').map(node => node.textContent),
         ['Músicas (1)', 'Artistas (1)', 'Álbuns (1)', 'Usuários (1)']);
     assert.deepEqual(flatten(panel).filter(node => node.tag === 'a').map(node => node.href), [
-        '/frontend/pages/detalhes-musica.html?id=1', '/frontend/pages/artista.html?id=2',
+        '/frontend/pages/musica.html?id=1', '/frontend/pages/artista.html?id=2',
         '/frontend/pages/album.html?id=3', '/frontend/pages/perfil.html?user=4']);
     input.listeners.keydown({key: 'Escape'}); assert.equal(panel.hidden, true);
     input.value = 'artist'; button.listeners.click(); await tick();

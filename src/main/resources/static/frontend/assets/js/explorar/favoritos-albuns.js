@@ -7,190 +7,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!grid || !feedback || !counter) return;
 
-    const coverCache = new Map();
-
-// Cache de URLs de capas durante a sessao.
-    const COVER_CACHE_PREFIX = "synchro:album-cover:";
-
-    function readSavedCover(releaseGroupId) {
-
-        try {
-            const key =
-                COVER_CACHE_PREFIX + releaseGroupId;
-
-            const saved = sessionStorage.getItem(key);
-
-            if (!saved) return null;
-
-            const data = JSON.parse(saved);
-
-            // Atualiza o endereço depois de 24 horas.
-            const maxAge = 24 * 60 * 60 * 1000;
-
-            if (
-                Date.now() - data.savedAt > maxAge ||
-                !validCoverUrl(data.url)
-            ) {
-                sessionStorage.removeItem(key);
-                return null;
-            }
-
-            return data.url;
-
-        } catch {
-            return null;
-        }
-    }
-
-    function saveCover(releaseGroupId, url) {
-
-        if (!validCoverUrl(url)) return;
-
-        try {
-            sessionStorage.setItem(
-                COVER_CACHE_PREFIX + releaseGroupId,
-                JSON.stringify({
-                    url,
-                    savedAt: Date.now()
-                })
-            );
-        } catch {
-            // Cache opcional: nao impede a capa.
-        }
-    }
-
-
     function showMessage(text) {
         feedback.textContent = text;
         feedback.hidden = false;
     }
-
-    function validCoverUrl(value) {
-        try {
-            const url = new URL(value);
-
-            return url.protocol === "https:" &&
-                (
-                    url.hostname === "coverartarchive.org" ||
-                    url.hostname === "archive.org" ||
-                    url.hostname.endsWith(".archive.org")
-                );
-        } catch {
-            return false;
-        }
-    }
-
-    // =====================================
-    // CONSULTAR CAPA PELO MUSICBRAINZ ID
-    // =====================================
-
-    async function findCover(releaseGroupId) {
-        const savedUrl = readSavedCover(releaseGroupId);
-
-        if (savedUrl) {
-            return savedUrl;
-        }
-
-        if (coverCache.has(releaseGroupId)) {
-            return coverCache.get(releaseGroupId);
-        }
-
-        const promise = (async () => {
-
-            const response = await fetch(
-                "/cover-art/release-group/" +
-                encodeURIComponent(releaseGroupId),
-                {
-                    credentials: "same-origin",
-                    headers: {
-                        Accept: "application/json"
-                    }
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(
-                    "Cover Art HTTP " + response.status
-                );
-            }
-
-            const data = await response.json();
-
-            // Verifica a URL diretamente, sem depender
-            // exclusivamente do campo "status".
-            if (validCoverUrl(data.coverUrl)) {
-
-                saveCover(releaseGroupId, data.coverUrl);
-
-                return data.coverUrl;
-            }
-
-            return null;
-
-        })().catch(error => {
-
-            console.warn(
-                "[Synchro] Capa de álbum indisponível:",
-                releaseGroupId,
-                error
-            );
-
-            return null;
-        });
-
-        coverCache.set(releaseGroupId, promise);
-
-        return promise;
-    }
-
-    // =====================================
-    // CARREGAR IMAGEM
-    // =====================================
-
-    async function loadCover(
-        cover,
-        releaseGroupId,
-        albumName
-    ) {
-
-        const imageUrl = await findCover(releaseGroupId);
-
-        if (!imageUrl || !cover.isConnected) return;
-
-        // Sem loading="lazy": a imagem começa
-        // a carregar antes de entrar no DOM.
-        const img = new Image();
-
-        img.className = "favorite-album-image";
-        img.alt = `Capa do álbum ${albumName}`;
-        img.decoding = "async";
-
-        img.onload = () => {
-
-            if (!cover.isConnected) return;
-
-            cover.replaceChildren(img);
-
-            console.log(
-                "[Synchro] Capa do álbum carregada:",
-                albumName
-            );
-        };
-
-        img.onerror = () => {
-            console.warn(
-                "[Synchro] Falha ao exibir capa:",
-                albumName
-            );
-        };
-
-        img.src = imageUrl;
-    }
-
-    // =====================================
-    // CRIAR CARTÃO DO ÁLBUM
-    // =====================================
-
 
     function renderAlbum(item) {
 
@@ -231,12 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const cover = document.createElement("div");
         cover.className = "favorite-album-cover";
 
-        const icon = document.createElement("i");
-        icon.className = "bx bx-album";
-
-        cover.appendChild(icon);
-
-        // INFORMACOES
         const info = document.createElement("div");
         info.className = "favorite-card-info";
 
@@ -258,12 +72,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         grid.appendChild(card);
 
-        // MANTEM O CARREGAMENTO DA CAPA REAL
-        loadCover(
-            cover,
-            item.releaseGroupId,
-            item.album
-        );
+        window.SynchroFavoriteImages.show(cover, {
+            kind: "album", title: item.album, artist: item.artist,
+            releaseGroupId: item.releaseGroupId,
+            className: "favorite-album-image", alt: `Capa do álbum ${item.album}`
+        });
     }
 
 

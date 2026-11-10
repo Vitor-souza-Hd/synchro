@@ -28,8 +28,9 @@ function environment(search) {
         getElementById: node, createElement: () => new Element(),
         querySelector: selector => selectors.get(selector) || null,
         querySelectorAll: selector => selectors.has(selector) ? [selectors.get(selector)] : [],
-        addEventListener: (name, fn) => { events[name] = fn; }};
-    const context = {document, URL, URLSearchParams, console,
+        addEventListener: (name, fn) => { events[name] = fn; },
+        dispatchEvent: event => events[event.type]?.(event)};
+    const context = {document, URL, URLSearchParams, console, CustomEvent,
         window: {location: {search, origin: 'http://synchro.test'}, SynchroFeatures: {bindFavorite() {}, escapeHtml: value => value}},
         DOMParser: class { parseFromString(value) { return {body: {textContent: value}, querySelectorAll: () => []}; } }};
     return {node, selectors, events, context};
@@ -154,7 +155,7 @@ async function checkUnifiedArtist(byName) {
     assert.equal(header.attrs['aria-busy'], 'false', 'Catalog content must not wait for popular lists');
     assert.equal(env.node('artistLastFmLink').href, 'https://www.last.fm/music/Test+Artist');
     assert.equal(env.node('artistStatistics').textContent, '7 ouvintes · 53 reproduções');
-    assert.equal(env.node('tracks').children[0].href, 'detalhes-musica.html?id=1');
+    assert.equal(env.node('tracks').children[0].href, 'musica.html?id=1');
     assert.equal(env.node('albums').children[0].href, 'album.html?id=2');
     assert.equal(env.node('artistImage').src, 'https://lastfm.freetls.fastly.net/gallery.jpg');
     popularTracks.resolve(json({toptracks: {track: [{name: 'Popular track'}, {name: 'Popular track'}]}}));

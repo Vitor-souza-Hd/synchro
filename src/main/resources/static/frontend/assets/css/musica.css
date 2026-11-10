@@ -2,9 +2,7 @@
 .song-page { color: #f5f5f5; }
 .song-page .container { grid-template-columns: 250px minmax(0, 1fr); gap: 16px; max-width: 1800px; }
 .song-page .container main { padding: 20px 28px 48px 20px; min-width: 0; }
-.song-page .container .sidebar { min-width: 0; justify-content: flex-start; gap: 0; padding: 24px 34px; }
-.song-page .sidebar .logo { margin-bottom: 40px; }
-.song-page .sidebar .menu { margin-bottom: 32px; }
+.song-page .container .sidebar { min-width: 0; }
 .song-page .container .sidebar .logo a, .song-page .container .sidebar .logo i { color: #3860ff; animation: none; }
 .song-page .search-bar { padding: 10px; margin-bottom: 32px; }
 .song-page .search-box { flex: 1; width: auto; min-width: 0; }

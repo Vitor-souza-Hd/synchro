@@ -60,9 +60,8 @@
         document.getElementById('catalogMeta').textContent = `${date} · ${data.musicas.length} música(s) no catálogo`;
         const tracks = document.getElementById('catalogTracks');
         tracks.replaceChildren();
-        document.getElementById('catalogTracksSection').hidden = false;
         data.musicas.forEach((song, index) => {
-            const row = link('detalhes-musica', song, '');
+            const row = link('musica', song, '');
             row.classList.add('track');
             const number = document.createElement('span');
             number.className = 'track-number';
@@ -103,7 +102,9 @@
                 headers: { Accept: 'application/json' }
             });
             if (!response.ok) throw new Error(response.status === 404 ? 'Registro não encontrado no catálogo.' : 'Não foi possível carregar os dados. Tente novamente.');
-            render(await response.json());
+            const data = await response.json();
+            render(data);
+            document.dispatchEvent(new CustomEvent("synchro:album", {detail: {id, album: data.album}}));
             // The saved album stays usable while optional metadata is refreshed.
             refreshAlbum();
         } catch (error) {

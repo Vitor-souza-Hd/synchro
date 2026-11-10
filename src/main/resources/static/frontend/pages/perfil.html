@@ -6,8 +6,8 @@
     <title>Meu perfil | Synchro</title>
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=20261106-sidebar-items-only-9">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=shared-sidebar-1">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=profile-sidebar-spacing-2">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-usuario.css?v=20261105-compact-profile-1">
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
     <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
@@ -15,7 +15,7 @@
     <script src="/frontend/assets/js/explorar/tema-global.js"></script>
 <link rel="stylesheet" href="/frontend/assets/css/auth.css">
 <link rel="stylesheet" href="/frontend/assets/css/features.css">
-<script src="/frontend/assets/js/features.js?v=20261105-catalog-interactions-1" defer></script>
+<script src="/frontend/assets/js/features.js?v=20261110-playlist-summary" defer></script>
 <script src="/frontend/assets/js/auth.js" defer></script>
 </head>
 <body class="synchro-usuario">
@@ -78,7 +78,7 @@
                 <div class="banner-content">
                     <div class="user" id="profileIdentity">
                         <div class="user-card">
-                            <img id="profileImage" src="../assets/images/user/userphoto.jpg" alt="Foto de perfil">
+                            <img id="profileImage" decoding="async" fetchpriority="high" src="../assets/images/user/userphoto.jpg" alt="Foto de perfil">
                             <h3 id="profileName"></h3>
                             <p id="profileUsername"></p>
                         </div>
@@ -204,8 +204,11 @@
             <div class="review" id="minhas-avaliacoes"><!-- Dados da conta Synchro, futuramente --></div>
         </section>
         <section class="user-playlist owner-only">
-            <h2>Playlists Criadas</h2>
-            <div class="playlist"><!-- Dados da conta Synchro, futuramente --></div>
+            <div class="profile-playlist-heading">
+                <h2>Playlists Criadas</h2>
+                <a class="profile-playlist-manage" href="/frontend/pages/playlists.html">Gerenciar playlists</a>
+            </div>
+            <div class="playlist"></div>
         </section>
         <div class="ranking-controls owner-only" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0;">
             <h2 style="margin:0;">Relatório Musical</h2>
@@ -247,11 +250,12 @@
 </div>
 
 <script src="/frontend/assets/js/user.js?v=20261105-profile-sidebar-8"></script>
-<script src="/frontend/assets/js/explorar/user3.js?v=20261105-unified-artist-1"></script>
+<script src="/frontend/assets/js/explorar/user3.js?v=20261110-fast-images"></script>
 <script src="/frontend/assets/js/search.js?v=20261105-single-search-1"></script>
 <script src="/frontend/assets/js/explorar/foto-perfil.js"></script>
 <script src="/frontend/assets/js/explorar/generos-perfil.js"></script>
 <script src="/frontend/assets/js/explorar/banner-perfil.js"></script>
-<script src="/frontend/assets/js/explorar/fotos-artistas-perfil.js?v=20261105-artist-photo-lastfm-1"></script>
+<script src="/frontend/assets/js/image-visibility.js"></script>
+<script src="/frontend/assets/js/explorar/fotos-artistas-perfil.js?v=20261110-fast-images"></script>
 </body>
 </html>

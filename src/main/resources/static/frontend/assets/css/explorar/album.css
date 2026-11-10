@@ -1,13 +1,4 @@
 
-.sidebar {
-    justify-content: flex-start !important;
-    padding-top: 40px;
-}
-.sidebar .logo {
-    margin-bottom: 50px;
-}
-
-
 #albumReviewRating,
 #albumReviewText {
     width: 100%;
@@ -157,4 +148,33 @@
 .rating-item.active .bar {
     background: #1db954;
     box-shadow: 0 0 8px #1db954;
+}
+#catalogTracks {
+    margin-top: 20px;
+}
+
+#catalogTracks .track {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+
+#catalogTracks .track:hover,
+#catalogTracks .track:focus-visible {
+    background: rgb(255 255 255 / 10%);
+}
+
+#catalogTracks .track-info {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#catalogTracks .track-info span {
+    display: block;
+    margin-top: 4px;
+    color: #b3b3b3;
+    font-size: 12px;
 }

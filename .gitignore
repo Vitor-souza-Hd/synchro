@@ -32,3 +32,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Last.fm credentials used only by this checkout
+/.lastfm.local.properties

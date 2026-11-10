@@ -4,6 +4,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.dto.PlaylistDto;
 import org.example.synchro.dto.PlaylistRequestDto;
+import org.example.synchro.dto.PlaylistSummaryDto;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import java.util.List;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import org.example.synchro.services.PlaylistService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +29,41 @@ public class PlaylistResource {
             @CookieValue(name = "token_jwt", required = false) String cookie) {
         return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore())
                 .body(playlistService.findMyPlaylists(cookie));
+    }
+
+
+    @GetMapping("/me/summary")
+    public ResponseEntity<List<PlaylistSummaryDto>> findMyPlaylistSummaries(
+            @CookieValue(name = "token_jwt", required = false) String cookie) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(playlistService.findMyPlaylistSummaries(cookie));
+    }
+
+    @GetMapping("/me/{id}")
+    public ResponseEntity<PlaylistDto> findMyPlaylist(
+            @CookieValue(name = "token_jwt", required = false) String cookie, @PathVariable long id) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(playlistService.findMyPlaylist(cookie, id));
+    }
+
+    @GetMapping("/me/{id}/artwork/{kind}")
+    public ResponseEntity<byte[]> findMyPlaylistArtwork(
+            @CookieValue(name = "token_jwt", required = false) String cookie, @PathVariable long id, @PathVariable String kind) {
+        var artwork = playlistService.findMyPlaylistArtwork(cookie, id, kind);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(artwork.contentType()))
+                .cacheControl(CacheControl.noCache().cachePrivate())
+                .varyBy(HttpHeaders.COOKIE)
+                .header("X-Content-Type-Options", "nosniff")
+                .eTag(artworkTag(artwork.bytes()))
+                .body(artwork.bytes());
+    }
+
+    private static String artworkTag(byte[] bytes) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+        } catch (NoSuchAlgorithmException error) {
+            throw new IllegalStateException(error);
+        }
     }
 
     @PostMapping("/new-playlist")

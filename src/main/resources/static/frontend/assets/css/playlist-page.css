@@ -1,7 +1,7 @@
 .playlists-page { color: #f5f5f5; background: #101014; }
 .playlists-page .container { grid-template-columns: 250px minmax(0, 1fr); max-width: 1800px; }
 .playlists-page .container main { min-width: 0; padding: 24px 32px 60px; }
-.playlists-page .container .sidebar { min-width: 0; padding: 24px 30px; justify-content: flex-start; gap: 32px; }
+.playlists-page .container .sidebar { min-width: 0; }
 .playlists-page .search-bar { margin-bottom: 38px; gap: 20px; padding: 0; }
 .playlists-page .search-box { flex: 1; width: auto; min-width: 0; }
 .playlists-page .nav-links { gap: 16px; flex-shrink: 0; }
