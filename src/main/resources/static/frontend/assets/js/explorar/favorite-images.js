@@ -192,7 +192,7 @@
     function show(container, options) {
         const {kind, className, alt} = options;
         const fallback = document.createElement('img');
-        fallback.className = className;
+        fallback.className = className || '';
         fallback.alt = alt;
         fallback.src = images + (kind === 'artist' ? 'artist-placeholder.svg' : 'catalog-placeholder.svg');
         container.replaceChildren(fallback);
@@ -203,19 +203,19 @@
         else load();
     }
 
-    async function resolveImage(container, {kind, title, artist, releaseGroupId, id, className, alt}) {
+    async function resolveImage(container, {kind, title, artist, releaseGroupId, id, className, alt, preferredImages = []}) {
         const cacheKey = 'synchro:favorite-image:' + JSON.stringify([kind, key(artist), key(title), releaseGroupId, artist ? null : id]);
         const seen = new Set();
         const catalogId = /^\d+$/.test(id || "") ? id : null;
         const sources = kind === "artist" ? artistPhotos(artist, catalogId) : covers(kind, title, artist, releaseGroupId, catalogId);
-        for await (const url of candidates(cacheKey, sources)) {
+        for await (const url of candidates(cacheKey, withPreferredImages(preferredImages, sources))) {
             if (!container.isConnected) return;
             if (!validImage(url) || seen.has(url)) continue;
             seen.add(url);
             const image = await loadImage(url);
             if (!image) continue;
             if (!container.isConnected) return;
-            image.className = className;
+            image.className = className || '';
             image.alt = alt;
             container.replaceChildren(image);
             try {
@@ -226,6 +226,11 @@
             return;
         }
         try { sessionStorage.removeItem(cacheKey); } catch { /* Optional cache. */ }
+    }
+
+    async function* withPreferredImages(preferredImages, sources) {
+        yield* preferredImages;
+        yield* sources;
     }
 
     window.SynchroFavoriteImages = {show};

@@ -7,7 +7,7 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=shared-sidebar-1">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=profile-sidebar-spacing-2">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=weekly-music-genres">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-usuario.css?v=20261105-compact-profile-1">
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
     <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
@@ -195,6 +195,19 @@
                 <a class="profile-account-settings" href="/frontend/pages/configuracoes.html">Mais configurações da conta</a>
             </div>
         </details>
+        <section class="music-profile owner-only" aria-labelledby="musicProfileTitle">
+            <h2 id="musicProfileTitle">Seu perfil musical</h2>
+            <p class="music-profile-period">Últimos 7 dias · <a href="https://www.last.fm/">Last.fm</a></p>
+            <p id="musicProfileStatus" role="status"></p>
+            <dl id="musicProfileHighlights" class="music-profile-highlights"></dl>
+            <button id="retryMusicProfile" type="button" hidden>Tentar carregar perfil musical</button>
+            <div class="music-profile-genres">
+                <h3>Seus principais gêneros</h3>
+                <ol id="musicProfileGenres"></ol>
+                <p id="musicProfileGenresStatus" role="status"></p>
+                <button id="retryMusicGenres" type="button" hidden>Tentar atualizar gêneros</button>
+            </div>
+        </section>
         <section class="top-artists owner-only">
             <h2>Seus Artistas Favoritos do Momento</h2>
             <div class="artist"><!-- Last.fm --></div>
@@ -242,7 +255,7 @@
             </div>
             <div class="weekly-card">
                 <h5 class="h-genre">Top Gêneros</h5>
-                <p class="p-genres">Em desenvolvimento</p>
+                <p class="p-genres">Estimativa por afinidade</p>
                 <div class="report-genres"><!-- Será calculado de tags --></div>
             </div>
         </section>
@@ -250,10 +263,12 @@
 </div>
 
 <script src="/frontend/assets/js/user.js?v=20261105-profile-sidebar-8"></script>
+<script src="/frontend/assets/js/explorar/perfil-musical.js"></script>
 <script src="/frontend/assets/js/explorar/user3.js?v=20261110-fast-images"></script>
 <script src="/frontend/assets/js/search.js?v=20261105-single-search-1"></script>
 <script src="/frontend/assets/js/explorar/foto-perfil.js"></script>
-<script src="/frontend/assets/js/explorar/generos-perfil.js"></script>
+<script src="/frontend/assets/js/music-profile-genres.js"></script>
+<script src="/frontend/assets/js/explorar/generos-perfil.js?v=shared-music-genres"></script>
 <script src="/frontend/assets/js/explorar/banner-perfil.js"></script>
 <script src="/frontend/assets/js/image-visibility.js"></script>
 <script src="/frontend/assets/js/explorar/fotos-artistas-perfil.js?v=20261110-fast-images"></script>

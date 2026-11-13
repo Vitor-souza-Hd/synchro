@@ -3,6 +3,7 @@ package org.example.synchro;
 import org.example.synchro.config.LastFmConfig;
 import org.example.synchro.resources.LastFmDiscoveryResource;
 import org.example.synchro.services.LastFmArtistService;
+import org.example.synchro.services.DailyPopularSelections;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -14,11 +15,43 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.util.List;
 import org.springframework.http.HttpHeaders;
 import reactor.core.publisher.Sinks;
 import static org.junit.jupiter.api.Assertions.*;
 
 class LastFmDiscoveryTests {
+    @Test
+    void sharesTheDailyArtistRankingAcrossVisitsAndIgnoresExtraParameters() {
+        var calls = new AtomicInteger();
+        String chart = "{\"artists\":{\"artist\":[{\"name\":\"Artist\",\"catalogId\":1},"
+                + "{\"catalogId\":2},{\"catalogId\":3},{\"catalogId\":4},{\"catalogId\":5},{\"catalogId\":6}]}}";
+        var client = WebClient.builder().baseUrl("https://provider.test")
+                .exchangeFunction(request -> {
+                    calls.incrementAndGet();
+                    assertFalse(request.url().toString().contains("tag="));
+                    return Mono.just(ClientResponse.create(HttpStatus.OK).body(chart).build());
+                }).build();
+        var config = new LastFmConfig();
+        config.setApiKey("test-key");
+        var catalog = org.mockito.Mockito.mock(org.example.synchro.services.LastFmCatalogService.class);
+        org.mockito.Mockito.when(catalog.importRecommendedArtists(chart)).thenReturn(chart);
+        var selections = org.mockito.Mockito.mock(DailyPopularSelections.class);
+        var resource = new LastFmDiscoveryResource(client, config, catalog, selections);
+        assertEquals(chart, resource.discover(Map.of("method", "chart.getTopArtists")).block(Duration.ofSeconds(2)));
+        assertEquals(chart, resource.discover(Map.of("method", "chart.getTopArtists", "tag", "rock"))
+                .block(Duration.ofSeconds(2)));
+        assertEquals(1, calls.get());
+        org.mockito.Mockito.verify(catalog).importRecommendedArtists(chart);
+        var today = LocalDate.now(DailyPopularSelections.TIME_ZONE);
+        org.mockito.Mockito.verify(selections).saveArtists(today, List.of(1L, 2L, 3L, 4L, 5L, 6L));
+        org.mockito.Mockito.when(selections.findArtists(today)).thenReturn(java.util.Optional.of(chart));
+        var restarted = new LastFmDiscoveryResource(client, config, catalog, selections);
+        assertEquals(chart, restarted.discover(Map.of("method", "chart.getTopArtists")).block(Duration.ofSeconds(2)));
+        assertEquals(1, calls.get());
+    }
+
     @Test
     void permitsOnlyDiscoveryMethodsAndUsesTheServerKeyWithEncodedParameters() {
         var captured = new AtomicReference<ClientRequest>();
@@ -29,7 +62,7 @@ class LastFmDiscoveryTests {
                 }).build();
         var config = new LastFmConfig(); config.setApiKey("server-key");
         var catalog = org.mockito.Mockito.mock(org.example.synchro.services.LastFmCatalogService.class);
-        var resource = new LastFmDiscoveryResource(client, config, catalog);
+        var resource = new LastFmDiscoveryResource(client, config, catalog, org.mockito.Mockito.mock(DailyPopularSelections.class));
         assertThrows(ResponseStatusException.class, () -> resource.discover(Map.of("method", "auth.getSession")));
         assertNull(captured.get());
         assertEquals("{\"artist\":{}}", resource.discover(Map.of("method", "artist.getInfo", "artist", "A & {B}",
@@ -57,7 +90,7 @@ class LastFmDiscoveryTests {
         var config = new LastFmConfig();
         config.setApiKey("test-key");
         var catalog = org.mockito.Mockito.mock(org.example.synchro.services.LastFmCatalogService.class);
-        var resource = new LastFmDiscoveryResource(client, config, catalog);
+        var resource = new LastFmDiscoveryResource(client, config, catalog, org.mockito.Mockito.mock(DailyPopularSelections.class));
         var query = Map.of("method", "track.getInfo", "track", "Track", "artist", "Artist");
         var first = resource.discover(query).toFuture();
         var second = resource.discover(query).toFuture();
@@ -89,7 +122,7 @@ class LastFmDiscoveryTests {
             var config = new LastFmConfig();
             config.setApiKey("test-key");
             var catalog = org.mockito.Mockito.mock(org.example.synchro.services.LastFmCatalogService.class);
-            var resource = new LastFmDiscoveryResource(client, config, catalog);
+            var resource = new LastFmDiscoveryResource(client, config, catalog, org.mockito.Mockito.mock(DailyPopularSelections.class));
             for (String artist : new String[]{"Artist one", "Artist two"}) {
                 var error = assertThrows(ResponseStatusException.class, () -> resource.discover(
                         Map.of("method", "artist.getinfo", "artist", artist)).block(Duration.ofSeconds(2)));

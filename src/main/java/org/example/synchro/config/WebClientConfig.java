@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import io.netty.channel.ChannelOption;
+import io.netty.resolver.DefaultAddressResolverGroup;
 import java.time.Duration;
 
 @Configuration
@@ -13,6 +14,7 @@ public class WebClientConfig {
     @Bean
     public WebClient webClient(LastFmConfig config) {
         HttpClient httpClient = HttpClient.create()
+                .resolver(DefaultAddressResolverGroup.INSTANCE)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)   // 5 segundos
                 .responseTimeout(Duration.ofSeconds(10))              // 10 segundos
                 .keepAlive(true);

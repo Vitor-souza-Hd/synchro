@@ -140,6 +140,20 @@ class LastFmProfileTests {
             assertFalse(saved.path("data").path("lastFmUpdatedAt").isNull());
             assertFalse(saved.toString().contains("private-session-key"));
             assertFalse(saved.toString().contains("test-secret"));
+            String musicProfileUrl = base + "/users/me/music-profile";
+            var updateGenres = HttpRequest.newBuilder(URI.create(musicProfileUrl))
+                    .header("Cookie", aliceCookie).header("Content-Type", "application/json")
+                    .PUT(HttpRequest.BodyPublishers.ofString("""
+                            {"lastFmUsername":"lastfm-listener","genres":["Hip-hop","R&B","Forró"]}
+                            """)).build();
+            assertEquals(200, browser.send(updateGenres, HttpResponse.BodyHandlers.discarding()).statusCode());
+            var musicProfile = request(browser, musicProfileUrl, aliceCookie, "GET");
+            assertEquals(200, musicProfile.statusCode());
+            var genres = JSON.readTree(musicProfile.body());
+            assertEquals(JSON.readTree("[\"Hip-hop\",\"R&B\",\"Forró\"]"), genres.path("genres"));
+            assertFalse(genres.path("updatedAt").isNull());
+            assertEquals(0, JSON.readTree(request(browser, musicProfileUrl, bobCookie, "GET").body()).path("genres").size());
+            assertEquals(401, request(browser, musicProfileUrl, null, "GET").statusCode());
             var publicResponse = request(browser, base + "/catalog/users/" + alice.getId(), null, "GET");
             assertEquals(200, publicResponse.statusCode(), publicResponse.body());
             JsonNode publicProfile = JSON.readTree(publicResponse.body());
@@ -147,6 +161,7 @@ class LastFmProfileTests {
             assertEquals(3210, publicProfile.path("data").path("scrobbles").asInt());
             assertEquals("Last.fm Name", publicProfile.path("data").path("lastFmRealName").asText());
             assertFalse(publicProfile.has("email"));
+            assertFalse(publicResponse.body().contains("Hip-hop"));
             assertFalse(publicResponse.body().contains("private-session-key"));
             assertFalse(profile(browser, base, bobCookie).path("lastFmConnected").asBoolean());
             assertRedirect(request(browser, callback + "&token=" + TOKEN, aliceCookie, "GET"), "invalid_state");

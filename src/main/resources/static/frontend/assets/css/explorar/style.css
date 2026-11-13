@@ -277,6 +277,20 @@ gap: 20px;
 
 
 /*IMAGENS*/
+.popular-artists-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 16px;
+    margin-top: 20px;
+}
+
+.popular-artists-heading h2 { margin: 0; }
+.popular-artists-heading p { flex: 1 1 260px; color: #fff; font-size: 14px; overflow-wrap: anywhere; }
+html.synchro-light .popular-artists-heading p { color: #30202b; }
+:is(#artistRecommendationStatus, #albumRecommendationStatus):not(:empty) { margin-top: 8px; color: #fff; font-size: 14px; }
+html.synchro-light :is(#artistRecommendationStatus, #albumRecommendationStatus):not(:empty) { color: #30202b; }
+
 .genres, .artists, .albums {
     width: 100%;
 

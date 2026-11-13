@@ -15,84 +15,6 @@ document.addEventListener("synchro:own-profile", ({detail: me}) => {
         return;
     }
 
-    // Normalizacao das tags mais comuns do Last.fm.
-    // Tags fora deste catalogo nao entram no ranking.
-    const genres = {
-        "rock": "Rock",
-        "alternative rock": "Rock alternativo",
-        "alt rock": "Rock alternativo",
-        "indie rock": "Indie rock",
-        "indie": "Indie",
-        "indie pop": "Indie pop",
-        "pop": "Pop",
-        "pop rock": "Pop rock",
-        "art pop": "Art pop",
-        "art rock": "Art rock",
-        "dream pop": "Dream pop",
-        "shoegaze": "Shoegaze",
-        "post punk": "Post-punk",
-        "post-punk": "Post-punk",
-        "punk": "Punk",
-        "punk rock": "Punk rock",
-        "post hardcore": "Post-hardcore",
-        "post-hardcore": "Post-hardcore",
-        "hardcore": "Hardcore",
-        "screamo": "Screamo",
-        "emo": "Emo",
-        "midwest emo": "Midwest emo",
-        "emo rap": "Emo rap",
-        "metal": "Metal",
-        "heavy metal": "Heavy metal",
-        "black metal": "Black metal",
-        "death metal": "Death metal",
-        "nu metal": "Nu metal",
-        "grunge": "Grunge",
-        "noise rock": "Noise rock",
-        "noise pop": "Noise pop",
-        "psychedelic rock": "Rock psicodélico",
-        "progressive rock": "Rock progressivo",
-        "electronic": "Eletrônica",
-        "electronica": "Eletrônica",
-        "electropop": "Electropop",
-        "ambient": "Ambient",
-        "experimental": "Experimental",
-        "trip hop": "Trip-hop",
-        "trip-hop": "Trip-hop",
-        "house": "House",
-        "techno": "Techno",
-        "drum and bass": "Drum and bass",
-        "hip hop": "Hip-hop",
-        "hip-hop": "Hip-hop",
-        "rap": "Rap",
-        "trap": "Trap",
-        "rnb": "R&B",
-        "r&b": "R&B",
-        "soul": "Soul",
-        "neo soul": "Neo soul",
-        "neo-soul": "Neo soul",
-        "funk": "Funk",
-        "jazz": "Jazz",
-        "blues": "Blues",
-        "folk": "Folk",
-        "folk rock": "Folk rock",
-        "country": "Country",
-        "reggae": "Reggae",
-        "ska": "Ska",
-        "bossa nova": "Bossa nova",
-        "samba": "Samba",
-        "samba rock": "Samba rock",
-        "mpb": "MPB",
-        "musica popular brasileira": "MPB",
-        "brazilian popular music": "MPB",
-        "pagode": "Pagode",
-        "forro": "Forró",
-        "sertanejo": "Sertanejo",
-        "baile funk": "Funk brasileiro",
-        "funk carioca": "Funk brasileiro",
-        "classical": "Música clássica",
-        "classical music": "Música clássica"
-    };
-
     let ultimaConsulta = 0;
 
     function mostrarMensagem(message) {
@@ -105,174 +27,90 @@ document.addEventListener("synchro:own-profile", ({detail: me}) => {
         container.appendChild(paragraph);
     }
 
-    function nomeNormalizado(name) {
-        return String(name || "")
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase()
-            .trim();
+    const calcularGeneros = periodo => window.SynchroMusicGenres.calculate(periodo, fetchProfileRanking);
+
+    const api = "/users/me/music-profile";
+    const weeklyStatus = document.getElementById("musicProfileGenresStatus");
+    const weeklyList = document.getElementById("musicProfileGenres");
+    const weeklyRetry = document.getElementById("retryMusicGenres");
+    let weeklyRequest;
+    let savedProfile;
+
+    function renderWeekly(genres) {
+        weeklyList.replaceChildren(...genres.map(genre => {
+            const item = document.createElement("li");
+            item.textContent = genre;
+            return item;
+        }));
     }
 
-    function obterLista(data, parent, field) {
-        const value = data?.[parent]?.[field];
+    function loadWeek() {
+        if (weeklyRequest) return weeklyRequest;
+        weeklyRetry.hidden = true;
+        weeklyStatus.textContent = "Calculando seus gêneros da semana…";
 
-        if (!value) return [];
-
-        return Array.isArray(value) ? value : [value];
-    }
-
-    async function buscarJson(url) {
-        const response = await fetch(url, {
-            credentials: "same-origin",
-            headers: {
-                Accept: "application/json"
-            }
+        const computation = calcularGeneros("7day");
+        weeklyRequest = computation;
+        const savedRequest = savedProfile
+            ? Promise.resolve(savedProfile)
+            : buscarJson(api).catch(() => null);
+        savedRequest.then(saved => {
+            savedProfile = saved;
+            if (saved?.genres?.length) renderWeekly(saved.genres);
         });
 
-        if (!response.ok) {
-            throw new Error("HTTP " + response.status);
-        }
+        Promise.allSettled([computation, savedRequest]).then(async ([calculated, previous]) => {
+            const saved = previous.value;
+            if (calculated.status === "rejected" || calculated.value.parcial) {
+                if (!saved?.genres?.length && calculated.status === "fulfilled") {
+                    renderWeekly(calculated.value.resultado.map(([genre]) => genre));
+                }
+                weeklyStatus.textContent = saved?.genres?.length
+                    ? "Não foi possível atualizar. Exibindo os gêneros da última análise salva."
+                    : "Não foi possível completar a análise de gêneros. Tente novamente.";
+                weeklyRetry.hidden = false;
+                weeklyRequest = null;
+                return;
+            }
 
-        return response.json();
+            const genres = calculated.value.resultado.map(([genre]) => genre);
+            renderWeekly(genres);
+            try {
+                // Evita regravar o mesmo perfil quando ele acabou de ser calculado.
+                const fresh = Date.now() - Date.parse(saved?.updatedAt) < 3600000;
+                if (!fresh || JSON.stringify(saved?.genres) !== JSON.stringify(genres)) {
+                    const response = await fetch(api, {
+                        method: "PUT",
+                        credentials: "same-origin",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({genres, lastFmUsername: me.lastFmUsername})
+                    });
+                    if (!response.ok) throw new Error("Perfil musical não salvo.");
+                    savedProfile = await response.json();
+                }
+                weeklyStatus.textContent = genres.length
+                    ? "Estimativa pelas tags dos artistas que você mais ouviu no Last.fm."
+                    : "Ainda não há gêneros identificados nas suas reproduções dos últimos 7 dias.";
+            } catch {
+                weeklyStatus.textContent = "Os gêneros foram calculados, mas não foi possível salvar o perfil.";
+                weeklyRetry.hidden = false;
+                weeklyRequest = null;
+            }
+        });
+        return computation;
     }
 
     async function carregarGeneros() {
         const consultaAtual = ++ultimaConsulta;
-
         mostrarMensagem("Calculando seus gêneros musicais...");
-
         try {
-
-
-            if (consultaAtual !== ultimaConsulta) return;
-
             if (!me.lastFmConnected) {
-                mostrarMensagem(
-                    "Conecte seu Last.fm para visualizar seus gêneros."
-                );
+                mostrarMensagem("Conecte seu Last.fm para visualizar seus gêneros.");
                 return;
             }
-
             const periodo = periodSelect?.value || "7day";
-
-            const ranking = await fetchProfileRanking("artists", periodo);
-
+            const {resultado, totalArtistas, parcial} = await (periodo === "7day" ? loadWeek() : calcularGeneros(periodo));
             if (consultaAtual !== ultimaConsulta) return;
-
-            const artistas = obterLista(
-                ranking,
-                "topartists",
-                "artist"
-            )
-                .filter(artist =>
-                    artist?.name &&
-                    Number(artist.playcount) > 0
-                )
-                .slice(0, 8);
-
-            if (!artistas.length) {
-                mostrarMensagem(
-                    "Nenhum artista ouvido neste período."
-                );
-                return;
-            }
-
-            // Um artista sem tags ou com falha na consulta
-            // nao impede os outros de serem calculados.
-            const respostas = await Promise.allSettled(
-                artistas.map(artist =>
-                    buscarJson(
-                        "/last-fm/artist/tags?artist=" +
-                        encodeURIComponent(artist.name)
-                    )
-                )
-            );
-
-            if (consultaAtual !== ultimaConsulta) return;
-
-            const pontuacoes = new Map();
-            let consultasValidas = 0;
-
-            respostas.forEach((resposta, index) => {
-
-                if (resposta.status !== "fulfilled") {
-                    return;
-                }
-
-                consultasValidas++;
-
-                const tags = obterLista(
-                    resposta.value,
-                    "toptags",
-                    "tag"
-                );
-
-                const reproducoes =
-                    Number(artistas[index].playcount);
-
-                // Usamos ate 10 tags por artista.
-                const tagsRelevantes = tags.slice(0, 10);
-
-                const maiorContagem = Math.max(
-                    1,
-                    ...tagsRelevantes.map(tag =>
-                        Number(tag.count) || 0
-                    )
-                );
-
-                const generosDoArtista = new Map();
-
-                tagsRelevantes.forEach(tag => {
-                    const chave = nomeNormalizado(tag.name);
-                    const genero = genres[chave];
-
-                    if (!genero) return;
-
-                    const contagem = Number(tag.count);
-
-                    if (!Number.isFinite(contagem) ||
-                        contagem <= 0) return;
-
-                    const relevancia =
-                        contagem / maiorContagem;
-
-                    // Evita contar duas tags sinonimas
-                    // do mesmo artista duas vezes.
-                    generosDoArtista.set(
-                        genero,
-                        Math.max(
-                            generosDoArtista.get(genero) || 0,
-                            relevancia
-                        )
-                    );
-                });
-
-                generosDoArtista.forEach(
-                    (relevancia, genero) => {
-
-                        const peso =
-                            reproducoes * relevancia;
-
-                        pontuacoes.set(
-                            genero,
-                            (pontuacoes.get(genero) || 0) +
-                            peso
-                        );
-                    }
-                );
-            });
-
-            if (!consultasValidas) {
-                mostrarMensagem(
-                    "Não foi possível consultar os gêneros agora."
-                );
-                return;
-            }
-
-            const resultado = [...pontuacoes.entries()]
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
-
             if (!resultado.length) {
                 mostrarMensagem(
                     "Não encontramos gêneros classificados para este período."
@@ -318,10 +156,10 @@ document.addEventListener("synchro:own-profile", ({detail: me}) => {
 
             note.textContent =
                 "Estimativa baseada nas tags dos " +
-                artistas.length +
+                totalArtistas +
                 " artistas mais ouvidos. " +
                 "Os percentuais não representam a divisão " +
-                "exata dos seus scrobbles.";
+                "exata dos seus scrobbles." + (parcial ? " Parte das tags está indisponível." : "");
 
             container.appendChild(note);
 
@@ -346,6 +184,13 @@ document.addEventListener("synchro:own-profile", ({detail: me}) => {
         );
     }
 
+
     document.getElementById("retryRankings").addEventListener("click", carregarGeneros);
+    weeklyRetry.addEventListener("click", () => {
+        if (periodSelect?.value === "7day") carregarGeneros();
+        else loadWeek();
+    });
+    if (me.lastFmConnected) loadWeek();
+    else weeklyStatus.textContent = "Conecte seu Last.fm para ver seus gêneros.";
     carregarGeneros();
 });

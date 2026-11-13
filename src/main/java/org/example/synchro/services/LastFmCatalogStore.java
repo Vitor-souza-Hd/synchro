@@ -78,7 +78,20 @@ public class LastFmCatalogStore {
         if (name.isBlank()) throw new IllegalArgumentException("Artista sem nome");
         var artist = artists.findByNomeKey(CatalogName.key(name))
                 .orElseGet(() -> artists.saveAndFlush(new Artista(name, null, null)));
-        metadata(artist.getLastFm(), node, complete);
+        var meta = artist.getLastFm();
+        if (!complete && meta.getRawJson() != null) {
+            // A ranking can supply fields missing from a previously imported artist.
+            String mbid = text(node, "mbid");
+            String url = text(node, "url");
+            String photo = image(node);
+            if ((meta.getMbid() == null || meta.getMbid().isBlank()) && !mbid.isBlank()) meta.setMbid(mbid);
+            if ((meta.getUrl() == null || meta.getUrl().isBlank()) && !url.isBlank()) meta.setUrl(url);
+            if (!ArtistPhotoStore.hasUsableImage(meta.getImageUrl()) && ArtistPhotoStore.hasUsableImage(photo)) {
+                meta.setImageUrl(photo);
+            }
+        } else {
+            metadata(meta, node, complete);
+        }
         if (!ArtistPhotoStore.hasUsableImage(artist.getImgUrl()) && ArtistPhotoStore.hasUsableImage(artist.getLastFm().getImageUrl())) {
             artist.setImgUrl(artist.getLastFm().getImageUrl());
         }

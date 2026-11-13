@@ -98,6 +98,25 @@ class LastFmCatalogTests {
             assertEquals(1, app.getBean(ArtistaRepository.class).count());
             assertEquals(1, app.getBean(MusicaRepository.class).count());
             assertEquals(0, app.getBean(LastFmScrobbleRepository.class).count(), "Interactions are not listening history");
+
+            long existingArtist = catalog.register("artist", "Recommended Artist", null, null, null);
+            String ranking = """
+                    {"topartists":{"artist":[{"name":"Recommended Artist","mbid":"recommended-mbid",
+                    "url":"https://www.last.fm/music/Recommended+Artist",
+                    "image":[{"#text":"https://example.test/artist.jpg"}]},
+                    {"name":"recommended artist"},{"name":"Another Artist"},{"name":""}]}}
+                    """;
+            var recommended = json.readTree(catalog.importRecommendedArtists(ranking)).path("topartists").path("artist");
+            assertEquals(2, recommended.size());
+            assertEquals(existingArtist, recommended.get(0).path("catalogId").asLong());
+            assertEquals(recommended, json.readTree(catalog.importRecommendedArtists(ranking)).path("topartists").path("artist"));
+            var artistResponse = http.send(HttpRequest.newBuilder(URI.create(base + "/catalog/artists/" + existingArtist))
+                    .build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, artistResponse.statusCode());
+            var imported = json.readTree(artistResponse.body()).path("artist");
+            assertEquals("https://example.test/artist.jpg", imported.path("imgUrl").asText());
+            assertEquals("recommended-mbid", imported.path("lastFm").path("mbid").asText());
+            assertEquals("https://www.last.fm/music/Recommended+Artist", imported.path("lastFm").path("url").asText());
         }
     }
 

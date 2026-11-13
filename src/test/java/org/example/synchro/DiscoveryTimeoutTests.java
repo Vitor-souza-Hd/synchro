@@ -33,7 +33,8 @@ class DiscoveryTimeoutTests {
                                 .body("{\"results\":{}}").build())).build();
         var service = new LastFmArtistService(provider, config);
         var mvc = MockMvcBuilders.standaloneSetup(
-                new LastFmDiscoveryResource(provider, config, mock(LastFmCatalogService.class)), new LastFmArtistResource(service))
+                new LastFmDiscoveryResource(provider, config, mock(LastFmCatalogService.class),
+                        mock(org.example.synchro.services.DailyPopularSelections.class)), new LastFmArtistResource(service))
                 .setControllerAdvice(new DiscoveryTimeoutHandler()).build();
         for (String url : new String[]{
                 "/last-fm/discovery?method=track.getInfo&artist=Artist&track=Track",

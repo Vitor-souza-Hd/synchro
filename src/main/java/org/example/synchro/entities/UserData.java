@@ -32,6 +32,9 @@ public class UserData implements Serializable {
     private Integer lastFmTracks;
     private Integer lastFmAlbums;
     private Instant lastFmUpdatedAt;
+    @Column(length = 300)
+    private String topMusicGenres;
+    private Instant musicProfileUpdatedAt;
 
     @Column(length = 2000)
     private String biography;

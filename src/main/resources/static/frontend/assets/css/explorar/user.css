@@ -1085,6 +1085,58 @@ html.synchro-light .profile-playlist-manage {
 
 /* MENSAGENS DE SECOES VAZIAS DO PERFIL */
 
+.music-profile {
+    margin: 24px 0;
+    padding: clamp(16px, 3vw, 24px);
+    border: 1px solid #39323f;
+    border-radius: 16px;
+    background: #17151c;
+    color: #eee9f2;
+}
+
+.music-profile h2 { margin: 0 0 6px; color: inherit; }
+.music-profile a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.music-profile-period, #musicProfileStatus, .music-profile-detail { color: #c6b9cc; }
+#musicProfileStatus:not(:empty) { margin-top: 12px; }
+
+.music-profile-highlights:not(:empty) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 195px), 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.music-profile-highlights > div {
+    padding: 12px 14px;
+    border: 1px solid #ffffff20;
+    border-radius: 10px;
+    overflow-wrap: anywhere;
+}
+
+.music-profile-highlights dt { font-size: 14px; color: #e9adcb; }
+.music-profile-highlights dd { margin-top: 6px; }
+.music-profile-highlights dd:not(.music-profile-detail) { font-size: 18px; font-weight: 700; }
+
+.music-profile-genres { margin-top: 20px; }
+.music-profile-genres ol { display: flex; flex-wrap: wrap; gap: 8px 24px; padding-left: 24px; margin-top: 8px; }
+.music-profile-genres ol:empty { display: none; }
+#musicProfileGenresStatus { margin-top: 8px; color: #c6b9cc; }
+
+#retryMusicProfile, #retryMusicGenres {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+html.synchro-light .music-profile { background: #fff; border-color: #dfcbd6; color: #30202b; }
+html.synchro-light .music-profile-highlights > div { border-color: #dfcbd6; }
+html.synchro-light .music-profile-highlights dt { color: #743352; }
+html.synchro-light :is(.music-profile-period, #musicProfileStatus, #musicProfileGenresStatus, .music-profile-detail) { color: #634b5f; }
+
 .profile-empty {
     display: block;
     color: #b3b3b3;

@@ -47,26 +47,115 @@ const artistsGrid = document.querySelector('.artists')
             const reviewsGrid = document.querySelector('.reviews')
             
 
-    artistsData.forEach( artist => {
-        const artistCard = document.createElement('div')
-        artistCard.classList.add('artist-card')
+    const genreTags = new Map([
+        ['rock alternativo', 'alternative rock'],
+        ['rock psicodélico', 'psychedelic rock'],
+        ['rock progressivo', 'progressive rock'],
+        ['eletrônica', 'electronic'],
+        ['hip-hop', 'hip hop'],
+        ['forró', 'forro'],
+        ['funk brasileiro', 'baile funk'],
+        ['música clássica', 'classical']
+    ]);
 
-         const artistLink =
-        `frontend/pages/artista.html?artist=${encodeURIComponent(artist.name)}`;
+    function renderArtists(artists) {
+        artistsGrid.replaceChildren();
+        for (const artist of artists) {
+            const card = document.createElement('div');
+            card.className = 'artist-card';
+            const link = document.createElement('a');
+            const identity = artist.id ? {id: artist.id} : {artist: artist.name};
+            link.href = 'frontend/pages/artista.html?' + new URLSearchParams(identity);
+            const artwork = document.createElement('div');
+            const info = document.createElement('div');
+            const name = document.createElement('h3');
+            name.textContent = artist.name;
+            const label = document.createElement('p');
+            label.textContent = artist.genre || 'Artista';
+            info.append(name, label);
+            link.append(artwork, info);
+            card.append(link);
+            artistsGrid.append(card);
 
-        artistCard.innerHTML = `
-            <a href="${artistLink}">
-            <img loading="lazy" decoding="async" src="${artist.image}" alt=imagem do "${artist.name}">
-            <div>
-            <h3>${artist.name}</h3>
-            <p>Artista</p>
-            </div>
-            </a>
-        `
+            if (artist.genre && window.SynchroFavoriteImages) {
+                window.SynchroFavoriteImages.show(artwork, {
+                    kind: 'artist', title: artist.name, artist: artist.name, id: artist.id,
+                    preferredImages: artist.images, alt: ''
+                });
+            } else {
+                const image = document.createElement('img');
+                image.loading = 'lazy';
+                image.decoding = 'async';
+                image.alt = '';
+                image.src = artist.image || '/frontend/assets/images/artist-placeholder.svg';
+                artwork.append(image);
+            }
+        }
+        const status = document.getElementById('popularArtistsStatus');
+        if (status) {
+            status.textContent = 'Artistas carregados com sucesso: ' +
+                new Intl.ListFormat('pt-BR').format(artists.map(artist => artist.name)) + '.';
+        }
+    }
 
-        artistsGrid.appendChild(artistCard)
+    async function loadGenreArtists(genre, tag) {
+        const query = new URLSearchParams({method: 'tag.getTopArtists', tag});
+        const response = await fetch('/last-fm/discovery?' + query, {signal: AbortSignal.timeout(6000)});
+        if (!response.ok) return [];
+        const {topartists} = await response.json();
+        const items = topartists?.artist;
+        return (Array.isArray(items) ? items : [items])
+            .filter(item => typeof item?.name === 'string' && item.name.trim())
+            .map(item => ({
+                name: item.name.trim(),
+                id: Number.isSafeInteger(item.catalogId) && item.catalogId > 0 ? item.catalogId : null,
+                genre,
+                images: Array.isArray(item.image) ? item.image.map(image => image?.['#text']).reverse() : []
+            }));
+    }
 
-    })
+    async function personalizeArtists() {
+        try {
+            const response = await fetch('/users/me/music-profile', {
+                cache: 'no-store', signal: AbortSignal.timeout(5000)
+            });
+            if (!response.ok) return;
+            const {genres} = await response.json();
+            if (!Array.isArray(genres)) return;
+            const tags = new Map();
+            for (const genre of genres) {
+                if (typeof genre !== 'string' || !genre.trim()) continue;
+                const name = genre.trim().toLowerCase();
+                const tag = genreTags.get(name) || name;
+                if (!tags.has(tag)) tags.set(tag, genre.trim());
+                if (tags.size === 3) break;
+            }
+            const results = await Promise.allSettled([...tags].map(([tag, genre]) => loadGenreArtists(genre, tag)));
+            const groups = results.filter(result => result.status === 'fulfilled').map(result => result.value);
+            const artists = new Map();
+            // Alternate genres in preference order, keeping Last.fm's order within each genre.
+            const rounds = Math.max(0, ...groups.map(group => group.length));
+            for (let rank = 0; rank < rounds && artists.size < 6; rank++) {
+                for (const group of groups) {
+                    const artist = group[rank];
+                    if (!artist) continue;
+                    const key = artist.name.normalize('NFKC').toLowerCase();
+                    if (!artists.has(key)) artists.set(key, artist);
+                    if (artists.size === 6) break;
+                }
+            }
+            if (!artists.size) return;
+            renderArtists([...artists.values()]);
+            document.getElementById('artists').textContent = 'Artistas populares para você';
+        } catch {
+            // Keep the default artists when the profile or provider is unavailable.
+        }
+    }
+
+    if (artistsGrid) {
+        renderArtists(artistsData);
+        personalizeArtists();
+    }
 
      albumsData.forEach( album => {
         const albumCard = document.createElement('div')

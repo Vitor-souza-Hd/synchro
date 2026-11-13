@@ -6,11 +6,13 @@
     <title>SYNCHRO</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=shared-sidebar-1">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=explore-album-recommendations">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-home.css">
     <script src="/frontend/assets/js/explorar/tema-global.js"></script>
 <link rel="stylesheet" href="/frontend/assets/css/auth.css">
 <link rel="stylesheet" href="/frontend/assets/css/features.css">
+<link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
+<script src="/frontend/assets/js/playlists.js?v=20261101-4" defer></script>
 <script src="/frontend/assets/js/features.js?v=20261105-catalog-interactions-1" defer></script>
 <script src="/frontend/assets/js/auth.js" defer></script>
 <link rel="stylesheet" href="/frontend/assets/css/search.css">
@@ -89,11 +91,11 @@
                 <ul>
                     <li>
                         <i class='bx bxs-plus-square'></i>
-                        <a href="#">Criar uma nova</a>
+                        <a href="#" data-create-playlist aria-haspopup="dialog">Criar uma nova</a>
                     </li>
                     <li>
                         <i class='bx bxs-caret-right-circle'></i>
-                        <a href="#">Suas Playlists</a>
+                        <a href="/frontend/pages/playlists.html" data-my-playlists>Suas Playlists</a>
                     </li>
                     <li>
                         <i class='bx bxs-caret-right-circle'></i>
@@ -149,28 +151,33 @@
                 </a>
                 <a href="#pesquisa">Músicas</a>
                 <a href="#artistas">Artistas</a>
-                <a href="#">Revisões</a>
+                <a href="#revisoes">Revisões</a>
             </div>       
 
-                        <a href="/frontend/pages/perfil.html" class="user">
+                        <a href="/frontend/pages/perfil.html" class="user" aria-label="Meu perfil">
                             <i class="fa-solid fa-circle-user"></i>
                         </a>
                       
         </header>
         <!--PRINCIPAL-->
         <section class="content">
-            <h2 id="artistas">Artistas Populares</h2>
+            <div class="popular-artists-heading">
+                <h2 id="artistas">Artistas Populares</h2>
+                <p id="popularArtistsStatus" role="status"></p>
+            </div>
+            <p id="artistRecommendationStatus" role="status"></p>
             <div class="artists">
                 <!--Inserir dados com JS-->
             </div>
             <h2 id="albuns">Álbuns Populares</h2>
+            <p id="albumRecommendationStatus" role="status"></p>
             <div class="albums">
                 <!--Inserir dados com JS-->
             </div>
             <h2 id="generos">Gêneros Populares</h2>
-            <div class="genres">
-                <!--Inserir dados com JS-->
-            </div>
+            <div class="genres"></div>
+            <h2 id="revisoes">Reviews Recentes dos Usuários</h2>
+            <div class="reviews"></div>
         </section>
 
             <section
@@ -206,7 +213,9 @@
     
 
     <script src="/frontend/assets/js/image-visibility.js"></script>
-    <script src="/frontend/assets/js/explorar/script2.js?v=20261110-fast-images"></script>
+    <script src="/frontend/assets/js/explorar/favorite-images.js?v=home-artist-photos"></script>
+    <script src="/frontend/assets/js/music-profile-genres.js"></script>
+    <script src="/frontend/assets/js/explorar/script2.js?v=saved-daily-selections"></script>
     <script src="/frontend/assets/js/search.js?v=20261105-single-search-1"></script>
     <script src="/frontend/assets/js/explorar/navegacao.js"></script>
     <script src="/frontend/assets/js/explorar/navegacao-global.js"></script>

@@ -64,7 +64,7 @@ const { chromium } = require('playwright');
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
         await close.click();
         await page.setViewportSize({ width: 1280, height: 1000 });
-        const home = await fs.readFile(path.join(root, 'index.html'), 'utf8');
+        const home = await fs.readFile(path.join(root, 'frontend/pages/explorar.html'), 'utf8');
         const sameMenu = await page.evaluate(html => {
             const homeDoc = new DOMParser().parseFromString(html, 'text/html');
             const labels = doc => [...doc.querySelectorAll('.sidebar .menu li')].map(item => item.textContent.trim());

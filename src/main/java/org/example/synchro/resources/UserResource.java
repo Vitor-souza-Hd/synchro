@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
@@ -92,6 +93,50 @@ public class UserResource {
     ) {
         return ResponseEntity.ok(service.updateUser(cookie, request));
     }
+
+    @GetMapping("/me/music-profile")
+    @Transactional(readOnly = true)
+    public ResponseEntity<MusicProfile> getMusicProfile(
+            @CookieValue(name = "token_jwt", required = false) String token) {
+        Long userId = obterIdAutenticado(token);
+        if (userId == null) return ResponseEntity.status(401).build();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return ResponseEntity.notFound().build();
+        UserData data = user.getData();
+        List<String> genres = data == null || data.getTopMusicGenres() == null || data.getTopMusicGenres().isEmpty()
+                ? List.of() : List.of(data.getTopMusicGenres().split("\n"));
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(new MusicProfile(genres, data == null ? null : data.getMusicProfileUpdatedAt()));
+    }
+
+    @PutMapping("/me/music-profile")
+    @Transactional
+    public ResponseEntity<MusicProfile> saveMusicProfile(
+            @CookieValue(name = "token_jwt", required = false) String token,
+            @Valid @RequestBody MusicProfileRequest request) {
+        Long userId = obterIdAutenticado(token);
+        if (userId == null) return ResponseEntity.status(401).build();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return ResponseEntity.notFound().build();
+        if (!user.hasLastFmConnection() || !user.getLastFmUsername().equalsIgnoreCase(request.lastFmUsername())) {
+            return ResponseEntity.status(409).build();
+        }
+        List<String> genres = request.genres().stream().map(String::strip).distinct().toList();
+        UserData data = obterOuCriarDados(user);
+        data.setTopMusicGenres(String.join("\n", genres));
+        data.setMusicProfileUpdatedAt(Instant.now());
+        userDataRepository.save(data);
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(new MusicProfile(genres, data.getMusicProfileUpdatedAt()));
+    }
+
+    public record MusicProfile(List<String> genres, Instant updatedAt) {}
+
+    public record MusicProfileRequest(
+            @jakarta.validation.constraints.NotBlank String lastFmUsername,
+            @jakarta.validation.constraints.NotNull @jakarta.validation.constraints.Size(max = 5)
+            List<@jakarta.validation.constraints.NotBlank
+                 @jakarta.validation.constraints.Pattern(regexp = "[\\p{L}\\p{M}\\p{N} &-]{1,50}") String> genres) {}
 
     @PostMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadProfileImage(

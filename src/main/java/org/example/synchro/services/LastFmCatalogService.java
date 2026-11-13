@@ -166,6 +166,36 @@ public class LastFmCatalogService {
         }
     }
 
+    public String importRecommendedArtists(String body) {
+        try {
+            var data = JSON.readTree(body);
+            var ranking = data.path(data.has("topartists") ? "topartists" : "artists");
+            var rankedArtists = LastFmCatalogStore.nodes(ranking.path("artist"));
+            var imported = JSON.createArrayNode();
+            var names = new HashSet<String>();
+            for (var node : rankedArtists) {
+                var name = node.path("name").asText("").strip();
+                if (name.isEmpty() || name.length() > 255
+                        || !names.add(org.example.synchro.entities.CatalogName.key(name))) continue;
+                long id = save("artist", node, false);
+                var artist = (com.fasterxml.jackson.databind.node.ObjectNode) node;
+                artist.put("catalogId", id);
+                imported.add(artist);
+                if (imported.size() == 6) break;
+            }
+            if (ranking instanceof com.fasterxml.jackson.databind.node.ObjectNode chart) {
+                chart.set("artist", imported);
+            }
+            return data.toString();
+        } catch (com.fasterxml.jackson.core.JsonProcessingException error) {
+            throw new IllegalStateException("O Last.fm retornou uma resposta inválida.", error);
+        }
+    }
+
+    public long importPopularAlbum(com.fasterxml.jackson.databind.JsonNode album) {
+        return save("album", album, true);
+    }
+
     private boolean refresh(String type, long id) {
         String key = type + ':' + id;
         var pending = new CompletableFuture<Boolean>();

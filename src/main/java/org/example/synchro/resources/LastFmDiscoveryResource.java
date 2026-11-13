@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.config.LastFmConfig;
+import org.example.synchro.services.DailyPopularSelections;
 import org.example.synchro.services.LastFmCatalogService;
+import org.example.synchro.services.LastFmCatalogStore;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,6 +19,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -34,18 +37,20 @@ public class LastFmDiscoveryResource {
     private static final int MAX_LOOKUPS = 256;
     private static final long MAX_CACHE_SECONDS = 300;
     private static final long DEFAULT_COOLDOWN_SECONDS = 15;
+    private static final String DAILY_ARTISTS = "chart.gettopartists";
     private static final Set<String> METHODS = Set.of("artist.getinfo", "artist.gettoptracks",
             "artist.gettopalbums", "artist.gettoptags", "artist.search", "track.getinfo",
-            "track.search", "album.getinfo", "album.search", "tag.gettopartists", "tag.gettopalbums");
+            "track.search", "album.getinfo", "album.search", "tag.gettopartists", "tag.gettopalbums", DAILY_ARTISTS);
     private static final Set<String> PARAMETERS = Set.of("artist", "track", "album", "tag", "mbid", "lang", "autocorrect");
 
     private final WebClient webClient;
     private final LastFmConfig config;
     private final LastFmCatalogService catalog;
+    private final DailyPopularSelections dailySelections;
     private final Map<Lookup, Entry> lookups = new LinkedHashMap<>(16, .75f, true);
     private final AtomicReference<Instant> pausedUntil = new AtomicReference<>(Instant.EPOCH);
 
-    private record Lookup(String method, Map<String, String> values) {}
+    private record Lookup(String method, Map<String, String> values, boolean preview) {}
     private record Result(String body, long cacheSeconds, boolean valid) {}
     private static final class Entry {
         private volatile Instant expires = Instant.MAX;
@@ -56,6 +61,15 @@ public class LastFmDiscoveryResource {
     public Mono<String> discover(@RequestParam Map<String, String> params) {
         String method = params.getOrDefault("method", "").toLowerCase(Locale.ROOT);
         if (!METHODS.contains(method)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Consulta invalida");
+        if (method.equals(DAILY_ARTISTS)) {
+            return Mono.defer(() -> {
+                var date = LocalDate.now(DailyPopularSelections.TIME_ZONE);
+                return Mono.fromCallable(() -> dailySelections.findArtists(date))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .flatMap(saved -> saved.map(Mono::just)
+                                .orElseGet(() -> cached(new Lookup(method, Map.of(), false))));
+            });
+        }
         Map<String, String> values = new HashMap<>();
         for (String key : PARAMETERS) {
             String value = params.get(key);
@@ -64,7 +78,8 @@ public class LastFmDiscoveryResource {
                 values.put(key, value);
             }
         }
-        var lookup = new Lookup(method, Map.copyOf(values));
+        boolean preview = method.equals("album.getinfo") && "true".equals(params.get("preview"));
+        var lookup = new Lookup(method, Map.copyOf(values), preview);
         return Mono.defer(() -> cached(lookup));
     }
 
@@ -82,7 +97,9 @@ public class LastFmDiscoveryResource {
         if (lookups.size() >= MAX_LOOKUPS) {
             lookups.entrySet().removeIf(entry -> !now.isBefore(entry.getValue().expires));
             if (lookups.size() >= MAX_LOOKUPS) {
-                var completed = lookups.entrySet().stream().filter(entry -> entry.getValue().expires != Instant.MAX).findFirst();
+                var completed = lookups.entrySet().stream()
+                        .filter(entry -> !entry.getKey().method().equals(DAILY_ARTISTS) && entry.getValue().expires != Instant.MAX)
+                        .findFirst();
                 completed.ifPresent(entry -> lookups.remove(entry.getKey()));
             }
             if (lookups.size() >= MAX_LOOKUPS) {
@@ -92,10 +109,30 @@ public class LastFmDiscoveryResource {
 
         var entry = new Entry();
         entry.result = request(lookup).flatMap(result -> {
-            if (!result.valid()) return Mono.just(result);
+            if (!result.valid() || lookup.preview()) return Mono.just(result);
+            if (lookup.method().equals("tag.gettopartists") || lookup.method().equals(DAILY_ARTISTS)) {
+                return Mono.fromCallable(() -> {
+                            String body = catalog.importRecommendedArtists(result.body());
+                            if (!lookup.method().equals(DAILY_ARTISTS)) return new Result(body, result.cacheSeconds(), true);
+                            var ids = LastFmCatalogStore.nodes(JSON.readTree(body).path("artists").path("artist")).stream()
+                                    .map(artist -> artist.path("catalogId").asLong()).toList();
+                            if (DailyPopularSelections.isComplete(ids)) {
+                                dailySelections.saveArtists(LocalDate.now(DailyPopularSelections.TIME_ZONE), ids);
+                                return new Result(body, result.cacheSeconds(), true);
+                            }
+                            return new Result(body, 60, false);
+                        })
+                        .subscribeOn(Schedulers.boundedElastic());
+            }
             return Mono.fromRunnable(() -> catalog.persistDiscovery(lookup.method(), result.body()))
                     .subscribeOn(Schedulers.boundedElastic()).thenReturn(result);
-        }).doOnNext(result -> entry.expires = Instant.now().plusSeconds(result.cacheSeconds()))
+        }).doOnNext(result -> {
+                    Instant received = Instant.now();
+                    entry.expires = lookup.method().equals(DAILY_ARTISTS) && result.valid()
+                            ? received.atZone(DailyPopularSelections.TIME_ZONE).toLocalDate().plusDays(1)
+                                .atStartOfDay(DailyPopularSelections.TIME_ZONE).toInstant()
+                            : received.plusSeconds(result.cacheSeconds());
+                })
                 .doOnError(error -> entry.expires = Instant.EPOCH)
                 .map(Result::body).cache();
         lookups.put(lookup, entry);
@@ -108,10 +145,10 @@ public class LastFmDiscoveryResource {
                     .queryParam("format", "json").queryParam("limit", 30);
             lookup.values().forEach((key, value) -> builder.queryParam(key, "{" + key + "}"));
             return builder.build(lookup.values());
-        }).exchangeToMono(this::read).timeout(Duration.ofSeconds(15));
+        }).exchangeToMono(response -> read(response, lookup.method())).timeout(Duration.ofSeconds(15));
     }
 
-    private Mono<Result> read(ClientResponse response) {
+    private Mono<Result> read(ClientResponse response, String method) {
         HttpHeaders headers = response.headers().asHttpHeaders();
         if (response.statusCode().value() == 429) {
             var error = pause(headers);
@@ -127,6 +164,12 @@ public class LastFmDiscoveryResource {
                             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Last.fm indisponível.");
                         }
                         boolean valid = data.isObject() && !data.has("error");
+                        if (method.equals(DAILY_ARTISTS) && valid) {
+                            var artists = data.path("artists").path("artist");
+                            if (!artists.isArray() || artists.isEmpty()) {
+                                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Ranking de artistas vazio.");
+                            }
+                        }
                         return new Result(body, valid ? cacheSeconds(headers) : 0, valid);
                     } catch (JsonProcessingException error) {
                         throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Resposta inválida do Last.fm.");

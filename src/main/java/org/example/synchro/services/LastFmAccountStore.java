@@ -39,6 +39,8 @@ public class LastFmAccountStore {
             data.setLastFmCountry(null);
             data.setLastFmImageUrl(null);
             data.setLastFmUpdatedAt(null);
+            data.setTopMusicGenres(null);
+            data.setMusicProfileUpdatedAt(null);
         }
         LastFmSession session = user.getSession();
         if (session == null) session = new LastFmSession();
