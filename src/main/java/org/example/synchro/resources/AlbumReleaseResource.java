@@ -175,13 +175,18 @@ public class AlbumReleaseResource {
                 .onErrorResume(error -> readFeed(iTunes, "entry", Duration.ofSeconds(6)).map(this::normalizeITunes));
     }
 
+    private record FeedResponse(HttpResponse<String> response, Throwable error) {}
+
     private Mono<JsonNode> readFeed(String url, String entries, Duration timeout) {
         var request = HttpRequest.newBuilder(URI.create(url)).timeout(timeout).build();
-        return Mono.fromFuture(() -> charts.sendAsync(request, HttpResponse.BodyHandlers.ofString()))
+        // The HTTP request owns the deadline. Complete the future normally even when a
+        // disconnected subscriber cannot receive its eventual timeout or cancellation.
+        return Mono.fromFuture(() -> charts.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                        .handle(FeedResponse::new), true)
+                .flatMap(result -> result.error() == null ? Mono.just(result.response()) : Mono.error(result.error()))
                 .filter(response -> response.statusCode() == 200)
                 .flatMap(response -> Mono.fromCallable(() -> JSON.readTree(response.body()).path("feed").path(entries)))
                 .filter(result -> result.isArray() && !result.isEmpty())
-                .timeout(timeout)
                 .onErrorMap(error -> new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Ranking indisponível.", error))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Ranking inválido.")));
     }
