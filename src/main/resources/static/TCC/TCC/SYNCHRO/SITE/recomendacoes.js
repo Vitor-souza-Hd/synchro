@@ -2,23 +2,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("recommendations-container");
     if (!container) return;
 
+    container.classList.add("genres");
+
     try {
         const res = await fetch('/recomendacoes', { credentials: 'same-origin' });
 
+        // MENSAGEM DE LOGIN (SEM BOTÃO)
         if (res.status === 401) {
-            container.innerHTML = '<p style="color: #b3b3b3;">Faça login para ver suas recomendações.</p>';
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <p style="color: #b3b3b3; font-size: 1.1rem; margin: 0;">
+                        Faça login para ver suas recomendações personalizadas.
+                    </p>
+                </div>
+            `;
             return;
         }
 
         const data = await res.json();
 
-        if (!Array.isArray(data)) {
-            container.innerHTML = '<p style="color: #b3b3b3;">Erro ao carregar recomendações.</p>';
-            return;
-        }
-
-        if (data.length === 0) {
-            container.innerHTML = '<p style="color: #b3b3b3;">Você já avaliou todos os álbuns dos seus artistas favoritos! Explore mais no Synchro.</p>';
+        if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML = '<p style="color: #b3b3b3; grid-column: 1 / -1;">Você já avaliou todos os álbuns dos seus artistas favoritos!</p>';
             return;
         }
 
@@ -26,35 +30,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         data.forEach(item => {
             const card = document.createElement('div');
-            card.style.cssText = 'background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; text-align: center; width: 160px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.3s;';
+            card.classList.add('genre-card');
 
-            card.onmouseenter = () => card.style.transform = 'translateY(-5px)';
-            card.onmouseleave = () => card.style.transform = 'translateY(0)';
+            const link = (typeof item.id === 'number' || !isNaN(item.id))
+                ? `album.html?id=${item.id}`
+                : `artista.html?artist=${encodeURIComponent(item.nomeArtista)}`;
 
-            // LÓGICA DE REDIRECIONAMENTO INTELIGENTE:
-            card.onclick = () => {
-                // Se o ID for numérico, é um álbum do banco
-                if (typeof item.id === 'number' || !isNaN(item.id)) {
-                    window.location.href = `album.html?id=${item.id}`;
-                } else {
-                    // Se for string (artista_X), vai para a página do artista
-                    window.location.href = `artista.html?artist=${encodeURIComponent(item.nomeArtista)}`;
-                }
-            };
-
-            const capa = item.capaUrl || 'https://placehold.co/150/333/fff?text=Album';
+            const capa = item.capaUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.nomeArtista)}&background=181818&color=1db954&size=400`;
 
             card.innerHTML = `
-                <img src="${capa}" alt="${item.titulo}" style="width: 120px; height: 120px; border-radius: 8px; object-fit: cover; margin-bottom: 10px;">
-                <h4 style="color: white; font-size: 14px; margin: 0 0 5px 0;">${item.titulo}</h4>
-                <p style="color: #b3b3b3; font-size: 12px; margin: 0;">${item.nomeArtista}</p>
+                <a href="${link}" style="width: 100%;">
+                    <img src="${capa}" alt="Imagem de ${item.titulo}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(item.nomeArtista)}&background=181818&color=1db954&size=400';">
+                    <div style="text-align: center; width: 100%;">
+                        <h3 style="text-align: center;">${item.titulo}</h3>
+                        <p style="color: rgba(197, 196, 196, 0.669); font-size: 14px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;">${item.nomeArtista}</p>
+                    </div>
+                </a>
             `;
 
-            container.appendChild(container.appendChild(card));
+            container.appendChild(card);
         });
 
     } catch (error) {
         console.error("Erro ao buscar recomendações:", error);
-        container.innerHTML = '<p style="color: #ff4d4d;">Erro ao carregar recomendações.</p>';
+        container.innerHTML = '<p style="color: #ff4d4d; grid-column: 1 / -1;">Erro ao carregar recomendações.</p>';
     }
 });
