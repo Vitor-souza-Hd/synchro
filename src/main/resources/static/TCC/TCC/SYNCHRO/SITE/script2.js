@@ -1,10 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // =========================================================
-    // DADOS DA PÁGINA INICIAL
-    // =========================================================
-    // (O artistsData foi removido, agora puxamos do banco/Last.fm)
-
     const albumsData = [
         { name: "Debí Tirar Más Fotos", artist: "Bad Bunny", image: "./img/DebíTirarMásFotos.png", link: "https://open.spotify.com/intl-pt/track/3sK8wGT43QFpWrvNQsrQya?si=68653d6088a04bec" },
         { name: "Mayhem", artist: "Lady Gaga", image: "./img/mayhem.jpg", link: "https://open.spotify.com/intl-pt/album/2MHUaRi9OCyTN02SoyRRBJ?si=2182527c0b6240ca" },
@@ -79,43 +74,29 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     ];
 
-    // =========================================================
-    // ELEMENTOS DA PÁGINA
-    // =========================================================
-
     const artistsGrid = document.querySelector(".artists");
     const albumsGrid = document.querySelector(".albums");
     const genresGrid = document.querySelector(".genres");
     const reviewsGrid = document.querySelector(".reviews");
-
-    // =========================================================
-    // EXIBIR ARTISTAS POPULARES (BASEADO NO LAST.FM OU BANCO)
-    // =========================================================
 
     if (artistsGrid) {
         async function carregarArtistas() {
             try {
                 let artistasParaExibir = [];
 
-                // 1. Tenta buscar os top artistas do Last.fm do usuário logado
                 try {
                     const lastfmRes = await fetch('/last-fm/me/top/artist', { credentials: 'same-origin' });
 
                     if (lastfmRes.ok) {
                         const lastfmData = await lastfmRes.json();
-
-                        // O Last.fm pode retornar { topartists: { artist: [...] } } ou um array direto
                         const listaLastFm = lastfmData.topartists?.artist || lastfmData;
 
                         if (Array.isArray(listaLastFm) && listaLastFm.length > 0) {
                             const topArtistasNomes = listaLastFm.map(a => (a.name || a.nome || "").toLowerCase());
 
-                            // Busca todos os artistas do nosso banco para cruzar os dados
                             const dbRes = await fetch('/artista');
                             if (dbRes.ok) {
                                 const artistasDoBanco = await dbRes.json();
-
-                                // Filtra apenas os que o usuário escuta
                                 artistasParaExibir = artistasDoBanco.filter(artista =>
                                     topArtistasNomes.includes(artista.nome.toLowerCase())
                                 );
@@ -126,31 +107,26 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.log("Usuário sem dados no Last.fm. Usando artistas gerais.");
                 }
 
-                // 2. Se não achou nada pelo Last.fm (ou não está logado), pega os artistas gerais do banco
                 if (artistasParaExibir.length === 0) {
                     const dbRes = await fetch('/artista');
                     if (!dbRes.ok) throw new Error('Erro na API do banco');
                     artistasParaExibir = await dbRes.json();
                 }
 
-                artistsGrid.innerHTML = ''; // Limpa a div
+                artistsGrid.innerHTML = '';
 
                 if (artistasParaExibir.length === 0) {
                     artistsGrid.innerHTML = '<p style="color:#b3b3b3;">Nenhum artista cadastrado.</p>';
                     return;
                 }
 
-                // Pega os 6 primeiros para manter o layout
                 const artistasPopulares = artistasParaExibir.slice(0, 6);
 
                 artistasPopulares.forEach(artist => {
                     const artistCard = document.createElement("div");
                     artistCard.classList.add("artist-card");
 
-                    // Link interno do Synchro
                     const linkInterno = `artista.html?artist=${encodeURIComponent(artist.nome)}`;
-
-                    // Fallback de imagem (se a API não trouxer foto, usa o placeholder verde)
                     const fallbackUrl = `https://placehold.co/300/1db954/fff?text=${encodeURIComponent(artist.nome)}`;
                     const imagem = artist.imgUrl || fallbackUrl;
 
@@ -177,10 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
         carregarArtistas();
     }
 
-    // =========================================================
-    // EXIBIR ÁLBUNS POPULARES
-    // =========================================================
-
     if (albumsGrid) {
         albumsData.forEach(album => {
             const albumCard = document.createElement("div");
@@ -200,10 +172,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // =========================================================
-    // EXIBIR GÊNEROS POPULARES
-    // =========================================================
-
     if (genresGrid) {
         genresData.forEach(genre => {
             const genreCard = document.createElement("div");
@@ -221,10 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
             genresGrid.appendChild(genreCard);
         });
     }
-
-    // =========================================================
-    // EXIBIR AVALIAÇÕES
-    // =========================================================
 
     if (reviewsGrid) {
         reviewsData.forEach(review => {
@@ -255,10 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // =========================================================
-    // MENU LATERAL RESPONSIVO
-    // =========================================================
-
     const menuToggle = document.querySelector(".menu-toggle");
     const sidebar = document.querySelector(".sidebar");
 
@@ -267,10 +227,6 @@ document.addEventListener("DOMContentLoaded", () => {
             sidebar.classList.toggle("active");
         });
     }
-
-    // =========================================================
-    // PESQUISA COM API DO LAST.FM
-    // =========================================================
 
     const searchInput = document.querySelector(".search");
     const searchBox = document.querySelector(".search-box");

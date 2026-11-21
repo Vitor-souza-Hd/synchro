@@ -1,7 +1,9 @@
 
 package org.example.synchro.repositories;
 
+import org.example.synchro.entities.Album;
 import org.example.synchro.entities.Review;
+import org.example.synchro.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -41,4 +43,6 @@ public interface ReviewRepository
     Long contarReviewsPorMidia(
             @Param("midiaId") Long midiaId
     );
+    boolean existsByAuthorAndMidia(User author, Album midia);
+
 }

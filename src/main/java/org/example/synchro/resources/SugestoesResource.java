@@ -49,4 +49,5 @@ public class SugestoesResource {
 
         return resultado;
     }
+
 }

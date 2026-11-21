@@ -34,3 +34,7 @@ build/
 
 src/main/resources/keys/
 *.pem
+data.rar
+idea.rar
+data/
+*.rar

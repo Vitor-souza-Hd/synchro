@@ -113,11 +113,10 @@
                             <i class="fa-brands fa-lastfm"></i><span>Conectar seu Last.fm</span>
                         </button>
 
-                        <!-- ⬇️ ADICIONE O BOTÃO AQUI ⬇️ -->
+                        <!-- BOTÃO SEGUIR -->
                         <button id="btnSeguir" style="display: none; margin: 15px 0; padding: 10px 20px; border-radius: 20px; border: 1px solid #1db954; background: transparent; color: #1db954; cursor: pointer; font-weight: bold;">
                             Seguir
                         </button>
-                        <!-- ⬆️ FIM DO BOTÃO ⬆️ -->
 
                         <div class="profile-stats">
                             <div><h3 id="profileScrobbles">—</h3><p>Synchs</p></div>
@@ -129,18 +128,31 @@
                 </div>
             </section>
         </header>
+
         <section class="top-artists">
             <h2>Seus Artistas Favoritos do Momento</h2>
             <div class="artist"><!-- Last.fm --></div>
         </section>
+
         <section class="user-review">
             <h2>Suas Avaliações Recentes</h2>
             <div class="review"><!-- Dados da conta Synchro, futuramente --></div>
         </section>
+
+        <!-- ⬇️ NOVA SEÇÃO: O QUE SEUS AMIGOS OUVEM ⬇️ -->
+        <section class="friends-listening" style="margin-top: 40px;">
+            <h2>O que seus amigos andam ouvindo?</h2>
+            <div id="friends-listening-container" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                <p style="color: #b3b3b3;">Carregando o gosto musical dos seus amigos...</p>
+            </div>
+        </section>
+        <!-- ⬆️ FIM DA NOVA SEÇÃO ⬆️ -->
+
         <section class="user-playlist">
             <h2>Playlists Criadas</h2>
             <div class="playlist"><!-- Dados da conta Synchro, futuramente --></div>
         </section>
+
         <div class="ranking-controls" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0;">
             <h2 style="margin:0;">Relatório Musical</h2>
             <label for="rankingPeriod">Período:</label>
@@ -154,6 +166,7 @@
             </select>
             <span id="rankingStatus" role="status" aria-live="polite"></span>
         </div>
+
         <section class="weekly-report">
             <div class="weekly-card">
                 <h5 class="h-artists">Top Artistas</h5>
@@ -186,5 +199,7 @@
 <script src="banner-perfil.js"></script>
 <script src="fotos-artistas-perfil.js"></script>
 <script src="seguidores.js"></script>
+<!-- ⬇️ ADICIONE O SCRIPT DA ABA DE AMIGOS AQUI ⬇️ -->
+<script src="amigos.js"></script>
 </body>
 </html>
