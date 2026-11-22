@@ -20,63 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
         { name: "RAP", image: "/frontend/assets/images/cards/tupac.webp", link: "https://open.spotify.com/playlist/37i9dQZF1DX186v583rmzp?si=fa1f1c99a2fd4f91" }
     ];
 
-    const reviewsData = [
-        {
-            user: "silverzenith",
-            userphoto: "/frontend/assets/images/cards/user/users/silverzenith.webp",
-            album: "/frontend/assets/images/cards/user/tcfsr.webp",
-            albumname: "Three Cheers for Sweet Revenge",
-            artist: "My Chemical Romance",
-            review: '"Um dos melhores álbuns conceituais da história, com certeza daria um bom filme"',
-            rating: "9/10"
-        },
-        {
-            user: "disintelia",
-            userphoto: "/frontend/assets/images/cards/user/users/disintelia.webp",
-            album: "/frontend/assets/images/cards/user/pornography.webp",
-            albumname: "Pornography",
-            artist: "The Cure",
-            review: '"Esse álbum tem uma atmosfera melancólica e fria tão perfeita e, apesar disso, consegue passar uma sensação tão aconchegante. Definitivamente supera o Disintegrated e é o melhor da discografia do The cure."',
-            rating: "10/10"
-        },
-        {
-            user: "jinka070",
-            userphoto: "/frontend/assets/images/cards/user/users/jinka070.webp",
-            album: "/frontend/assets/images/cards/user/biohazard.webp",
-            albumname: "BIOHAZARD",
-            artist: "Trash Poll",
-            review: '"somente a nata do nu metal brasileiro"',
-            rating: "9.5/10"
-        },
-        {
-            user: "Tavio_OoO",
-            userphoto: "/frontend/assets/images/cards/user/users/Tavio_OoO.webp",
-            album: "/frontend/assets/images/cards/user/bythewater.webp",
-            albumname: "By The Water",
-            artist: "Sondae",
-            review: '"Ao contrário da maior parte dos álbuns cristãos que já ouvi, este apresenta um grande foco na musicalidade e sonoridade e não somente ao louvor, e só nisso já me ganhou, mas além disso, o conteúdo introspectivo retrata muito mais uma maior conexão com Jesus Cristo que religiosidade, tornando esse álbum uma joia rara em meio a tantos outros"',
-            rating: "8.5/10"
-        },
-        {
-            user: "Saii0710",
-            userphoto: "/frontend/assets/images/cards/user/users/Saii0710.webp",
-            album: "/frontend/assets/images/cards/user/SSPSG.webp",
-            albumname: "SE SONHOS PUDESSEM SER GUARDADOS",
-            artist: "myseryswin",
-            review: '"O álbum mostra o refinamento de Swin em comparação com seus projetos anteriores. Melhor música: feiticeiro(eu merecia essa dança tanto assim?)"',
-            rating: "9/10"
-        },
-        {
-            user: "Alz7",
-            userphoto: "/frontend/assets/images/cards/user/users/Alz7.webp",
-            album: "/frontend/assets/images/cards/user/sonofspergy.webp",
-            albumname: "Son Of Spergy",
-            artist: "Daniel Caesar",
-            review: '" é o último álbum lançado de Daniel Caesar. Sendo um álbum que Daniel foca em contar a jornada de amadurecimento, fé e reconciliação. O álbum explora o peso dessa herança religiosa e familiar, abordando temas como masculinidade, erros do passado e a busca por perdão. O ritmo do projeto é intencionalmente lento, apostando em produções atmosféricas e vocais crus usando muito os corais gospels. Sendo um retrato honesto de um artista aprendendo a lidar com suas próprias fraquezas."',
-            rating: "9/10"
-        }
-    ];
-
     // =========================================================
     // ELEMENTOS DA PÁGINA
     // =========================================================
@@ -148,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const recommendationLimit = 6;
     const brazilianSlots = 2;
+    const artistPoolLimit = 18;
+    const artistRotationMs = 2 * 60 * 60 * 1000;
     const genreWeights = [1, 0.7, 0.45, 0.35, 0.25];
     const artistKey = artist => artist.name.normalize('NFKC').replace(/\s+/g, ' ').toLowerCase();
 
@@ -252,9 +197,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadPersonalizedArtists(genres) {
         try {
-            if (!Array.isArray(genres)) return [];
+            if (!Array.isArray(genres)) return null;
             const tags = recommendationTags(genres);
-            if (!tags.size) return [];
+            if (!tags.size) return null;
 
             const nationalTag = [...tags.keys()].map(tag => brazilianGenreTags.get(tag)).find(Boolean) || 'brazilian';
             const requests = new Map();
@@ -291,19 +236,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 addNationalArtists(orderNationalArtists(await getArtists('brazilian')));
             }
 
-            const artists = new Map([...nationalArtists].slice(0, brazilianSlots));
-            for (const [key, {artist}] of ranked) {
-                if (artists.size === recommendationLimit) break;
-                if (!artists.has(key)) artists.set(key, nationalArtists.get(key) || artist);
-            }
-            for (const [key, artist] of nationalArtists) {
-                if (artists.size === recommendationLimit) break;
-                if (!artists.has(key)) artists.set(key, artist);
-            }
-            return [...artists.values()].map(artist => ({...artist, nome: artist.name}));
+            return {ranked: ranked.slice(0, artistPoolLimit).map(([key, {artist}]) => nationalArtists.get(key) || artist),
+                national: [...nationalArtists.values()]};
         } catch {
-            return [];
+            return null;
         }
+    }
+
+    function rotateArtists(items, slot) {
+        if (items.length < 2) return items;
+        const offset = slot % items.length;
+        return items.slice(offset).concat(items.slice(0, offset));
     }
 
     const recommendationProfile = artistsGrid || albumsGrid ? loadRecommendationGenres().catch(() => ({
@@ -313,8 +256,61 @@ document.addEventListener("DOMContentLoaded", () => {
     if (artistsGrid) {
         const artistsStatus = document.getElementById('popularArtistsStatus');
         const recommendationStatus = document.getElementById('artistRecommendationStatus');
-        let personalized = false;
-        let dailyRankingShown = false;
+        let personalized = null;
+        let dailyRanking = [];
+        let catalogArtists = artistsData;
+        let renderedSlot;
+        let rotationTimer;
+        let visibleArtistNames = '';
+
+        function renderArtistSelection(slot = Math.floor(Date.now() / artistRotationMs)) {
+            renderedSlot = slot;
+            const selected = new Map();
+            function addArtists(items, limit = recommendationLimit) {
+                for (const artist of items) {
+                    if (selected.size === limit) break;
+                    const nome = artist.nome || artist.name;
+                    if (!nome) continue;
+                    const key = artistKey({name: nome});
+                    if (!selected.has(key)) selected.set(key, {...artist, nome});
+                }
+            }
+
+            if (personalized) {
+                addArtists(rotateArtists(personalized.national, slot), brazilianSlots);
+                addArtists(rotateArtists(personalized.ranked, slot));
+                addArtists(rotateArtists(personalized.national, slot));
+            }
+            if (selected.size < recommendationLimit) {
+                const fallback = new Map();
+                for (const artist of [...dailyRanking, ...catalogArtists]) {
+                    const nome = artist.nome || artist.name;
+                    if (!nome) continue;
+                    const key = artistKey({name: nome});
+                    if (!fallback.has(key)) fallback.set(key, artist);
+                    if (fallback.size === artistPoolLimit) break;
+                }
+                addArtists(rotateArtists([...fallback.values()], slot));
+            }
+            const identity = JSON.stringify([...selected.values()].map(({nome, id, genre, imgUrl, images}) =>
+                [nome, id, genre, imgUrl, images]));
+            if (identity === visibleArtistNames) return;
+            visibleArtistNames = identity;
+            exibirArtistas([...selected.values()]);
+        }
+
+        function scheduleArtistRotation() {
+            clearTimeout(rotationTimer);
+            const now = Date.now();
+            const slot = Math.floor(now / artistRotationMs);
+            if (renderedSlot !== slot) renderArtistSelection(slot);
+            rotationTimer = setTimeout(scheduleArtistRotation, artistRotationMs - now % artistRotationMs);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) scheduleArtistRotation();
+        });
+        scheduleArtistRotation();
 
         async function carregarCatalogo() {
             let catalog = [];
@@ -324,8 +320,9 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch {
                 // Use the default artists if the local catalog cannot be reached.
             }
-            if (!personalized && !dailyRankingShown) {
-                exibirArtistas(Array.isArray(catalog) && catalog.length ? catalog : artistsData);
+            if (Array.isArray(catalog) && catalog.length) {
+                catalogArtists = catalog;
+                renderArtistSelection();
             }
         }
 
@@ -334,13 +331,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 const response = await fetch('/last-fm/discovery?method=chart.getTopArtists', {
                     signal: AbortSignal.timeout(17000)
                 });
-                if (!response.ok || personalized) return;
+                if (!response.ok) return;
                 const {artists} = await response.json();
-                const ranked = readRankedArtists(artists?.artist);
-                if (!ranked.length || personalized) return;
-                dailyRankingShown = true;
-                exibirArtistas(ranked.map(artist => ({...artist, nome: artist.name,
-                    imgUrl: artist.images.find(usablePhoto)})));
+                dailyRanking = readRankedArtists(artists?.artist)
+                    .map(artist => ({...artist, imgUrl: artist.images.find(usablePhoto)}));
+                renderArtistSelection();
             } catch {
                 // The catalog remains available while the Last.fm ranking is unavailable.
             }
@@ -395,9 +390,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
                 const artists = await loadPersonalizedArtists(genres);
-                if (!artists.length) throw new Error('Recomendações indisponíveis.');
-                personalized = true;
-                exibirArtistas(artists);
+                if (!artists || (!artists.ranked.length && !artists.national.length)) {
+                    throw new Error('Recomendações indisponíveis.');
+                }
+                personalized = artists;
+                renderArtistSelection();
                 if (recommendationStatus) recommendationStatus.textContent = 'Para você · ' + genres.join(', ');
             } catch {
                 if (recommendationStatus) recommendationStatus.textContent =
@@ -462,6 +459,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 artist.textContent = album.artist;
                 if (album.releaseDate) artist.textContent += ' · ' + album.releaseDate.split('-').reverse().join('/');
                 info.append(name, artist);
+                if (album.reason) {
+                    const reason = document.createElement('p');
+                    reason.textContent = album.reason;
+                    info.append(reason);
+                }
                 link.append(artwork, info);
                 card.append(link);
                 grid.append(card);
@@ -548,11 +550,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     name: item.titulo,
                     artist: item.nomeArtista || '',
                     artistCard: item.id == null,
+                    reason: item.motivo,
                     images: /^https:\/\//i.test(item.capaUrl || '') ? [item.capaUrl] : []
                 }));
                 renderAlbums(cards, grid);
                 feedback.textContent = cards.length === 0 ? 'Ainda não há sugestões disponíveis.'
-                    : personalized ? 'Com base nos artistas que você mais ouve no Last.fm.'
+                    : personalized ? 'Uma seleção com base no seu gosto musical.'
                     : 'Sugestões do catálogo do Synchro.';
             } catch {
                 feedback.textContent = 'Não foi possível carregar as sugestões.';
@@ -595,31 +598,101 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================================
 
     if (reviewsGrid) {
-        reviewsData.forEach(review => {
-            const reviewsCard = document.createElement("div");
-            reviewsCard.classList.add("reviews-card");
+        const feedback = document.getElementById('recentReviewsStatus');
+        const imageRoot = '/frontend/assets/images/';
 
-            reviewsCard.innerHTML = `
-                <div class="review-header">
-                    <img loading="lazy" decoding="async" class="album-cover" src="${review.album}" alt="Imagem de ${review.albumname}">
-                    <div class="review-info">
-                        <h3>${review.albumname}</h3>
-                        <h5>${review.artist}</h5>
-                        <div class="rating">
-                            <h3>${review.rating}</h3>
-                        </div>
-                    </div>
-                </div>
+        function safeReviewImage(url) {
+            if (!usablePhoto(url)) return null;
+            try {
+                const image = new URL(url, window.location.origin);
+                return !image.username && !image.password ? image.href : null;
+            } catch {
+                return null;
+            }
+        }
 
-                <p class="review-text">${review.review}</p>
+        function showReview(item) {
+            const track = item.mediaType === 'track';
+            const artist = item.artistName || '';
+            const card = document.createElement('article');
+            card.className = 'reviews-card';
 
-                <div class="review-user">
-                    <img loading="lazy" decoding="async" class="user-avatar" src="${review.userphoto}" alt="Imagem de ${review.user}">
-                    <span>${review.user}</span>
-                </div>
-            `;
+            const header = document.createElement('div');
+            header.className = 'review-header';
+            const artwork = document.createElement('div');
+            artwork.className = 'review-artwork';
+            const info = document.createElement('div');
+            info.className = 'review-info';
+            const heading = document.createElement('h3');
+            const mediaLink = document.createElement('a');
+            mediaLink.href = '/frontend/pages/' + (track ? 'musica' : 'album') + '.html?' +
+                new URLSearchParams({id: item.mediaId});
+            mediaLink.textContent = item.title || 'Mídia sem título';
+            heading.append(mediaLink);
+            const subtitle = document.createElement('h5');
+            subtitle.textContent = artist || (track ? 'Música' : 'Álbum');
+            info.append(heading, subtitle);
+            if (item.rating != null) {
+                const rating = document.createElement('span');
+                rating.className = 'rating';
+                rating.textContent = item.rating + '/10';
+                info.append(rating);
+            }
+            header.append(artwork, info);
 
-            reviewsGrid.appendChild(reviewsCard);
+            const comment = document.createElement('p');
+            comment.className = 'review-text';
+            comment.textContent = item.review?.trim() || 'Avaliação sem comentário.';
+
+            const author = document.createElement('div');
+            author.className = 'review-user';
+            const avatar = document.createElement('img');
+            avatar.className = 'user-avatar';
+            avatar.alt = '';
+            avatar.loading = 'lazy';
+            avatar.onerror = () => { avatar.onerror = null; avatar.src = imageRoot + 'user/userphoto.jpg'; };
+            avatar.src = safeReviewImage(item.avatarUrl) || imageRoot + 'user/userphoto.jpg';
+            const profile = document.createElement('a');
+            profile.href = '/frontend/pages/perfil-publico.html?' + new URLSearchParams({user: item.authorId});
+            profile.textContent = '@' + item.username;
+            author.append(avatar, profile);
+
+            card.append(header, comment, author);
+            reviewsGrid.append(card);
+
+            const cover = safeReviewImage(item.coverUrl);
+            if (window.SynchroFavoriteImages) {
+                window.SynchroFavoriteImages.show(artwork, {
+                    kind: track ? 'track' : 'album', id: item.mediaId, title: item.title, artist,
+                    className: 'album-cover', preferredImages: cover ? [cover] : [], alt: ''
+                });
+            } else {
+                const image = document.createElement('img');
+                image.className = 'album-cover';
+                image.alt = '';
+                image.loading = 'lazy';
+                image.onerror = () => { image.onerror = null; image.src = imageRoot + 'catalog-placeholder.svg'; };
+                image.src = cover || imageRoot + 'catalog-placeholder.svg';
+                artwork.append(image);
+            }
+        }
+
+        async function showRecentReviews() {
+            try {
+                const response = await fetch('/review/recent', {signal: AbortSignal.timeout(8000)});
+                if (!response.ok) throw new Error('Avaliações indisponíveis.');
+                const items = await response.json();
+                reviewsGrid.replaceChildren();
+                items.forEach(showReview);
+                if (feedback) feedback.textContent = items.length ? '' : 'Ainda não há avaliações da comunidade.';
+            } catch {
+                if (feedback) feedback.textContent = 'Não foi possível carregar as avaliações agora.';
+            }
+        }
+
+        showRecentReviews();
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) showRecentReviews();
         });
     }
 

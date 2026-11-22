@@ -188,7 +188,7 @@ public class LastFmCatalogService {
                 var artist = (com.fasterxml.jackson.databind.node.ObjectNode) node;
                 artist.put("catalogId", id);
                 imported.add(artist);
-                if (imported.size() == 6) break;
+                if (imported.size() == DailyPopularSelections.ARTIST_POOL_SIZE) break;
             }
             if (ranking instanceof com.fasterxml.jackson.databind.node.ObjectNode chart) {
                 chart.set("artist", imported);

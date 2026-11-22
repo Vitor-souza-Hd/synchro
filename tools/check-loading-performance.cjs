@@ -31,6 +31,7 @@ function environment(search) {
         addEventListener: (name, fn) => { events[name] = fn; },
         dispatchEvent: event => events[event.type]?.(event)};
     const context = {document, URL, URLSearchParams, console, CustomEvent, AbortSignal,
+        Date: class extends Date { static now() { return 0; } }, setTimeout: () => 1, clearTimeout: () => {},
         window: {location: {search, origin: 'http://synchro.test'}, SynchroFeatures: {bindFavorite() {}, escapeHtml: value => value}},
         DOMParser: class { parseFromString(value) { return {body: {textContent: value}, querySelectorAll: () => []}; } }};
     return {node, selectors, events, context};
@@ -115,7 +116,7 @@ async function checkDailyArtists() {
     catalog.resolve(json([{nome: 'Saved artist'}]));
     await tick();
     assert.deepEqual(grid.children.map(card => card.children[0].children[1].children[0].textContent),
-        ['First in chart', 'Second in chart']);
+        ['First in chart', 'Second in chart', 'Saved artist']);
     assert.equal(grid.children[0].children[0].href, '/frontend/pages/artista.html?id=17');
 }
 async function checkPopularArtistPhotos() {

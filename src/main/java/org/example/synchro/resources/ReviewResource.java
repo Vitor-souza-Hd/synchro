@@ -2,9 +2,11 @@ package org.example.synchro.resources;
 
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.dto.MidiaRatingDto;
+import org.example.synchro.dto.RecentReviewDto;
 import org.example.synchro.dto.ReviewDto;
 import org.example.synchro.dto.ReviewRequest;
 import org.example.synchro.services.ReviewService;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,6 +55,11 @@ public class ReviewResource {
         ) {
             return ResponseEntity.status(401).build();
         }
+    }
+
+    @GetMapping("/recent")
+    public ResponseEntity<List<RecentReviewDto>> recent() {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(reviewService.recentPublicReviews());
     }
 
     @GetMapping

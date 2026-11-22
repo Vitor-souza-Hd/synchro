@@ -17,16 +17,27 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     List<Album> findByArtistas(Artista artista);
 
     @Query("""
-            SELECT DISTINCT album FROM Album album JOIN album.artistas artist
-            WHERE artist.nomeKey = :artistKey
+            SELECT album FROM Album album
+            WHERE EXISTS (SELECT artist.id FROM Album linked JOIN linked.artistas artist
+                WHERE linked.id = album.id AND artist.nomeKey = :artistKey)
             AND NOT EXISTS (
                 SELECT review.id FROM Review review
                 WHERE review.midia.id = album.id AND review.author.user.id = :userId
             )
-            ORDER BY album.id
+            ORDER BY coalesce(album.lastFm.listeners, 0) DESC, coalesce(album.lastFm.playcount, 0) DESC,
+                album.dataLancamento DESC NULLS LAST, album.id DESC
             """)
     List<Album> findUnreviewedByArtist(@Param("userId") Long userId, @Param("artistKey") String artistKey,
                                      Pageable pageable);
+
+    @Query("""
+            SELECT album FROM Album album
+            WHERE NOT EXISTS (SELECT review.id FROM Review review
+                WHERE review.midia.id = album.id AND review.author.user.id = :userId)
+            ORDER BY coalesce(album.lastFm.listeners, 0) DESC, coalesce(album.lastFm.playcount, 0) DESC,
+                album.dataLancamento DESC NULLS LAST, album.id DESC
+            """)
+    List<Album> findUnreviewedPopular(@Param("userId") Long userId, Pageable pageable);
 
     Album findByTitulo(String titulo);
 

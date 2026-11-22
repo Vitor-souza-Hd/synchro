@@ -21,7 +21,7 @@ public class DailyPopularSelection {
     @Column(name = "selection_date")
     private LocalDate date;
 
-    @Column(length = 120)
+    @Column(length = 380)
     private String artistIds;
 
     @Column(length = 120)

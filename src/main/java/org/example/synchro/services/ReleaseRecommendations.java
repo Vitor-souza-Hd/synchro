@@ -79,7 +79,7 @@ public final class ReleaseRecommendations {
                 .toLowerCase(Locale.ROOT).replace('-', ' ').replace('_', ' ').replaceAll("\\s+", " ").strip();
     }
 
-    private static double affinity(List<String> profile, Set<String> tags) {
+    static double affinity(List<String> profile, Set<String> tags) {
         double score = 0;
         for (int i = 0; i < profile.size(); i++) {
             String genre = profile.get(i);

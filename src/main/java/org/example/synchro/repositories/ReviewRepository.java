@@ -2,6 +2,7 @@
 package org.example.synchro.repositories;
 
 import org.example.synchro.entities.Review;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +12,16 @@ import java.util.Optional;
 
 public interface ReviewRepository
         extends JpaRepository<Review, Long> {
+
+    @Query("""
+            SELECT r FROM Review r
+            JOIN FETCH r.author author
+            JOIN FETCH author.user
+            JOIN FETCH r.midia media
+            WHERE TYPE(media) IN (Album, Musica)
+            ORDER BY r.id DESC
+            """)
+    List<Review> findRecentPublicReviews(Pageable pageable);
 
     Optional<Review> findByAuthorIdAndMidiaId(
             Long authorId,

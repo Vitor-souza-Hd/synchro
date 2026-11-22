@@ -374,10 +374,19 @@ html.synchro-light :is(#artistRecommendationStatus, #albumRecommendationStatus, 
     transform: translateY(-5px);
 }
 
-.reviews-header{
+.review-header {
     display: flex;
+    align-items: center;
     gap: 15px;
 }
+
+.review-artwork { flex: 0 0 auto; }
+.review-artwork img { display: block; }
+.review-info, .review-text, .review-user { min-width: 0; overflow-wrap: anywhere; }
+.review-info a { color: inherit; }
+.review-user a { color: #fff; }
+html.synchro-light .review-user a { color: #715d69; }
+#recentReviewsStatus:empty { display: none; }
 .album-cover{
     width: 90px;
     height: 90px;

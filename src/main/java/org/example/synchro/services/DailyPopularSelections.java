@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class DailyPopularSelections {
     public static final ZoneId TIME_ZONE = ZoneId.of("America/Sao_Paulo");
     public static final int SIZE = 6;
+    public static final int ARTIST_POOL_SIZE = 18;
     private static final ObjectMapper JSON = new ObjectMapper();
 
     private final DailyPopularSelectionRepository selections;
@@ -34,7 +35,7 @@ public class DailyPopularSelections {
     public Optional<String> findArtists(LocalDate date) {
         var ids = selections.findById(date).map(DailyPopularSelection::getArtistIds)
                 .map(DailyPopularSelections::readIds).orElseGet(List::of);
-        if (ids.size() != SIZE) return Optional.empty();
+        if (!isArtistPool(ids)) return Optional.empty();
         var response = JSON.createObjectNode();
         var chart = response.putObject("artists").putArray("artist");
         for (var id : ids) {
@@ -66,7 +67,7 @@ public class DailyPopularSelections {
     }
 
     public synchronized void saveArtists(LocalDate date, List<Long> ids) {
-        if (!isComplete(ids)) return;
+        if (!isArtistPool(ids)) return;
         var selection = selections.findById(date).orElseGet(() -> new DailyPopularSelection(date));
         selection.setArtistIds(writeIds(ids));
         selections.saveAndFlush(selection);
@@ -77,6 +78,11 @@ public class DailyPopularSelections {
         var selection = selections.findById(date).orElseGet(() -> new DailyPopularSelection(date));
         selection.setAlbumIds(writeIds(ids));
         selections.saveAndFlush(selection);
+    }
+
+    public static boolean isArtistPool(List<Long> ids) {
+        return ids.size() >= SIZE && ids.size() <= ARTIST_POOL_SIZE && ids.stream().allMatch(id -> id != null && id > 0)
+                && ids.stream().distinct().count() == ids.size();
     }
 
     public static boolean isComplete(List<Long> ids) {

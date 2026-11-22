@@ -34,14 +34,17 @@ public class RecomendacaoResource {
         if (!cookies.checkCookie(token)) throw new UnauthorizedException("Faça login para ver suas recomendações");
         Long userId = cookies.getId(token);
 
-        return lastfm.getTopBySynchroId(userId, "artists", "overall")
-                .flatMap(body -> Mono.fromCallable(() -> readArtists(body)))
-                .onErrorResume(error -> Mono.empty())
-                .filter(artists -> !artists.isEmpty())
-                .flatMap(artists -> Mono.fromCallable(() -> recommendations.forTopArtists(userId, artists))
+        return Mono.zip(topArtists(userId, "1month"), topArtists(userId, "overall"))
+                .flatMap(rankings -> Mono.fromCallable(() -> recommendations.recommend(userId, rankings.getT1(), rankings.getT2()))
                         .subscribeOn(Schedulers.boundedElastic()))
-                .switchIfEmpty(Mono.fromCallable(recommendations::fromCatalog).subscribeOn(Schedulers.boundedElastic()))
                 .map(result -> ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(result));
+    }
+
+    private Mono<List<TopArtist>> topArtists(Long userId, String period) {
+        return lastfm.getTopBySynchroId(userId, "artists", period)
+                .flatMap(body -> Mono.fromCallable(() -> readArtists(body)))
+                .onErrorReturn(List.of())
+                .defaultIfEmpty(List.of());
     }
 
     private List<TopArtist> readArtists(String body) throws java.io.IOException {

@@ -116,7 +116,7 @@ public class LastFmDiscoveryResource {
                             if (!lookup.method().equals(DAILY_ARTISTS)) return new Result(body, result.cacheSeconds(), true);
                             var ids = LastFmCatalogStore.nodes(JSON.readTree(body).path("artists").path("artist")).stream()
                                     .map(artist -> artist.path("catalogId").asLong()).toList();
-                            if (DailyPopularSelections.isComplete(ids)) {
+                            if (DailyPopularSelections.isArtistPool(ids)) {
                                 dailySelections.saveArtists(LocalDate.now(DailyPopularSelections.TIME_ZONE), ids);
                                 return new Result(body, result.cacheSeconds(), true);
                             }

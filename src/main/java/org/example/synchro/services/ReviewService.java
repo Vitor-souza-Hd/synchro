@@ -1,7 +1,12 @@
 package org.example.synchro.services;
 
 import lombok.RequiredArgsConstructor;
+import org.example.synchro.dto.RecentReviewDto;
 import org.example.synchro.dto.ReviewDto;
+import org.example.synchro.entities.Album;
+import org.example.synchro.entities.Artista;
+import org.example.synchro.entities.Musica;
+import org.springframework.data.domain.PageRequest;
 import org.example.synchro.dto.ReviewRequest;
 import org.example.synchro.entities.Midia;
 import org.example.synchro.entities.Review;
@@ -110,6 +115,32 @@ public class ReviewService {
                 .stream()
                 .map(ReviewDto::new)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecentReviewDto> recentPublicReviews() {
+        return reviewRepository.findRecentPublicReviews(PageRequest.of(0, 6)).stream()
+                .map(this::toRecentReview).toList();
+    }
+
+    private RecentReviewDto toRecentReview(Review review) {
+        var media = review.getMidia();
+        var track = media instanceof Musica musica ? musica : null;
+        var artists = track == null ? ((Album) media).getArtistas() : track.getArtistas();
+        var metadata = media.getLastFm();
+        String artist = metadata.getArtistName();
+        if (artist == null || artist.isBlank()) {
+            artist = artists.stream().map(Artista::getNome).sorted().findFirst().orElse(null);
+        }
+        String cover = metadata.getImageUrl();
+        if ((cover == null || cover.isBlank()) && track != null && track.getAlbum() != null) {
+            cover = track.getAlbum().getLastFm().getImageUrl();
+        }
+        var author = review.getAuthor();
+        var account = author.getUser();
+        return new RecentReviewDto(review.getId(), review.getRating(), review.getReview(), account.getId(),
+                account.getUsername(), author.getLastFmImageUrl(), media.getId(), track == null ? "album" : "track",
+                media.getTitulo(), artist, cover);
     }
 
     @Transactional(readOnly = true)
