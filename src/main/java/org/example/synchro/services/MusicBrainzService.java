@@ -1,5 +1,6 @@
 package org.example.synchro.services;
 
+import org.example.synchro.services.exception.MusicBrainzUnavailableException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.util.retry.Retry;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,7 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class MusicBrainzService {
@@ -32,8 +32,8 @@ public class MusicBrainzService {
     private static final Duration CACHE_POSITIVO = Duration.ofHours(6);
     private static final Duration CACHE_VAZIO = Duration.ofMinutes(30);
 
-    private final ConcurrentHashMap<String, Mono<String>> cachePesquisas =
-            new ConcurrentHashMap<>();
+    private final BoundedLookupCache<String, String> cachePesquisas =
+            new BoundedLookupCache<>(MAX_CACHE_ENTRIES, json -> respostaVazia(json) ? CACHE_VAZIO : CACHE_POSITIVO);
 
     private final MusicBrainzRateLimiter rateLimiter;
     private final Duration lookupTimeout;
@@ -168,12 +168,7 @@ public class MusicBrainzService {
 
         String chave = caminho + "|" + limite + "|" + query;
 
-        if (cachePesquisas.size() >= MAX_CACHE_ENTRIES
-                && !cachePesquisas.containsKey(chave)) {
-            cachePesquisas.clear();
-        }
-
-        return cachePesquisas.computeIfAbsent(chave, ignorada ->
+        return cachePesquisas.get(chave, () ->
 
                 Mono.defer(() ->
                                 rateLimiter.aguardarPermissao()
@@ -186,7 +181,8 @@ public class MusicBrainzService {
                                                         .queryParam("limit", limite)
                                                         .build(query))
                                                 .retrieve()
-                                                .bodyToMono(String.class))
+                                                .bodyToMono(String.class)
+                                                .onErrorMap(WebClientResponseException.class, rateLimiter::tratarFalha))
                         )
 
                         .retryWhen(
@@ -197,15 +193,6 @@ public class MusicBrainzService {
                                         .maxBackoff(Duration.ofSeconds(6))
                                         .jitter(0.25)
 
-                                        .doBeforeRetry(retrySignal -> {
-                                            System.out.println(
-                                                    "[SYNCHRO] Nova tentativa no MusicBrainz: "
-                                                            + (retrySignal.totalRetries() + 1)
-                                                            + " | Erro: "
-                                                            + retrySignal.failure().getMessage()
-                                            );
-                                        })
-
                                         .filter(error -> {
                                             if (!(error instanceof WebClientResponseException ex)) {
                                                 return false;
@@ -213,15 +200,12 @@ public class MusicBrainzService {
 
                                             int status = ex.getStatusCode().value();
 
-                                            return status == 429
-                                                    || status == 502
-                                                    || status == 503
-                                                    || status == 504;
+                                            return status == 502 || status == 504;
                                         })
+                                        .onRetryExhaustedThrow((spec, signal) -> new MusicBrainzUnavailableException(0))
                         )
 
                         .timeout(lookupTimeout)
-                        .cacheInvalidateWhen(json -> Mono.delay(respostaVazia(json) ? CACHE_VAZIO : CACHE_POSITIVO).then())
         );
     }
 

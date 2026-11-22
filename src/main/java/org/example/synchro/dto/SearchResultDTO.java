@@ -14,6 +14,7 @@ import java.util.List;
 public class SearchResultDTO {
 
     private List<SearchUserDTO> users = new ArrayList<>();
+    private boolean hasMoreUsers;
     private List<Song> songs = new ArrayList<>();
     private List<Artist> artists = new ArrayList<>();
     private List<AlbumResult> albums = new ArrayList<>();

@@ -2,6 +2,7 @@ package org.example.synchro.repositories;
 
 import org.example.synchro.entities.Artista;
 import org.example.synchro.entities.Musica;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -25,6 +26,21 @@ public interface MusicaRepository extends JpaRepository<Musica, Long> {
     Musica findByTitulo(String titulo);
 
     List<Musica> findByTituloContainingIgnoreCase(String titulo);
+
+    @org.springframework.data.jpa.repository.Query("""
+            select m from Musica m
+            where locate(lower(:term), lower(m.titulo)) > 0
+               or exists (
+                   select candidate.id from Musica candidate join candidate.artistas artist
+                   where candidate.id = m.id and locate(lower(:term), lower(artist.nome)) > 0
+               )
+            order by case
+                when lower(m.titulo) = lower(:term) then 0
+                when locate(lower(:term), lower(m.titulo)) = 1 then 1
+                when locate(lower(:term), lower(m.titulo)) > 0 then 2
+                else 3 end, lower(m.titulo), m.id
+            """)
+    List<Musica> searchCatalog(@org.springframework.data.repository.query.Param("term") String term, Pageable pageable);
 
     List<Musica> findByTituloContainingIgnoreCaseOrArtistasNomeContainingIgnoreCase(
             String titulo,

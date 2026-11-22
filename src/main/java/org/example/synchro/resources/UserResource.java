@@ -1,6 +1,7 @@
 
 package org.example.synchro.resources;
 
+import org.example.synchro.dto.PublicProfileDto;
 import org.example.synchro.dto.UserDto;
 import org.example.synchro.dto.UpdateUsernameRequest;
 import jakarta.validation.Valid;
@@ -47,8 +48,8 @@ public class UserResource {
     // =====================================================
 
     @GetMapping
-    public ResponseEntity<List<UserDto>> findAll() {
-        return ResponseEntity.ok(service.findAll());
+    public ResponseEntity<List<PublicProfileDto>> findAll() {
+        return ResponseEntity.ok(service.findPublicProfiles());
     }
 
     // =====================================================
@@ -83,7 +84,7 @@ public class UserResource {
                     required = false
             ) String token
     ) {
-        return ResponseEntity.ok(service.findMe(token));
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).body(service.findMe(token));
     }
 
     @PutMapping("/me/username")
@@ -454,12 +455,8 @@ public class UserResource {
     // =====================================================
 
     @GetMapping("/{username}")
-    public ResponseEntity<UserDto> findByUsername(
-            @PathVariable String username
-    ) {
-        return ResponseEntity.ok(
-                service.FindByUsername(username)
-        );
+    public ResponseEntity<PublicProfileDto> findByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(service.findPublicProfileByUsername(username));
     }
 
     // =====================================================

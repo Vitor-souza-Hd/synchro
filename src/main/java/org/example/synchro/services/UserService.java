@@ -1,6 +1,7 @@
 package org.example.synchro.services;
 
 import lombok.RequiredArgsConstructor;
+import org.example.synchro.dto.PublicProfileDto;
 import org.example.synchro.dto.UpdateUsernameRequest;
 import org.example.synchro.dto.UserDto;
 import org.example.synchro.entities.User;
@@ -15,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -25,15 +25,16 @@ public class UserService {
     private final UserRepository repository;
     private final CookieService cookieService;
 
-    public List<UserDto> findAll(){
-        List<UserDto> list = new ArrayList<>();
-        for(User user:repository.findAll()){
-            list.add(new UserDto(user));
-        }
-        return list;
+    @Transactional(readOnly = true)
+    public List<PublicProfileDto> findPublicProfiles() {
+        return repository.findAll().stream().map(PublicProfileDto::from).toList();
     }
-    public UserDto FindByUsername(String username){
-        return new UserDto(repository.findByUsername(username));
+
+    @Transactional(readOnly = true)
+    public PublicProfileDto findPublicProfileByUsername(String username) {
+        User user = repository.findByUsername(username);
+        if (user == null) throw new ResourceNotFoundException("Usuário não encontrado");
+        return PublicProfileDto.from(user);
     }
 
     public UserDto findMe(String cookie) {

@@ -25,6 +25,7 @@ public class UserDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
+    private Long id;
     private String username;
     private String email;
     private LocalDate birthDay;
@@ -36,6 +37,7 @@ public class UserDto implements Serializable {
     public UserDto() {}
 
     public UserDto(User user) {
+        this.id = user.getId();
         this.username = user.getUsername();
         this.email = user.getEmail();
         this.birthDay = user.getBirthDay();

@@ -12,7 +12,7 @@ for (const file of files) {
     const html = fs.readFileSync(file, 'utf8');
     if (!/class="search"/.test(html)) continue;
     assert.equal((html.match(/<script[^>]+src="[^"]*\/search\.js(?:\?[^"\s]*)?"/g) || []).length, 1, file);
-    assert.ok(html.includes('search.js?v=20261105-single-search-1'), 'Fresh search asset: ' + file);
+    assert.ok(html.includes('search.js?v=busca-eficiente'), 'Fresh search asset: ' + file);
     assert.ok(html.includes('assets/css/search.css'), file);
     assert.ok(!html.includes('explorar/busca.js'), file);
     pages++;
@@ -66,10 +66,10 @@ const flatten = node => [node, ...node.children.flatMap(flatten)];
     await tick(); assert.ok(prevented);
     assert.deepEqual(calls, ['/search?q=radio']);
     assert.deepEqual(flatten(panel).filter(node => node.tag === 'h3').map(node => node.textContent),
-        ['Músicas (1)', 'Artistas (1)', 'Álbuns (1)', 'Usuários (1)']);
+        ['Usuários (1)', 'Músicas (1)', 'Artistas (1)', 'Álbuns (1)']);
     assert.deepEqual(flatten(panel).filter(node => node.tag === 'a').map(node => node.href), [
-        '/frontend/pages/musica.html?id=1', '/frontend/pages/artista.html?id=2',
-        '/frontend/pages/album.html?id=3', '/frontend/pages/perfil.html?user=4']);
+        '/frontend/pages/perfil-publico.html?user=4', '/frontend/pages/musica.html?id=1',
+        '/frontend/pages/artista.html?id=2', '/frontend/pages/album.html?id=3']);
     input.listeners.keydown({key: 'Escape'}); assert.equal(panel.hidden, true);
     input.value = 'artist'; button.listeners.click(); await tick();
     assert.equal(calls.at(-1), '/search?q=artist');

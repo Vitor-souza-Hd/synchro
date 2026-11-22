@@ -164,86 +164,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // =========================================
-    // IDENTIFICAR CAPA PELO MUSICBRAINZ
+    // BUSCAR CAPA NAS FONTES DISPONÍVEIS
     // =========================================
 
-    async function loadCover() {
+    function loadCover(data) {
+        const normalize = value => String(value || '').normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+        const returnedArtist = typeof data?.artist === 'string' ? data.artist : data?.artist?.name;
+        const sameAlbum = normalize(data?.name) === normalize(album) && normalize(returnedArtist) === normalize(artist);
+        const preferredImages = sameAlbum && Array.isArray(data.image)
+            ? data.image.slice().reverse().map(image => image?.['#text']) : [];
 
-        try {
-            const url = new URL(
-                "/musicbrainz/album/search",
-                location.origin
-            );
-
-            url.searchParams.set("artist", artist);
-            url.searchParams.set("album", album);
-
-            const response = await fetch(url);
-
-            if (!response.ok) return;
-
-            const data = await response.json();
-
-            const candidates = data["release-groups"] || [];
-
-            const normalize = value =>
-                String(value || "")
-                    .normalize("NFD")
-                    .replace(/[\u0300-\u036f]/g, "")
-                    .trim()
-                    .toLowerCase();
-
-            const match = candidates.find(item =>
-                normalize(item.title) === normalize(album) &&
-                item["primary-type"] === "Album"
-            );
-
-            if (!match?.id) return;
-
-            const coverResponse = await fetch(
-                "/cover-art/release-group/" +
-                encodeURIComponent(match.id)
-            );
-
-            if (!coverResponse.ok) return;
-
-            const coverData = await coverResponse.json();
-            const imageUrl = coverData.coverUrl;
-
-            if (!imageUrl) return;
-
-            const parsed = new URL(imageUrl);
-
-            if (
-                parsed.protocol !== "https:" ||
-                !(
-                    parsed.hostname === "coverartarchive.org" ||
-                    parsed.hostname === "archive.org" ||
-                    parsed.hostname.endsWith(".archive.org")
-                )
-            ) {
-                return;
-            }
-
-            const img = new Image();
-            img.alt = `Capa de ${album}`;
-
-            img.onload = () => {
-                coverEl.replaceChildren(img);
-            };
-
-            img.src = imageUrl;
-
-        } catch (error) {
-            console.warn(
-                "[Synchro] Capa indisponível:",
-                error
-            );
-        }
+        window.SynchroFavoriteImages?.show(coverEl, {
+            kind: 'album', title: album, artist, preferredImages, alt: `Capa de ${album}`
+        });
     }
 
+    let data;
     try {
-        const data = await loadAlbum();
+        data = await loadAlbum();
 
         nameEl.textContent = data.name || album;
 
@@ -279,5 +217,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // A capa não depende do sucesso da consulta de faixas.
-    loadCover();
+    loadCover(data);
 });

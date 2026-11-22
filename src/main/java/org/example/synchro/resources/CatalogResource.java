@@ -1,6 +1,7 @@
 package org.example.synchro.resources;
 
 import lombok.RequiredArgsConstructor;
+import org.example.synchro.dto.PublicProfileDto;
 import org.example.synchro.dto.SearchResultDTO;
 import org.example.synchro.entities.Artista;
 import org.example.synchro.entities.CatalogName;
@@ -78,22 +79,12 @@ public class CatalogResource {
     }
 
     @GetMapping("/users/{id}")
-    public PublicProfile user(@PathVariable Long id) {
-        var user = users.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
-        var data = user.getData();
-        return new PublicProfile(user.getUsername(), user.getLastFmUsername(), user.hasLastFmConnection(),
-                new PublicProfileData(data == null ? null : data.getFullName(),
-                        data == null ? null : data.getScrobbles(), data == null ? null : data.getArtistas(),
-                        data == null ? null : data.getLastFmRealName(), data == null ? null : data.getLastFmImageUrl(),
-                        data == null ? null : data.getLastFmCountry(), data == null ? null : data.getLastFmTracks(),
-                        data == null ? null : data.getLastFmAlbums(), data == null ? null : data.getLastFmUpdatedAt()));
+    public PublicProfileDto user(@PathVariable Long id) {
+        return users.findById(id).map(PublicProfileDto::from)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
     public record AlbumDetails(SearchResultDTO.AlbumResult album, List<SearchResultDTO.Song> musicas) {}
     public record ArtistDetails(SearchResultDTO.Artist artist, List<SearchResultDTO.Song> musicas,
                                 List<SearchResultDTO.AlbumResult> albums) {}
-    public record PublicProfile(String username, String lastFmUsername, boolean lastFmConnected, PublicProfileData data) {}
-    public record PublicProfileData(String fullName, Integer scrobbles, Integer artistas,
-                                    String lastFmRealName, String lastFmImageUrl, String lastFmCountry,
-                                    Integer lastFmTracks, Integer lastFmAlbums, java.time.Instant lastFmUpdatedAt) {}
 }

@@ -8,6 +8,7 @@ import org.example.synchro.dto.SearchUserDTO;
 import org.example.synchro.entities.*;
 import org.example.synchro.importer.LastFmGenres;
 import org.example.synchro.repositories.*;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
@@ -18,6 +19,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class LastFmCatalogStore {
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final PageRequest SEARCH_PAGE = PageRequest.of(0, 10);
     private final MusicaRepository songs;
     private final ArtistaRepository artists;
     private final AlbumRepository albums;
@@ -201,16 +203,24 @@ public class LastFmCatalogStore {
                 .flatMap(Optional::stream).map(SearchResultDTO.Artist::from).toList());
         result.setAlbums(ids.getOrDefault("album", List.of()).stream().distinct().map(albums::findById)
                 .flatMap(Optional::stream).map(SearchResultDTO.AlbumResult::from).toList());
-        result.setUsers(users.findByUsernameContainingIgnoreCase(term).stream()
-                .map(u -> new SearchUserDTO(u.getId(), u.getUsername())).toList());
+        addPeople(term, result);
         return result;
     }
 
     @Transactional(readOnly = true)
     public SearchResultDTO local(String term) {
-        return result(term, Map.of("track", songs.findByTituloContainingIgnoreCaseOrArtistasNomeContainingIgnoreCase(term, term)
-                        .stream().map(Musica::getId).toList(),
-                "artist", artists.findByNomeContainingIgnoreCase(term).stream().map(Artista::getId).toList(),
-                "album", albums.findByTituloContainingIgnoreCase(term).stream().map(Album::getId).toList()));
+        var result = new SearchResultDTO();
+        result.setSongs(songs.searchCatalog(term, SEARCH_PAGE).stream().map(SearchResultDTO.Song::from).toList());
+        result.setArtists(artists.searchCatalog(term, SEARCH_PAGE).stream().map(SearchResultDTO.Artist::from).toList());
+        result.setAlbums(albums.searchCatalog(term, SEARCH_PAGE).stream().map(SearchResultDTO.AlbumResult::from).toList());
+        addPeople(term, result);
+        return result;
+    }
+
+    private void addPeople(String term, SearchResultDTO result) {
+        var people = users.searchPeople(term, SEARCH_PAGE);
+        result.setUsers(people.stream()
+                .map(user -> new SearchUserDTO(user.id(), user.username(), user.fullName())).toList());
+        result.setHasMoreUsers(people.hasNext());
     }
 }

@@ -7,7 +7,7 @@
         }
         if (document.querySelector('script[data-synchro-search-loader], script[src*="/assets/js/search.js"]')) return;
         const script = document.createElement('script');
-        script.src = '/frontend/assets/js/search.js?v=20261105-single-search-1';
+        script.src = '/frontend/assets/js/search.js?v=busca-eficiente';
         script.dataset.synchroSearchLoader = 'true';
         document.head.append(script);
     }

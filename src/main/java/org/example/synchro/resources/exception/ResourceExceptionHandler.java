@@ -6,17 +6,35 @@ import org.example.synchro.services.exception.InvalidTokenException;
 import org.example.synchro.services.exception.ResourceConflictException;
 import org.example.synchro.services.exception.ResourceNotFoundException;
 import org.example.synchro.services.exception.UnauthorizedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Map;
 
 @ControllerAdvice
 public class ResourceExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(ResourceExceptionHandler.class);
+
+    @ExceptionHandler(WebClientRequestException.class)
+    public ResponseEntity<Map<String, String>> externalConnectionFailed(
+            WebClientRequestException error, HttpServletRequest request) {
+        log.warn("Falha de conexão externa em {} {} para {} ({})",
+                request.getMethod(), request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE),
+                error.getUri().getHost(), error.getMostSpecificCause().getClass().getSimpleName());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).cacheControl(CacheControl.noStore())
+                .body(Map.of("error", "Não foi possível conectar ao serviço externo. Tente novamente."));
+    }
+
 	
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<StandardError> BadCredential(BadCredentialsException e, HttpServletRequest request){

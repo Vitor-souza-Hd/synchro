@@ -49,7 +49,7 @@ function initializeProfileMenu() {
     render();
 }
 
-const isPublicProfile = new URLSearchParams(window.location.search).has('user');
+const isPublicProfile = document.body.dataset.profile === 'public';
 // Cada aba do perfil compartilha a resposta entre rankings, gêneros e contadores.
 const profileRankings = new Map();
 function fetchProfileRanking(type, period) {
@@ -75,7 +75,14 @@ function fetchProfileRanking(type, period) {
     profileRankings.set(key, entry);
     return entry.request;
 }
-window.addEventListener('pageshow', () => {
+window.addEventListener('pagehide', event => {
+    if (!isPublicProfile && event.persisted) document.getElementById('profilePage').hidden = true;
+});
+window.addEventListener('pageshow', event => {
+    if (!isPublicProfile && event.persisted) {
+        window.location.reload();
+        return;
+    }
     // The user may return without authorizing, using the browser's Back button.
     const button = document.getElementById('connectLastFm');
     if (button?.disabled) {
@@ -94,12 +101,14 @@ async function loadCurrentUserProfile() {
     try {
         const publicUser = new URLSearchParams(window.location.search).get('user');
         if (isPublicProfile && !/^\d+$/.test(publicUser)) throw new Error("Perfil não encontrado.");
-        const response = await fetch(publicUser ? `/catalog/users/${encodeURIComponent(publicUser)}` : "/users/me", {
+        const endpoint = isPublicProfile ? `/catalog/users/${encodeURIComponent(publicUser)}` : "/users/me";
+        const response = await fetch(endpoint, {
             credentials: "same-origin",
+            cache: "no-store",
             headers: { Accept: "application/json" }
         });
 
-        if (!publicUser && (response.status === 401 || response.status === 403 || response.status === 404)) {
+        if (!isPublicProfile && [401, 403, 404].includes(response.status)) {
             window.location.replace("login.html");
             return;
         }
@@ -110,14 +119,16 @@ async function loadCurrentUserProfile() {
 
         const user = await response.json();
         renderCurrentUser(user);
-        if (publicUser) {
-            document.getElementById('profileHeading').textContent = 'Perfil';
-            ['profileEmail', 'profileBirthDay', 'profileGender'].forEach(id => document.getElementById(id).hidden = true);
-        }
-
         document.getElementById("profileStatus").hidden = true;
         document.getElementById("profilePage").hidden = false;
-        if (!isPublicProfile) {
+        if (isPublicProfile) {
+            initializeFollowProfile(publicUser);
+        } else {
+            const publicLink = document.getElementById('viewPublicProfile');
+            if (/^\d+$/.test(user.id)) {
+                publicLink.href = 'perfil-publico.html?' + new URLSearchParams({user: user.id});
+                publicLink.hidden = false;
+            }
             document.getElementById('connectLastFm').addEventListener('click', connectLastFm);
             document.getElementById('syncLastFm').addEventListener('click', syncLastFm);
             showLastFmCallbackResult();
@@ -129,21 +140,63 @@ async function loadCurrentUserProfile() {
     }
 }
 
+async function initializeFollowProfile(profileId) {
+    const button = document.getElementById('followProfile');
+    const status = document.getElementById('followProfileStatus');
+    const url = '/follow/' + encodeURIComponent(profileId);
+    const request = method => fetch(url, {method, credentials: 'same-origin', cache: 'no-store'});
+    let following = false;
+
+    function render(state) {
+        following = state.following;
+        button.hidden = !state.canFollow;
+        button.textContent = following ? 'Deixar de seguir' : 'Seguir';
+    }
+
+    try {
+        const response = await request('GET');
+        if (!response.ok) throw new Error();
+        const state = await response.json();
+        render(state);
+        if (!state.canFollow) return;
+    } catch {
+        status.textContent = 'Não foi possível consultar se você segue este perfil.';
+        return;
+    }
+
+    button.addEventListener('click', async () => {
+        button.disabled = true;
+        status.textContent = '';
+        try {
+            const response = await request(following ? 'DELETE' : 'POST');
+            if (response.status === 401) {
+                button.hidden = true;
+                status.textContent = 'Sua sessão expirou. Entre novamente para seguir perfis.';
+                return;
+            }
+            if (!response.ok) throw new Error();
+            render(await response.json());
+            status.textContent = following ? 'Você está seguindo este perfil.' : 'Você deixou de seguir este perfil.';
+        } catch {
+            status.textContent = 'Não foi possível atualizar o status. Tente novamente.';
+        } finally {
+            button.disabled = false;
+        }
+    });
+}
+
 function renderCurrentUser(user) {
     const data = user.data || {};
     const displayName = data.fullName?.trim() || user.username || "Usuário";
-    const genderNames = {
-        female: "Feminino",
-        male: "Masculino",
-        other: "Outro"
-    };
-
     document.title = `SYNCHRO | ${displayName}`;
     setProfileText("profileName", displayName);
     setProfileText("profileUsername", user.username ? `@${user.username}` : "");
-    setProfileText("profileEmail", user.email ? `E-mail: ${user.email}` : "E-mail não informado");
-    setProfileText("profileBirthDay", `Nascimento: ${formatBirthDay(user.birthDay)}`);
-    setProfileText("profileGender", `Gênero: ${genderNames[data.gender] || "Não informado"}`);
+    if (!isPublicProfile) {
+        const genderNames = {female: "Feminino", male: "Masculino", other: "Outro"};
+        setProfileText("profileEmail", user.email ? `E-mail: ${user.email}` : "E-mail não informado");
+        setProfileText("profileBirthDay", `Nascimento: ${formatBirthDay(user.birthDay)}`);
+        setProfileText("profileGender", `Gênero: ${genderNames[data.gender] || "Não informado"}`);
+    }
     setProfileText("profileLastFm", user.lastFmConnected
         ? `Last.fm conectado: ${user.lastFmUsername}`
         : "Last.fm não conectado");
@@ -156,11 +209,18 @@ function renderCurrentUser(user) {
 function renderLastFm(user) {
     const data = user.data || {};
     const connected = user.lastFmConnected === true;
-    document.getElementById('lastFmActions').hidden = isPublicProfile;
-    document.getElementById('connectLastFm').hidden = isPublicProfile || connected;
-    document.getElementById('syncLastFm').hidden = isPublicProfile || !connected;
+    if (!isPublicProfile) {
+        document.getElementById('lastFmActions').hidden = false;
+        document.getElementById('connectLastFm').hidden = connected;
+        document.getElementById('syncLastFm').hidden = !connected;
+        document.getElementById('lastFmAccountInfo').hidden = !connected;
+        setOptionalLastFmText('lastFmRealName', data.lastFmRealName ? `Nome no Last.fm: ${data.lastFmRealName}` : '');
+        setOptionalLastFmText('lastFmCountry', data.lastFmCountry ? `País: ${data.lastFmCountry}` : '');
+        const updated = new Date(data.lastFmUpdatedAt || '');
+        setOptionalLastFmText('lastFmUpdatedAt', Number.isNaN(updated.getTime()) ? ''
+            : `Atualizado em ${updated.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`);
+    }
     document.getElementById('lastFmDetails').hidden = !connected;
-    document.getElementById('lastFmAccountInfo').hidden = !connected;
     document.getElementById('lastFmTracksStat').hidden = !connected || data.lastFmTracks == null;
     document.getElementById('lastFmAlbumsStat').hidden = !connected || data.lastFmAlbums == null;
     setProfileText('profileTracks', formatCount(data.lastFmTracks));
@@ -172,11 +232,6 @@ function renderLastFm(user) {
     if (!connected) return;
 
     document.getElementById('lastFmProfileLink').href = `https://www.last.fm/user/${encodeURIComponent(user.lastFmUsername)}`;
-    setOptionalLastFmText('lastFmRealName', data.lastFmRealName ? `Nome no Last.fm: ${data.lastFmRealName}` : '');
-    setOptionalLastFmText('lastFmCountry', data.lastFmCountry ? `País: ${data.lastFmCountry}` : '');
-    const updated = new Date(data.lastFmUpdatedAt || '');
-    setOptionalLastFmText('lastFmUpdatedAt', Number.isNaN(updated.getTime()) ? ''
-        : `Atualizado em ${updated.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`);
     try {
         const url = new URL(data.lastFmImageUrl);
         if (url.protocol === 'https:' && !url.username && !url.password) {

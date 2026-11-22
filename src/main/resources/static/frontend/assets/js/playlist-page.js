@@ -47,7 +47,7 @@
 
     function userLink(user) {
         const link = document.createElement('a');
-        link.href = `perfil.html?user=${encodeURIComponent(user.id)}`;
+        link.href = `perfil-publico.html?user=${encodeURIComponent(user.id)}`;
         link.textContent = user.username || 'Usuário';
         return link;
     }

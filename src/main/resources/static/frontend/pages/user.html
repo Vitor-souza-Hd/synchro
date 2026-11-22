@@ -1,4 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><title>Perfil | Synchro</title>
-<script>location.replace('perfil.html' + location.search + location.hash);</script>
+<script>
+const profile = new URLSearchParams(location.search).has('user') ? 'perfil-publico.html' : 'perfil.html';
+location.replace(profile + location.search + location.hash);
+</script>
 </head><body><a href="perfil.html">Abrir perfil</a></body></html>

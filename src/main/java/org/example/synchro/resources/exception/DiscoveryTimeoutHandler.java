@@ -6,7 +6,9 @@ import org.example.synchro.resources.LastFmDiscoveryResource;
 import org.example.synchro.resources.LastFmArtistResource;
 import org.example.synchro.resources.LastFmResource;
 import org.example.synchro.resources.MusicaResource;
+import org.example.synchro.services.exception.MusicBrainzUnavailableException;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +20,15 @@ import java.util.concurrent.TimeoutException;
 @RestControllerAdvice(assignableTypes = {MusicBrainzResource.class, CoverArtResource.class,
         LastFmDiscoveryResource.class, LastFmArtistResource.class, LastFmResource.class, MusicaResource.class})
 public class DiscoveryTimeoutHandler {
+    @ExceptionHandler(MusicBrainzUnavailableException.class)
+    public ResponseEntity<Map<String, String>> musicBrainzUnavailable(MusicBrainzUnavailableException error) {
+        var response = ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).cacheControl(CacheControl.noStore());
+        if (error.getRetryAfterSeconds() > 0) {
+            response.header(HttpHeaders.RETRY_AFTER, Long.toString(error.getRetryAfterSeconds()));
+        }
+        return response.body(Map.of("error", error.getReason()));
+    }
+
     @ExceptionHandler(TimeoutException.class)
     public ResponseEntity<Map<String, String>> timeout() {
         return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).cacheControl(CacheControl.noStore())

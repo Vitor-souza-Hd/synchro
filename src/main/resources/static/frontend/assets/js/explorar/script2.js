@@ -422,18 +422,38 @@ document.addEventListener("DOMContentLoaded", () => {
             {name: 'Starboy', artist: 'The Weeknd', cover: 'cards/starboy.webp'},
             {name: 'Bleeds', artist: 'Wednesday', cover: 'cards/bleeds.webp'}
         ];
-        let personalizedAlbumsShown = false;
-        const albumKey = album => artistKey(album) + '\n' +
-            album.artist.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+        let dailyAlbums = [];
+        let recentAlbums = [];
+        let visibleAlbums = [];
 
-        function renderAlbums(albums) {
-            albumsGrid.replaceChildren();
+        function renderPopularAlbums() {
+            const next = [];
+            const seen = new Set();
+            for (const album of [...recentAlbums, ...dailyAlbums, ...defaultAlbums]) {
+                const title = album?.name?.trim();
+                const artist = album?.artist?.trim();
+                if (!title || !artist) continue;
+                const key = JSON.stringify([artistKey({name: title}), artistKey({name: artist})]);
+                if (seen.has(key)) continue;
+                seen.add(key);
+                next.push(album);
+                if (next.length === recommendationLimit) break;
+            }
+            if (next.length === visibleAlbums.length && next.every((album, index) => album === visibleAlbums[index])) return;
+            visibleAlbums = next;
+            renderAlbums(next);
+        }
+
+        function renderAlbums(albums, grid = albumsGrid) {
+            grid.replaceChildren();
             for (const album of albums) {
                 const card = document.createElement('div');
                 card.className = 'album-card';
                 const link = document.createElement('a');
-                link.href = '/frontend/pages/album.html?' +
-                    new URLSearchParams(album.id ? {id: album.id} : {album: album.name, artist: album.artist});
+                const page = album.artistCard ? 'artista' : 'album';
+                const identity = album.artistCard ? {artist: album.artist} :
+                    album.id ? {id: album.id} : {album: album.name, artist: album.artist};
+                link.href = '/frontend/pages/' + page + '.html?' + new URLSearchParams(identity);
                 const artwork = document.createElement('div');
                 const info = document.createElement('div');
                 const name = document.createElement('h3');
@@ -444,11 +464,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 info.append(name, artist);
                 link.append(artwork, info);
                 card.append(link);
-                albumsGrid.append(card);
-                if (album.images && window.SynchroFavoriteImages) {
+                grid.append(card);
+                if (window.SynchroFavoriteImages) {
+                    const preferredImages = Array.isArray(album.images) ? [...album.images] : [];
+                    if (album.cover) preferredImages.unshift('/frontend/assets/images/' + album.cover);
                     window.SynchroFavoriteImages.show(artwork, {
-                        kind: 'album', title: album.name, artist: album.artist,
-                        preferredImages: album.images, alt: ''
+                        kind: album.artistCard ? 'artist' : 'album',
+                        title: album.artistCard ? album.artist : album.name,
+                        artist: album.artist, id: album.id, preferredImages, alt: ''
                     });
                 } else {
                     const image = document.createElement('img');
@@ -461,148 +484,33 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        const genreKey = value => String(value || '').normalize('NFD').replace(/\p{M}/gu, '')
-            .toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
-        const genreFamilies = [
-            ['hip hop', 'rap', 'trap', 'hip hop/rap', 'rap nacional', 'trap br', 'brazilian hip hop', 'emo rap'],
-            ['rock', 'alternative rock', 'indie rock', 'rock alternativo', 'pop rock', 'grunge', 'brazilian rock',
-                'rock progressivo', 'progressive rock', 'rock psicodelico', 'psychedelic rock', 'punk rock'],
-            ['alternative', 'alternativo', 'indie', 'alternative rock', 'rock alternativo', 'indie rock', 'indie pop', 'shoegaze'],
-            ['pop', 'art pop', 'dream pop', 'indie pop', 'brazilian pop', 'electropop', 'pop rock'],
-            ['electronic', 'eletronica', 'electro', 'dance', 'techno', 'house', 'drum and bass', 'ambient', 'electropop'],
-            ['r&b', 'rnb', 'soul', 'r&b/soul', 'neo soul', 'rhythm and blues'],
-            ['metal', 'heavy metal', 'black metal', 'death metal', 'nu metal'],
-            ['classical', 'musica classica', 'classica'],
-            ['mpb', 'musica popular brasileira', 'brazilian popular music', 'bossa nova'],
-            ['baile funk', 'funk brasileiro', 'funk carioca']
-        ];
-        const brazilianTags = new Set(['brazil', 'brasil', 'brazilian', 'brasileiro', 'mpb', 'samba', 'pagode',
-            'sertanejo', 'forro', 'bossa nova', 'brazilian rock', 'brazilian pop', 'rap nacional', 'trap br',
-            'brazilian hip hop', 'baile funk', 'funk brasileiro', 'funk carioca', 'musica popular brasileira']);
-        const list = value => Array.isArray(value) ? value : value ? [value] : [];
-        const tagNames = value => list(value).map(tag => genreKey(tag?.name)).filter(Boolean);
-
-        function releaseDay(value) {
-            if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-            const time = Date.parse(value);
-            return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === value ? value : null;
-        }
-
-        function genreAffinity(profile, tags) {
-            return profile.reduce((score, genre, index) => {
-                if (tags.includes(genre)) return score + genreWeights[index];
-                const related = genreFamilies.some(family => family.includes(genre) &&
-                    tags.some(tag => family.includes(tag)));
-                return score + (related ? genreWeights[index] * 0.5 : 0);
-            }, 0);
-        }
-
-        async function readJson(url, timeout = 10000) {
-            const response = await fetch(url, {signal: AbortSignal.timeout(timeout)});
-            if (!response.ok) throw new Error('Consulta indisponível.');
-            return response.json();
-        }
-
-        async function readReleaseChart(market, since, today) {
-            const items = await readJson('/catalog/albums/release-chart?market=' + market, 14000);
-            return items.flatMap((item, index) => {
-                const name = item.name?.trim();
-                const artist = item.artistName?.trim();
-                const date = releaseDay(item.releaseDate);
-                if (!name || !artist || !date || date < since || date > today || /\s-\sSingle$/i.test(name)) return [];
-                return [{name, artist, releaseDate: date, tags: tagNames(item.genres),
-                    images: [item.artworkUrl100], rank: index}];
-            });
-        }
-
-        async function readLastFmAlbum(album) {
-            const params = new URLSearchParams({method: 'album.getInfo', artist: album.artist,
-                album: album.name, preview: 'true'});
-            const {album: result} = await readJson('/last-fm/discovery?' + params);
-            if (!result?.name || typeof result.artist !== 'string' || albumKey(result) !== albumKey(album)) return null;
-            const listeners = Number(result.listeners);
-            if (!(listeners > 0)) return null;
-            const images = list(result.image).map(image => image?.['#text']).reverse();
-            return {...album, listeners, plays: Number(result.playcount) || 0,
-                tags: [...album.tags, ...tagNames(result.tags?.tag ?? result.toptags?.tag)],
-                images: [...images, ...album.images]};
-        }
-
         async function showRecentReleases() {
             const {genres, message} = await recommendationProfile;
-            if (!genres?.length) {
+            const tags = recommendationTags(genres || []);
+            if (!tags.size) {
                 if (status) status.textContent = 'Seleção padrão · ' +
                     (message || 'Conecte o Last.fm para receber recomendações.');
                 return;
             }
-            const profile = [...recommendationTags(genres).keys()].map(genreKey);
-            const now = new Date();
-            const today = now.toISOString().slice(0, 10);
-            now.setUTCDate(now.getUTCDate() - 30);
-            const since = now.toISOString().slice(0, 10);
-            let unavailable = false;
-            const charts = await Promise.all(['br', 'us'].map(market => readReleaseChart(market, since, today)
-                .catch(() => {
-                    unavailable = true;
-                    return [];
-                })));
-            const candidates = new Map();
-            charts.forEach((chart, marketIndex) => {
-                for (const album of chart) {
-                    const key = albumKey(album);
-                    const existing = candidates.get(key);
-                    if (existing) {
-                        existing.tags.push(...album.tags);
-                        existing.rank = Math.min(existing.rank, album.rank);
-                    } else {
-                        candidates.set(key, {...album, brazilChart: marketIndex === 0});
-                    }
-                }
+            const query = new URLSearchParams();
+            for (const tag of tags.keys()) query.append('genre', tag);
+            const response = await fetch('/catalog/albums/recommendations?' + query, {
+                signal: AbortSignal.timeout(45000)
             });
-            const entries = [...candidates.values()];
-            const byAffinity = (a, b) => genreAffinity(profile, b.tags) - genreAffinity(profile, a.tags) || a.rank - b.rank;
-            const [local, global] = [true, false].map(brazilChart =>
-                entries.filter(album => album.brazilChart === brazilChart).sort(byAffinity));
-            const queue = Array.from({length: 10}, (_, index) => [local[index], global[index]]).flat().filter(Boolean);
-            const recent = [];
-            const artistTags = new Map();
-            for (let index = 0; index < queue.length; index += 4) {
-                await Promise.all(queue.slice(index, index + 4).map(async candidate => {
-                    try {
-                        const album = await readLastFmAlbum(candidate);
-                        if (!album) return;
-                        if (!genreAffinity(profile, album.tags) ||
-                                (album.brazilChart && !album.tags.some(tag => brazilianTags.has(tag)))) {
-                            const key = genreKey(album.artist);
-                            if (!artistTags.has(key)) {
-                                const params = new URLSearchParams({method: 'artist.getTopTags', artist: album.artist});
-                                artistTags.set(key, readJson('/last-fm/discovery?' + params)
-                                    .then(data => tagNames(data.toptags?.tag)).catch(() => []));
-                            }
-                            album.tags.push(...await artistTags.get(key));
-                        }
-                        const affinity = genreAffinity(profile, album.tags);
-                        if (affinity) recent.push({...album, affinity,
-                            brazilian: album.tags.some(tag => brazilianTags.has(tag))});
-                    } catch {
-                        unavailable = true;
-                    }
-                }));
-            }
-            recent.sort((a, b) => b.affinity - a.affinity || b.listeners - a.listeners || b.plays - a.plays ||
-                a.rank - b.rank || albumKey(a).localeCompare(albumKey(b)));
-            const selected = new Set(recent.filter(album => album.brazilian).slice(0, 3));
-            for (const album of recent) {
-                if (selected.size === recommendationLimit) break;
-                selected.add(album);
-            }
-            if (selected.size) {
-                personalizedAlbumsShown = true;
-                renderAlbums(recent.filter(album => selected.has(album)));
-            }
-            if (status) {
-                status.textContent = selected.size ? 'Lançamentos dos últimos 30 dias · ' + genres.join(', ')
-                    : unavailable ? 'Seleção padrão · Recomendações indisponíveis no momento.'
+            if (!response.ok) throw new Error('Recomendações indisponíveis.');
+            const {albums, matchedCount = albums.length, unavailable} = await response.json();
+            recentAlbums = albums;
+            renderPopularAlbums();
+            if (!status) return;
+
+            if (matchedCount >= recommendationLimit) {
+                status.textContent = 'Lançamentos dos últimos 30 dias · ' + genres.join(', ');
+            } else if (matchedCount > 0) {
+                status.textContent = genres.join(', ') + ' · Seleção completada com outros destaques.';
+            } else if (albums.length) {
+                status.textContent = 'Exibindo destaques recentes enquanto não há recomendações por gênero.';
+            } else {
+                status.textContent = unavailable ? 'Seleção padrão · Recomendações indisponíveis no momento.'
                     : 'Seleção padrão · Nenhum lançamento recente compatível com seus gêneros.';
             }
         }
@@ -610,15 +518,49 @@ document.addEventListener("DOMContentLoaded", () => {
         async function showDailyAlbums() {
             try {
                 const response = await fetch('/catalog/albums/popular', {signal: AbortSignal.timeout(75000)});
-                if (!response.ok || personalizedAlbumsShown) return;
+                if (!response.ok || recentAlbums.length >= recommendationLimit) return;
                 const albums = await response.json();
-                if (Array.isArray(albums) && albums.length && !personalizedAlbumsShown) renderAlbums(albums);
+                if (Array.isArray(albums) && albums.length) {
+                    dailyAlbums = albums;
+                    renderPopularAlbums();
+                }
             } catch {
                 // Keep the available selection when the daily chart cannot load.
             }
         }
 
-        renderAlbums(defaultAlbums);
+        async function showTopArtistRecommendations() {
+            const grid = document.getElementById('topArtistRecommendations');
+            const feedback = document.getElementById('topArtistRecommendationStatus');
+            if (!grid || !feedback) return;
+            try {
+                const response = await fetch('/recomendacoes', {
+                    credentials: 'same-origin', signal: AbortSignal.timeout(20000)
+                });
+                if (response.status === 401) {
+                    feedback.textContent = 'Entre no Synchro para ver suas sugestões.';
+                    return;
+                }
+                if (!response.ok) throw new Error();
+                const {items, personalized} = await response.json();
+                const cards = items.map(item => ({
+                    id: item.id,
+                    name: item.titulo,
+                    artist: item.nomeArtista || '',
+                    artistCard: item.id == null,
+                    images: /^https:\/\//i.test(item.capaUrl || '') ? [item.capaUrl] : []
+                }));
+                renderAlbums(cards, grid);
+                feedback.textContent = cards.length === 0 ? 'Ainda não há sugestões disponíveis.'
+                    : personalized ? 'Com base nos artistas que você mais ouve no Last.fm.'
+                    : 'Sugestões do catálogo do Synchro.';
+            } catch {
+                feedback.textContent = 'Não foi possível carregar as sugestões.';
+            }
+        }
+
+        renderPopularAlbums();
+        showTopArtistRecommendations();
         if (status) status.textContent = 'Seleção padrão · Buscando lançamentos para você…';
         showDailyAlbums();
         showRecentReleases().catch(() => {

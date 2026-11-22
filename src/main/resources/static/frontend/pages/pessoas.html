@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Encontrar pessoas | Synchro</title>
+    <script src="/frontend/assets/js/explorar/tema-global.js"></script>
+    <link rel="stylesheet" href="/frontend/assets/css/people-search.css">
+    <script src="/frontend/assets/js/people-search.js" defer></script>
+</head>
+<body>
+    <header class="people-header">
+        <nav aria-label="Navegação principal">
+            <a href="/frontend/pages/explorar.html" class="people-brand">SYNCHRO</a>
+            <a href="/frontend/pages/perfil.html">Meu perfil</a>
+        </nav>
+    </header>
+    <main>
+        <h1>Encontrar pessoas</h1>
+        <form id="peopleSearch" role="search" aria-label="Busca de usuários">
+            <label for="peopleQuery">Nome ou @usuário</label>
+            <div class="people-input">
+                <input id="peopleQuery" name="q" type="search" maxlength="200" required autocomplete="off" placeholder="Nome ou @usuário">
+                <button type="submit">Buscar</button>
+            </div>
+        </form>
+        <p id="peopleStatus" role="status"></p>
+        <ul id="peopleResults" aria-label="Perfis encontrados"></ul>
+        <nav id="peoplePages" class="people-pages" aria-label="Páginas de resultados" hidden>
+            <button id="peoplePrevious" type="button">Anterior</button>
+            <span id="peoplePageNumber"></span>
+            <button id="peopleNext" type="button">Próxima</button>
+        </nav>
+    </main>
+</body>
+</html>

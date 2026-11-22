@@ -35,6 +35,11 @@ public class LastFmCatalogService {
     public SearchResultDTO search(String query) {
         String term = query.strip();
         if (term.length() < 2) return new SearchResultDTO();
+        if (term.startsWith("@")) {
+            var result = store.result(term, Map.of());
+            result.setSource("local");
+            return result;
+        }
         String key = term.toLowerCase(Locale.ROOT);
         CompletableFuture<Cached> request;
         boolean start = false;
@@ -49,16 +54,18 @@ public class LastFmCatalogService {
                     var oldest = searches.entrySet().stream().filter(entry -> entry.getValue().isDone()).findFirst();
                     oldest.ifPresent(entry -> searches.remove(entry.getKey()));
                 }
-                if (searches.size() >= 100) {
-                    var local = store.local(term);
-                    local.setSource("local");
-                    local.setWarning("Exibindo os dados salvos. Tente a pesquisa novamente em instantes.");
-                    return local;
+                if (searches.size() < 100) {
+                    request = new CompletableFuture<>();
+                    searches.put(key, request);
+                    start = true;
                 }
-                request = new CompletableFuture<>();
-                searches.put(key, request);
-                start = true;
             }
+        }
+        if (request == null) {
+            var local = store.local(term);
+            local.setSource("local");
+            local.setWarning("Exibindo os dados salvos. Tente a pesquisa novamente em instantes.");
+            return local;
         }
         if (start) startSearch(term, request);
         var cached = request.getNow(null);

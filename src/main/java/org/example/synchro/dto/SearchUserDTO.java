@@ -1,12 +1,14 @@
 package org.example.synchro.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public record SearchUserDTO(
         Long id,
-        String username
+        String username,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String fullName
 ) {
+    public SearchUserDTO(Long id, String username) {
+        this(id, username, null);
+    }
 }
 

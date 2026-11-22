@@ -3,6 +3,22 @@
         window.SynchroSearch.initialize();
         return;
     }
+    const retryDelays = [1000, 2000, 4000, 6000, 7000, 9000];
+    const searchDeadline = 30000;
+
+    function waitForRetry(delay, signal) {
+        return new Promise(resolve => {
+            const done = () => {
+                clearTimeout(timer);
+                signal.removeEventListener('abort', done);
+                resolve();
+            };
+            const timer = setTimeout(done, delay);
+            signal.addEventListener('abort', done, {once: true});
+            if (signal.aborted) done();
+        });
+    }
+
     function initializeSearch() {
         document.querySelectorAll('input.search').forEach((input, index) => {
             if (input.dataset.synchroSearchReady === 'true') return;
@@ -21,13 +37,14 @@
             input.type = 'search';
             input.autocomplete = 'off';
             input.maxLength = 200;
-            input.placeholder = 'Pesquisar no Last.fm — pressione Enter';
+            input.placeholder = 'Buscar música ou pessoas';
+            input.setAttribute('aria-label', 'Buscar músicas, artistas, álbuns ou usuários');
             input.setAttribute('aria-controls', panel.id);
             const submit = document.createElement('button');
             submit.type = 'button';
             submit.className = 'synchro-search-submit';
-            submit.setAttribute('aria-label', 'Pesquisar no Last.fm');
-            submit.title = 'Pesquisar no Last.fm';
+            submit.setAttribute('aria-label', 'Pesquisar');
+            submit.title = 'Pesquisar';
             const icon = box?.querySelector('i');
             if (icon) { icon.replaceWith(submit); submit.append(icon); }
             else { submit.textContent = 'Buscar'; input.after(submit); }
@@ -67,17 +84,19 @@
                 input.removeAttribute('aria-busy');
             }
 
-            function render(data) {
+            function render(data, term) {
                 const groups = [
+                    ['Usuários', data.users, item => item.fullName?.trim() || '@' + item.username,
+                        item => item.fullName?.trim() ? '@' + item.username : '', 'perfil-publico'],
                     ['Músicas', data.songs, item => item.titulo,
                         item => [item.lastFm?.artistName || item.artistas?.map(artist => artist.nome).join(', '), item.album?.titulo].filter(Boolean).join(' · '), 'musica'],
                     ['Artistas', data.artists, item => item.nome, () => 'Artista', 'artista'],
                     ['Álbuns', data.albums, item => item.titulo,
-                        item => item.lastFm?.artistName || item.artistas?.map(artist => artist.nome).join(', ') || 'Álbum', 'album'],
-                    ['Usuários', data.users, item => item.username, () => 'Usuário', 'perfil']
+                        item => item.lastFm?.artistName || item.artistas?.map(artist => artist.nome).join(', ') || 'Álbum', 'album']
                 ];
                 if (!groups.some(([, items]) => Array.isArray(items) && items.length)) {
-                    message(data.refreshing ? 'Pesquisando no Last.fm…' : data.warning || 'Nenhum resultado encontrado no Last.fm.');
+                    message(data.refreshing ? 'Pesquisando no Last.fm…' : data.warning ||
+                        (term.startsWith('@') ? 'Nenhum usuário encontrado.' : 'Nenhum resultado encontrado.'));
                     return;
                 }
                 panel.replaceChildren();
@@ -85,27 +104,37 @@
                 source.className = 'synchro-search-status';
                 source.textContent = data.warning || (data.refreshing
                     ? 'Resultados salvos · buscando mais resultados no Last.fm…'
-                    : data.source === 'local' ? 'Resultados salvos no Synchro' : 'Resultados do Last.fm · salvos no Synchro');
+                    : term.startsWith('@') || data.source === 'local' ? 'Resultados do Synchro' : 'Resultados do Synchro e do Last.fm');
                 panel.append(source);
                 groups.forEach(([label, items, title, description, page]) => {
                     if (!Array.isArray(items) || !items.length) return;
                     const heading = document.createElement('h3');
-                    heading.textContent = `${label} (${items.length})`;
+                    const morePeople = page === 'perfil-publico' && (data.hasMoreUsers || items.length > 10);
+                    heading.textContent = morePeople ? label : `${label} (${items.length})`;
                     const list = document.createElement('ul');
                     items.slice(0, 10).forEach(item => {
                         const row = document.createElement('li');
                         const name = document.createElement('strong');
                         const detail = document.createElement('span');
                         const link = document.createElement('a');
-                        link.href = `/frontend/pages/${page}.html?${page === 'perfil' ? 'user' : 'id'}=${encodeURIComponent(item.id)}`;
+                        link.href = `/frontend/pages/${page}.html?${page === 'perfil-publico' ? 'user' : 'id'}=${encodeURIComponent(item.id)}`;
                         name.textContent = title(item);
                         detail.textContent = description(item);
-                        link.append(name, detail);
+                        link.append(name);
+                        if (detail.textContent) link.append(detail);
                         row.append(link);
                         list.append(row);
                     });
+                    if (morePeople) {
+                        const row = document.createElement('li');
+                        const all = document.createElement('a');
+                        all.href = '/frontend/pages/pessoas.html?q=' + encodeURIComponent(term);
+                        all.textContent = 'Ver todos os usuários';
+                        row.append(all);
+                        list.append(row);
+                    }
                     panel.append(heading, list);
-                    if (items.length > 10) {
+                    if (!morePeople && items.length > 10) {
                         const note = document.createElement('p');
                         note.className = 'synchro-search-status';
                         note.textContent = 'Mostrando os primeiros 10. Digite mais para refinar a pesquisa.';
@@ -117,39 +146,51 @@
             }
 
             async function search(term, requestVersion) {
-                controller = new AbortController();
-                const signal = controller.signal;
+                const activeController = new AbortController();
+                controller = activeController;
+                const signal = activeController.signal;
+                let timedOut = false;
+                const timeout = setTimeout(() => {
+                    timedOut = true;
+                    activeController.abort();
+                }, searchDeadline);
+                let latest;
+                let previous;
+                const showPartial = warning => render({...latest, refreshing: false, warning}, term);
                 input.setAttribute('aria-busy', 'true');
-                message('Pesquisando no Synchro e no Last.fm…');
+                message(term.startsWith('@') ? 'Buscando usuários…' : 'Pesquisando no Synchro e no Last.fm…');
                 try {
-                    let previous;
-                    for (let attempt = 0; attempt < 30; attempt++) {
+                    for (let attempt = 0; attempt <= retryDelays.length; attempt++) {
                         const response = await fetch(`/search?q=${encodeURIComponent(term)}`, {
                             signal, headers: { Accept: 'application/json' }
                         });
                         if (!response.ok) throw new Error('Pesquisa indisponível');
                         const data = await response.json();
-                        if (signal.aborted || requestVersion !== version) return;
-                        if (attempt === 29 && data.refreshing) {
-                            data.refreshing = false;
-                            data.warning = 'A consulta ao Last.fm continua. Pesquise novamente em instantes; os dados salvos estão disponíveis.';
-                        }
+                        if (requestVersion !== version) return;
+                        signal.throwIfAborted();
+                        latest = data;
+                        const delay = retryDelays[attempt];
+                        if (data.refreshing && delay === undefined) break;
                         const snapshot = JSON.stringify(data);
-                        if (snapshot !== previous) render(data);
+                        if (snapshot !== previous) render(data, term);
                         previous = snapshot;
-                        if (!data.refreshing) break;
-                        await new Promise(resolve => {
-                            const done = () => { clearTimeout(timer); signal.removeEventListener('abort', done); resolve(); };
-                            const timer = setTimeout(done, 1000);
-                            signal.addEventListener('abort', done, {once: true});
-                        });
-                        if (signal.aborted || requestVersion !== version) return;
+                        if (!data.refreshing) return;
+                        await waitForRetry(delay, signal);
+                        signal.throwIfAborted();
                     }
-                } catch (error) {
-                    if (error.name !== 'AbortError' && requestVersion === version) {
-                        message('Não foi possível pesquisar agora. Tente novamente.');
+                    showPartial('O Last.fm ainda está respondendo. Os resultados disponíveis já foram exibidos.');
+                } catch {
+                    if (requestVersion !== version || signal.aborted && !timedOut) return;
+                    if (latest) {
+                        showPartial(timedOut
+                            ? 'O Last.fm demorou para responder. Os resultados disponíveis já foram exibidos.'
+                            : 'Não foi possível atualizar a pesquisa. Os resultados disponíveis já foram exibidos.');
+                    } else {
+                        message(timedOut ? 'A pesquisa demorou para responder. Tente novamente.'
+                            : 'Não foi possível pesquisar agora. Tente novamente.');
                     }
                 } finally {
+                    clearTimeout(timeout);
                     if (requestVersion === version) input.removeAttribute('aria-busy');
                 }
             }
@@ -165,7 +206,7 @@
                 }
                 const requestVersion = version;
                 if (immediate) search(term, requestVersion);
-                else message('Pressione Enter ou clique na lupa para pesquisar no Last.fm.');
+                else message('Pressione Enter ou clique na lupa para pesquisar.');
             }
 
             input.addEventListener('input', () => schedule());

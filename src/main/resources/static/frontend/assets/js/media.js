@@ -4,6 +4,7 @@
     const status = document.getElementById('catalogStatus');
     const content = document.getElementById('catalogContent');
     const placeholder = '../assets/images/catalog-placeholder.svg';
+    let displayedCover;
     function safeUrl(value, lastfmOnly = false) {
         try {
             const url = new URL(value);
@@ -20,9 +21,25 @@
         return doc.body.textContent.trim();
     }
 
-    function cover(image, url) {
-        image.onerror = () => { image.onerror = null; image.src = placeholder; };
-        image.src = safeUrl(url) || placeholder;
+    function renderCover(item) {
+        const image = document.getElementById('catalogImage');
+        const artist = item.lastFm?.artistName || item.artistas?.[0]?.nome || params.get('artist') || '';
+        const url = item.lastFm?.imageUrl || item.album?.imgUrl;
+        const identity = JSON.stringify([item.id, item.titulo, artist, url]);
+        if (identity === displayedCover) return;
+        displayedCover = identity;
+
+        const alt = `Capa de ${item.titulo}`;
+        if (window.SynchroFavoriteImages && image.parentElement) {
+            window.SynchroFavoriteImages.show(image.parentElement, {
+                kind: 'album', imageId: image.id, title: item.titulo, artist, id: item.id,
+                knownAlbum: item, preferredImages: url ? [url] : [], alt
+            });
+        } else {
+            image.alt = alt;
+            image.onerror = () => { image.onerror = null; image.src = placeholder; };
+            image.src = safeUrl(url) || placeholder;
+        }
     }
     document.querySelector('.menu-toggle')?.addEventListener('click', () => {
         document.querySelector('.sidebar')?.classList.toggle('active');
@@ -49,8 +66,7 @@
         document.title = `SYNCHRO | ${item.titulo}`;
         document.getElementById('catalogTitle').textContent = item.titulo;
         document.getElementById('catalogDescription').textContent = plainText(item.descricao) || 'O Last.fm ainda não disponibilizou uma descrição para este registro.';
-        cover(document.getElementById('catalogImage'), item.lastFm?.imageUrl || item.album?.imgUrl);
-        document.getElementById('catalogImage').alt = `Capa de ${item.titulo}`;
+        renderCover(item);
         const artists = document.getElementById('catalogArtists');
         artists.replaceChildren();
         const primary = item.artistas?.find(artist => artist.nome.toLowerCase() === item.lastFm?.artistName?.toLowerCase());

@@ -1,0 +1,90 @@
+:root {
+    color-scheme: dark;
+    --page: #19171e;
+    --surface: #24212b;
+    --text: #f5eff7;
+    --muted: #c9becc;
+    --line: #524754;
+    --accent: #e1b1ca;
+    --hover: #332a37;
+}
+
+:root.synchro-light {
+    color-scheme: light;
+    --page: #f5eef2;
+    --surface: #fff;
+    --text: #30202b;
+    --muted: #655060;
+    --line: #ceb9c6;
+    --accent: #813454;
+    --hover: #f4e5ee;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text);
+    font: 1rem/1.5 system-ui, sans-serif;
+}
+a { color: var(--accent); }
+.people-header { border-bottom: 1px solid var(--line); }
+.people-header nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    max-width: 48rem;
+    margin: auto;
+    padding: 1rem;
+}
+.people-brand {
+    color: var(--text);
+    font-weight: 750;
+    text-decoration: none;
+}
+main { max-width: 48rem; margin: 2rem auto; padding: 0 1rem; }
+h1 { margin: 0 0 1.5rem; line-height: 1.15; }
+label { display: block; margin-bottom: .375rem; font-weight: 650; }
+.people-input { display: flex; gap: .5rem; }
+input, button {
+    min-height: 44px;
+    padding: .5rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: .5rem;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+}
+input { min-width: 0; flex: 1; }
+button { cursor: pointer; }
+button:not(:disabled):hover, #peopleResults a:hover { background: var(--hover); }
+button:disabled { opacity: .5; cursor: default; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#peopleStatus { color: var(--muted); }
+#peopleResults { display: grid; gap: .5rem; list-style: none; padding: 0; }
+#peopleResults a {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem;
+    border: 1px solid var(--line);
+    border-radius: .625rem;
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+.person-initials {
+    display: grid;
+    place-items: center;
+    flex: 0 0 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--hover);
+    color: var(--accent);
+    font-weight: 700;
+}
+.person-handle { display: block; color: var(--muted); font-size: .9rem; }
+.people-pages { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }

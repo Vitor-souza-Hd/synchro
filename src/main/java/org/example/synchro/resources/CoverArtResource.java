@@ -26,7 +26,8 @@ public class CoverArtResource {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<Map<String, Object>> getAlbumCover(
-            @PathVariable("id") String id
+            @PathVariable("id") String id,
+            @RequestParam(name = "alternatives", defaultValue = "false") boolean alternativas
     ) {
 
         if (
@@ -46,7 +47,7 @@ public class CoverArtResource {
             );
         }
 
-        return coverArtService.getAlbumCover(id);
+        return coverArtService.getAlbumCover(id, alternativas);
     }
 }
 

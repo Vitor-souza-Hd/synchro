@@ -4,27 +4,40 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import java.net.URI;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 @Service
 public class CoverArtService {
 
     private static final int MAX_EDICOES = 5;
     private static final int MAX_CACHE_ENTRIES = 500;
+    private static final Duration TEMPO_GRUPO = Duration.ofSeconds(4);
+    private static final Duration TEMPO_EDICAO = Duration.ofSeconds(3);
+    private static final Duration CACHE_PARCIAL = Duration.ofSeconds(20);
+    private static final Duration PAUSA_COVER_ART = Duration.ofSeconds(15);
+    private static final Pattern RELEASE_ID = Pattern.compile(
+            "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
 
     private static final Duration CACHE_CAPA_ENCONTRADA =
             Duration.ofHours(24);
@@ -36,13 +49,56 @@ public class CoverArtService {
     private final WebClient musicBrainzClient;
     private final MusicBrainzRateLimiter rateLimiter;
     private final Duration lookupTimeout;
+    private final AtomicReference<Instant> coverArtPausedUntil = new AtomicReference<>(Instant.EPOCH);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // Armazena consultas compartilhadas por releaseGroupId.
-    private final ConcurrentHashMap<
-            String, Mono<Map<String, Object>>
-            > cacheCapas = new ConcurrentHashMap<>();
+    private final BoundedLookupCache<ConsultaCapa, Capas> cacheCapas = new BoundedLookupCache<>(
+            MAX_CACHE_ENTRIES, resultado -> {
+                if (resultado.parcial()) return CACHE_PARCIAL;
+                return resultado.encontrada() ? CACHE_CAPA_ENCONTRADA : CACHE_CAPA_NAO_ENCONTRADA;
+            });
+
+    private record ConsultaCapa(String grupoId, boolean alternativas) {}
+
+    private record Capas(List<String> urls, boolean parcial) {
+        boolean encontrada() {
+            return !urls.isEmpty();
+        }
+
+        Capas comoParcial() {
+            return new Capas(urls, true);
+        }
+
+        Map<String, Object> resposta(String grupoId) {
+            Map<String, Object> resultado = new LinkedHashMap<>();
+            resultado.put("status", encontrada() ? "found" : "not_found");
+            resultado.put("releaseGroupId", grupoId);
+            resultado.put("coverUrl", encontrada() ? urls.get(0) : null);
+            resultado.put("coverUrls", urls);
+            if (parcial) resultado.put("partial", true);
+            return resultado;
+        }
+    }
+
+    private static final Capas SEM_CAPAS = new Capas(List.of(), false);
+
+    private static final class CoverArtPaused extends ResponseStatusException {
+        private final long retryAfterSeconds;
+
+        private CoverArtPaused(HttpStatus status, long retryAfterSeconds) {
+            super(status, "Cover Art Archive está temporariamente indisponível.");
+            this.retryAfterSeconds = retryAfterSeconds;
+        }
+
+        @Override
+        public HttpHeaders getHeaders() {
+            var headers = new HttpHeaders();
+            headers.setCacheControl("no-store");
+            headers.set(HttpHeaders.RETRY_AFTER, Long.toString(retryAfterSeconds));
+            return headers;
+        }
+    }
 
     public CoverArtService(MusicBrainzRateLimiter rateLimiter,
             @org.springframework.beans.factory.annotation.Value("${synchro.discovery.timeout:20s}") Duration lookupTimeout) {
@@ -96,63 +152,35 @@ public class CoverArtService {
     // CONSULTA COM CACHE
     // =========================================
 
-    public Mono<Map<String, Object>> getAlbumCover(
-            String releaseGroupId
-    ) {
-
-        // Evita crescimento ilimitado do mapa.
-        // Se estiver cheio, limpa as entradas antigas
-        // e inicia um novo conjunto de consultas.
-        if (cacheCapas.size() >= MAX_CACHE_ENTRIES
-                && !cacheCapas.containsKey(releaseGroupId)) {
-            cacheCapas.clear();
-        }
-
-        return cacheCapas.computeIfAbsent(
-                releaseGroupId,
-                id -> criarConsultaCacheada(id)
-        );
-    }
-
-    private Mono<Map<String, Object>> criarConsultaCacheada(
-            String releaseGroupId
-    ) {
-
-        return Mono.defer(
-                        () -> buscarCapaSemCache(releaseGroupId)
-                )
-                .timeout(lookupTimeout)
-                .cacheInvalidateWhen(result -> Mono.delay("found".equals(result.get("status"))
-                        ? CACHE_CAPA_ENCONTRADA : CACHE_CAPA_NAO_ENCONTRADA).then());
+    public Mono<Map<String, Object>> getAlbumCover(String releaseGroupId, boolean alternativas) {
+        var consulta = new ConsultaCapa(releaseGroupId, alternativas);
+        return cacheCapas.get(consulta, () -> Mono.defer(() -> {
+            var pausa = pausaAtiva();
+            if (pausa != null) return Mono.error(pausa);
+            return alternativas ? buscarCapaEmEdicoes(releaseGroupId, true) : buscarCapaSemCache(releaseGroupId);
+        }).timeout(lookupTimeout)).map(capas -> capas.resposta(releaseGroupId));
     }
 
     // =========================================
     // BUSCA ORIGINAL: GRUPO E EDICOES
     // =========================================
 
-    private Mono<Map<String, Object>> buscarCapaSemCache(
-            String releaseGroupId
-    ) {
-
-        return consultarCapa(
-                "/release-group/" + releaseGroupId,
-                releaseGroupId
-        )
-                .filter(resultado -> "found".equals(resultado.get("status")))
-                .onErrorResume(error -> buscarCapaEmEdicoes(releaseGroupId)
-                        .filter(resultado -> "found".equals(resultado.get("status")))
+    private Mono<Capas> buscarCapaSemCache(String releaseGroupId) {
+        var capaDoGrupo = consultarCapa("/release-group/" + releaseGroupId);
+        if (lookupTimeout.compareTo(TEMPO_GRUPO) > 0) capaDoGrupo = capaDoGrupo.timeout(TEMPO_GRUPO);
+        return capaDoGrupo.filter(Capas::encontrada)
+                .onErrorResume(error -> !(error instanceof CoverArtPaused), error -> buscarCapaEmEdicoes(releaseGroupId, false)
+                        .filter(Capas::encontrada)
+                        .map(Capas::comoParcial)
                         .switchIfEmpty(Mono.error(error)))
-                .switchIfEmpty(Mono.defer(() -> buscarCapaEmEdicoes(releaseGroupId)));
+                .switchIfEmpty(Mono.defer(() -> buscarCapaEmEdicoes(releaseGroupId, false)));
     }
 
     // =========================================
     // BUSCAR CAPA NAS EDICOES OFICIAIS
     // =========================================
 
-    private Mono<Map<String, Object>> buscarCapaEmEdicoes(
-            String releaseGroupId
-    ) {
-
+    private Mono<Capas> buscarCapaEmEdicoes(String releaseGroupId, boolean alternativas) {
         return rateLimiter.aguardarPermissao()
                 .then(Mono.defer(() -> musicBrainzClient
                         .get()
@@ -164,36 +192,42 @@ public class CoverArtService {
                         )
                         .retrieve()
                         .bodyToMono(String.class)
+                        .onErrorMap(WebClientResponseException.class, rateLimiter::tratarFalha)
                 ))
+                .switchIfEmpty(Mono.error(respostaInvalida("MusicBrainz")))
                 .map(this::converterJson)
-                .flatMap(data -> {
+                .map(this::selecionarEdicoesOficiais)
+                .onErrorReturn(WebClientResponseException.NotFound.class, List.of())
+                .flatMap(edicoes -> buscarCapasDisponiveis(edicoes, alternativas));
+    }
 
-                    List<String> edicoes =
-                            selecionarEdicoesOficiais(data);
+    private Mono<Capas> buscarCapasDisponiveis(List<String> edicoes, boolean alternativas) {
+        var falha = new AtomicReference<Throwable>();
+        var candidatos = Flux.fromIterable(edicoes)
+                .concatMap(releaseId -> consultarCapa("/release/" + releaseId).timeout(TEMPO_EDICAO)
+                        .onErrorResume(error -> {
+                            if (error instanceof CoverArtPaused) return Mono.error(error);
+                            falha.compareAndSet(null, error);
+                            return Mono.empty();
+                        }))
+                .onErrorResume(CoverArtPaused.class, error -> {
+                    falha.set(error);
+                    return Flux.empty();
+                })
+                .filter(Capas::encontrada);
 
-                    if (edicoes.isEmpty()) {
-                        return Mono.just(
-                                resultadoNaoEncontrado(releaseGroupId)
-                        );
-                    }
+        Mono<Capas> encontrados = alternativas
+                ? candidatos.concatMapIterable(Capas::urls)
+                        .collect(LinkedHashSet<String>::new, LinkedHashSet::add)
+                        .filter(urls -> !urls.isEmpty())
+                        .map(urls -> new Capas(List.copyOf(urls), false))
+                : candidatos.next();
 
-                    return Flux.fromIterable(edicoes)
-                            .concatMapDelayError(releaseId ->
-                                    consultarCapa(
-                                            "/release/" + releaseId,
-                                            releaseGroupId
-                                    )
-                            )
-                            .filter(resultado ->
-                                    "found".equals(
-                                            resultado.get("status")
-                                    )
-                            )
-                            .next()
-                            .defaultIfEmpty(
-                                    resultadoNaoEncontrado(releaseGroupId)
-                            );
-                });
+        return encontrados.map(capas -> falha.get() == null ? capas : capas.comoParcial())
+                .switchIfEmpty(Mono.defer(() -> {
+                    Throwable error = falha.get();
+                    return error == null ? Mono.just(SEM_CAPAS) : Mono.error(error);
+                }));
     }
 
     // =========================================
@@ -208,9 +242,9 @@ public class CoverArtService {
 
         JsonNode releases = data.path("releases");
 
-        if (!releases.isArray()) {
-            return edicoes;
-        }
+        if (!releases.isArray()) throw respostaInvalida("MusicBrainz");
+
+        List<String> comCapa = new ArrayList<>();
 
         for (JsonNode release : releases) {
 
@@ -222,61 +256,61 @@ public class CoverArtService {
 
             String releaseId = release.path("id").asText("");
 
-            if (releaseId.isBlank()) {
-                continue;
-            }
+            if (!RELEASE_ID.matcher(releaseId).matches()) continue;
 
-            String descricao = release
-                    .path("disambiguation")
-                    .asText("")
-                    .toLowerCase();
-
-            if (descricao.contains("digital download")) {
-                continue;
-            }
-
-            edicoes.add(releaseId);
-
-            if (edicoes.size() >= MAX_EDICOES) {
-                break;
+            if (release.path("cover-art-archive").path("front").asBoolean(false)) {
+                comCapa.add(releaseId);
+            } else {
+                edicoes.add(releaseId);
             }
         }
 
-        return edicoes;
+        comCapa.addAll(edicoes);
+        return comCapa.stream().distinct().limit(MAX_EDICOES).toList();
     }
 
     // =========================================
     // CONSULTAR COVER ART ARCHIVE
     // =========================================
 
-    private Mono<Map<String, Object>> consultarCapa(
-            String caminho,
-            String releaseGroupId
-    ) {
+    private Mono<Capas> consultarCapa(String caminho) {
+        return Mono.defer(() -> {
+            var pausa = pausaAtiva();
+            if (pausa != null) return Mono.error(pausa);
 
-        return coverArtClient
-                .get()
-                .uri(caminho)
-                .exchangeToMono(response -> {
+            return coverArtClient.get().uri(caminho).exchangeToMono(response -> {
+                int status = response.statusCode().value();
+                if (status == 404) return response.releaseBody().thenReturn(SEM_CAPAS);
+                if (status == 429 || status == 503) {
+                    var now = Instant.now();
+                    var deadline = RetryAfter.deadline(response.headers().asHttpHeaders().getFirst(HttpHeaders.RETRY_AFTER),
+                            now, PAUSA_COVER_ART);
+                    var until = coverArtPausedUntil.accumulateAndGet(deadline,
+                            (current, next) -> current.isAfter(next) ? current : next);
+                    var error = new CoverArtPaused(HttpStatus.valueOf(status), RetryAfter.secondsRemaining(now, until));
+                    return response.releaseBody().then(Mono.error(error));
+                }
+                if (!response.statusCode().is2xxSuccessful()) {
+                    return response.releaseBody().then(Mono.error(new ResponseStatusException(
+                            HttpStatus.BAD_GATEWAY, "Cover Art Archive está temporariamente indisponível.")));
+                }
+                return response.bodyToMono(String.class)
+                        .switchIfEmpty(Mono.error(respostaInvalida("Cover Art Archive")))
+                        .map(this::converterResposta);
+            });
+        });
+    }
 
-                    if (response.statusCode().value() == 404) {
-                        return Mono.just(
-                                resultadoNaoEncontrado(releaseGroupId)
-                        );
-                    }
+    private CoverArtPaused pausaAtiva() {
+        var now = Instant.now();
+        var deadline = coverArtPausedUntil.get();
+        return deadline.isAfter(now)
+                ? new CoverArtPaused(HttpStatus.SERVICE_UNAVAILABLE, RetryAfter.secondsRemaining(now, deadline))
+                : null;
+    }
 
-                    if (response.statusCode().isError()) {
-                        return response.createException()
-                                .flatMap(Mono::error);
-                    }
-
-                    return response
-                            .bodyToMono(String.class)
-                            .map(texto -> converterResposta(
-                                    texto,
-                                    releaseGroupId
-                            ));
-                });
+    private ResponseStatusException respostaInvalida(String provedor) {
+        return new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Resposta inválida de " + provedor + ".");
     }
 
     // =========================================
@@ -291,42 +325,19 @@ public class CoverArtService {
 
         } catch (JsonProcessingException error) {
 
-            throw new IllegalStateException(
-                    "O MusicBrainz retornou um JSON invalido.",
-                    error
-            );
+            throw respostaInvalida("MusicBrainz");
         }
     }
 
-    private Map<String, Object> converterResposta(
-            String texto,
-            String releaseGroupId
-    ) {
-
-        if (texto == null || texto.isBlank()) {
-            throw new IllegalStateException(
-                    "O Cover Art Archive retornou uma resposta vazia."
-            );
-        }
-
+    private Capas converterResposta(String texto) {
         try {
-
             JsonNode data = objectMapper.readTree(texto);
-
-            if (data == null || !data.isObject()) {
-                throw new IllegalStateException(
-                        "Resposta inesperada do Cover Art Archive."
-                );
+            if (data == null || !data.path("images").isArray()) {
+                throw respostaInvalida("Cover Art Archive");
             }
-
-            return extrairCapa(data, releaseGroupId);
-
+            return extrairCapas(data.path("images"));
         } catch (JsonProcessingException error) {
-
-            throw new IllegalStateException(
-                    "O Cover Art Archive retornou um JSON invalido.",
-                    error
-            );
+            throw respostaInvalida("Cover Art Archive");
         }
     }
 
@@ -334,65 +345,41 @@ public class CoverArtService {
     // SELECIONAR CAPA FRONTAL APROVADA
     // =========================================
 
-    private Map<String, Object> extrairCapa(
-            JsonNode data,
-            String releaseGroupId
-    ) {
-
-        JsonNode imagens = data.path("images");
-
-        if (!imagens.isArray()) {
-            return resultadoNaoEncontrado(releaseGroupId);
-        }
+    private Capas extrairCapas(JsonNode imagens) {
+        var urls = new LinkedHashSet<String>();
+        var frentesAlternativas = new ArrayList<JsonNode>();
 
         for (JsonNode imagem : imagens) {
-
-            if (!imagem.path("front").asBoolean(false)) {
-                continue;
+            if (!imagem.path("approved").asBoolean(false)) continue;
+            if (imagem.path("front").asBoolean(false)) {
+                adicionarVariantes(imagem, urls);
+            } else if (tipoFrontal(imagem)) {
+                frentesAlternativas.add(imagem);
             }
-
-            if (!imagem.path("approved").asBoolean(false)) {
-                continue;
-            }
-
-            JsonNode thumbnails = imagem.path("thumbnails");
-
-            String url = thumbnails
-                    .path("500")
-                    .asText("");
-
-            if (url.isBlank()) {
-                url = thumbnails
-                        .path("large")
-                        .asText("");
-            }
-
-            if (url.isBlank()) {
-                url = imagem
-                        .path("image")
-                        .asText("");
-            }
-
-            url = normalizarUrlImagem(url);
-
-            if (url.isBlank()) {
-                continue;
-            }
-
-            Map<String, Object> resultado =
-                    new LinkedHashMap<>();
-
-            resultado.put("status", "found");
-            resultado.put(
-                    "releaseGroupId",
-                    releaseGroupId
-            );
-            resultado.put("coverUrl", url);
-
-            return resultado;
         }
 
-        return resultadoNaoEncontrado(releaseGroupId);
+        frentesAlternativas.forEach(imagem -> adicionarVariantes(imagem, urls));
+        return new Capas(List.copyOf(urls), false);
+    }
+
+    private boolean tipoFrontal(JsonNode imagem) {
+        for (JsonNode tipo : imagem.path("types")) {
+            if ("Front".equalsIgnoreCase(tipo.asText())) return true;
+        }
+        return false;
+    }
+
+    private void adicionarVariantes(JsonNode imagem, LinkedHashSet<String> urls) {
+        JsonNode thumbnails = imagem.path("thumbnails");
+        for (String tamanho : List.of("500", "large", "1200", "250", "small")) {
+            adicionarUrl(thumbnails.path(tamanho).asText(""), urls);
+        }
+        adicionarUrl(imagem.path("image").asText(""), urls);
+    }
+
+    private void adicionarUrl(String valor, LinkedHashSet<String> urls) {
+        String url = normalizarUrlImagem(valor);
+        if (!url.isBlank()) urls.add(url);
     }
 
     // =========================================
@@ -412,7 +399,7 @@ public class CoverArtService {
             String esquema = uri.getScheme();
             String host = uri.getHost();
 
-            if (esquema == null || host == null) {
+            if (esquema == null || host == null || uri.getRawUserInfo() != null) {
                 return "";
             }
 
@@ -421,7 +408,7 @@ public class CoverArtService {
                 return "";
             }
 
-            String hostNormalizado = host.toLowerCase();
+            String hostNormalizado = host.toLowerCase(Locale.ROOT);
 
             boolean hostPermitido =
                     hostNormalizado.equals("coverartarchive.org")
@@ -448,25 +435,5 @@ public class CoverArtService {
         }
     }
 
-    // =========================================
-    // RESPOSTA SEM CAPA
-    // =========================================
-
-    private Map<String, Object> resultadoNaoEncontrado(
-            String releaseGroupId
-    ) {
-
-        Map<String, Object> resultado =
-                new LinkedHashMap<>();
-
-        resultado.put("status", "not_found");
-        resultado.put(
-                "releaseGroupId",
-                releaseGroupId
-        );
-        resultado.put("coverUrl", null);
-
-        return resultado;
-    }
 }
 

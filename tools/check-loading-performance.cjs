@@ -185,36 +185,21 @@ async function checkRecentAlbumReleases() {
     env.selectors.set('.albums', albums);
     const now = new Date();
     const day = offset => new Date(now.getTime() + offset * 86400000).toISOString().slice(0, 10);
-    const release = (name, releaseDate, genre, artistName = 'International artist') =>
-        ({name, artistName, releaseDate, genres: [{name: genre}]});
-    const international = release('New rock album', day(-3), 'Rock');
-    const charts = {
-        br: [release('Brazilian A', day(-30), 'Rock', 'Brazilian artist'),
-            release('Brazilian B', day(-1), 'Rock', 'Brazilian artist'),
-            release('Brazilian C', day(-5), 'Rock', 'Brazilian artist'), international],
-        us: [release('Old album', day(-31), 'Rock'), release('Future album', day(1), 'Rock'),
-            release('Undated album', day(-1).slice(0, 7), 'Rock'), international,
-            release('Unrelated album', day(-1), 'Country'), release('No Last.fm listeners', day(-2), 'Rock'),
-            release('Wrong artist', day(-2), 'Rock'), release('Another rock album', day(-1), 'Rock')]
-    };
+    const release = (name, offset, artist = 'International artist') =>
+        ({name, artist, releaseDate: day(offset)});
+    const recommendations = [
+        release('New rock album', -3), release('Brazilian A', -30, 'Brazilian artist'),
+        release('Brazilian B', -1, 'Brazilian artist'), release('Brazilian C', -5, 'Brazilian artist'),
+        release('Another rock album', -1)
+    ];
     env.context.fetch = async url => {
         calls.push(url);
         if (url === '/catalog/albums/popular') return daily.promise;
         if (url === '/users/me/music-profile') return json({genres: ['Rock', 'Pop', 'Jazz', 'Soul', 'Blues']});
         const target = new URL(url, 'http://synchro.test');
-        if (target.pathname === '/catalog/albums/release-chart') {
-            const market = target.searchParams.get('market');
-            return market === 'br' ? pending.promise : json(charts[market]);
-        }
-        if (target.searchParams.get('method') === 'album.getInfo') {
-            const name = target.searchParams.get('album');
-            assert.equal(target.searchParams.get('preview'), 'true');
-            return json({album: {name,
-                artist: name === 'Wrong artist' ? 'Different artist' : target.searchParams.get('artist'),
-                listeners: name === 'No Last.fm listeners' ? '0' : name === 'New rock album' ? '1000' : '10'}});
-        }
-        if (target.searchParams.get('method') === 'artist.getTopTags') {
-            return json({toptags: {tag: target.searchParams.get('artist') === 'Brazilian artist' ? {name: 'Brasil'} : []}});
+        if (target.pathname === '/catalog/albums/recommendations') {
+            assert.deepEqual(target.searchParams.getAll('genre'), ['rock', 'pop', 'jazz', 'soul', 'blues']);
+            return pending.promise;
         }
         throw new Error('Unexpected request: ' + url);
     };
@@ -228,19 +213,18 @@ async function checkRecentAlbumReleases() {
     assert.match(env.node('albumRecommendationStatus').textContent, /Seleção padrão/);
     await tick();
     assert.equal(albums.children[0].children[0], firstCard);
-    pending.resolve(json(charts.br));
+    pending.resolve(json({albums: recommendations, matchedCount: 5, unavailable: false}));
     await tick();
     daily.resolve(json([{name: 'Daily album', artist: 'Artist', releaseDate: day(-2)}]));
     await tick();
     assert.ok(!calls.some(url => url.startsWith('/last-fm/me/top/albums')));
-    assert.equal(calls.filter(url => url.includes('method=artist.getTopTags') && url.includes('Brazilian+artist')).length, 1);
-    assert.equal(calls.filter(url => url.includes('album=New+rock+album')).length, 1);
-    assert.ok(!calls.some(url => /Old\+album|Future\+album|Undated\+album/.test(url)));
+    assert.equal(calls.filter(url => url.startsWith('/catalog/albums/recommendations?')).length, 1);
+    assert.ok(!calls.some(url => url.startsWith('/last-fm/discovery') || url.startsWith('/catalog/albums/release-chart')));
     const links = albums.children.map(card => new URL(card.children[0].href, 'http://synchro.test'));
     assert.ok(links.every(link => link.pathname === '/frontend/pages/album.html'));
     assert.deepEqual(links.map(link => link.searchParams.get('album')),
-        ['New rock album', 'Brazilian A', 'Brazilian B', 'Brazilian C', 'Another rock album']);
-    assert.match(env.node('albumRecommendationStatus').textContent, /Lançamentos dos últimos 30 dias/);
+        ['New rock album', 'Brazilian A', 'Brazilian B', 'Brazilian C', 'Another rock album', 'Daily album']);
+    assert.match(env.node('albumRecommendationStatus').textContent, /Seleção completada com outros destaques/);
 }
 
 async function checkDefaultAlbumsWithoutConnection(signedIn) {
@@ -263,7 +247,7 @@ async function checkDefaultAlbumsWithoutConnection(signedIn) {
         signedIn ? /^Seleção padrão · Conecte o Last.fm/ : /^Seleção padrão · Entre na sua conta/);
     daily.resolve(json([{name: 'Daily album', artist: 'Artist', releaseDate: '2026-11-01'}]));
     await tick();
-    assert.equal(albums.children.length, 1);
+    assert.equal(albums.children.length, 6);
     assert.equal(albums.children[0].children[0].children[1].children[0].textContent, 'Daily album');
     assert.deepEqual(calls, signedIn ? ['/users/me/music-profile', '/catalog/albums/popular', '/users/me']
         : ['/users/me/music-profile', '/catalog/albums/popular']);
