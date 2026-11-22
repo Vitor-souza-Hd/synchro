@@ -1,4 +1,3 @@
-
 (() => {
     "use strict";
 
@@ -30,12 +29,17 @@
     }
 
     function getImage(item, fallback) {
-        const images = asList(item?.image)
-            .map(image => image?.["#text"] || "")
-            .filter(url => /^https?:\/\//i.test(url))
-            .filter(url => !url.includes("2a96cbd8b46e442fc41c2b86b821562f"));
+        const rawImages = item?.image || item?.photo;
+        const imagesList = Array.isArray(rawImages) ? rawImages : [];
 
-        return images.at(-1) || fallback;
+        const urls = imagesList.map(img => {
+            if (typeof img === 'string') return img;
+            return img?.["#text"] || img?.url || "";
+        }).filter(url => /^https?:\/\//i.test(url));
+
+        const validImage = urls.reverse().find(url => !url.includes("2a96cbd8b46e442fc41c2b86b821562f") && url.trim() !== "");
+
+        return validImage || fallback;
     }
 
     async function discovery(method) {
@@ -98,7 +102,7 @@
         artistsStatus.textContent = "Buscando artistas relacionados...";
 
         try {
-            const data = await discovery("tag.gettopartists");
+            const data = await discovery("tag.getTopArtists");
             const artists = asList(data.topartists?.artist)
                 .filter(artist => artist?.name)
                 .slice(0, 6);
@@ -141,8 +145,8 @@
         albumsStatus.textContent = "Buscando álbuns relacionados...";
 
         try {
-            const data = await discovery("tag.gettopalbums");
-            const albums = asList(data.topalbums?.album)
+            const data = await discovery("tag.getTopAlbums");
+            const albums = asList(data.albums?.album)
                 .filter(album => album?.name && album.name !== "(null)")
                 .slice(0, 12);
 
