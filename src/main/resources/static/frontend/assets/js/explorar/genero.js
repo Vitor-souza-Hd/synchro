@@ -1,0 +1,192 @@
+
+(() => {
+    "use strict";
+
+    const params = new URLSearchParams(window.location.search);
+    const genreName = (params.get("name") || "").trim();
+
+    const title = document.getElementById("genreName");
+    const artistsGrid = document.getElementById("genreArtists");
+    const albumsGrid = document.getElementById("genreAlbums");
+    const artistsStatus = document.getElementById("artistsStatus");
+    const albumsStatus = document.getElementById("albumsStatus");
+
+    const artistPlaceholder = "/frontend/assets/images/artist-placeholder.svg";
+    const albumPlaceholder = "/frontend/assets/images/catalog-placeholder.svg";
+
+    if (!genreName || genreName.length > 100) {
+        title.textContent = "Gênero não identificado";
+        artistsStatus.textContent = "Volte à página inicial e selecione um gênero.";
+        albumsStatus.textContent = "";
+        return;
+    }
+
+    title.textContent = genreName;
+    document.title = `${genreName} - Synchro`;
+
+    function asList(value) {
+        if (Array.isArray(value)) return value;
+        return value ? [value] : [];
+    }
+
+    function getImage(item, fallback) {
+        const images = asList(item?.image)
+            .map(image => image?.["#text"] || "")
+            .filter(url => /^https?:\/\//i.test(url))
+            .filter(url => !url.includes("2a96cbd8b46e442fc41c2b86b821562f"));
+
+        return images.at(-1) || fallback;
+    }
+
+    async function discovery(method) {
+        const url = new URL("/last-fm/discovery", window.location.origin);
+
+        url.searchParams.set("method", method);
+        url.searchParams.set("tag", genreName.toLowerCase());
+
+        const response = await fetch(url, {
+            headers: { Accept: "application/json" },
+            credentials: "same-origin",
+            signal: AbortSignal.timeout(15000)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Consulta indisponível (${response.status}).`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.message || "Não foi possível carregar os dados.");
+        }
+
+        return data;
+    }
+
+    function createCard({ name, subtitle, image, href, alt }) {
+        const link = document.createElement("a");
+        link.className = "genre-media-card";
+        link.href = href;
+
+        const cover = document.createElement("img");
+        cover.src = image;
+        cover.alt = alt || name;
+        cover.loading = "lazy";
+        cover.decoding = "async";
+
+        cover.onerror = () => {
+            cover.onerror = null;
+            cover.src = alt === "Artista" ? artistPlaceholder : albumPlaceholder;
+        };
+
+        const info = document.createElement("div");
+        info.className = "genre-media-info";
+
+        const heading = document.createElement("h3");
+        heading.textContent = name;
+
+        const description = document.createElement("p");
+        description.textContent = subtitle;
+
+        info.append(heading, description);
+        link.append(cover, info);
+
+        return link;
+    }
+
+    async function loadArtists() {
+        artistsStatus.textContent = "Buscando artistas relacionados...";
+
+        try {
+            const data = await discovery("tag.gettopartists");
+            const artists = asList(data.topartists?.artist)
+                .filter(artist => artist?.name)
+                .slice(0, 6);
+
+            artistsGrid.replaceChildren();
+
+            if (!artists.length) {
+                artistsStatus.textContent = "Nenhum artista encontrado para este gênero.";
+                return;
+            }
+
+            artists.forEach(artist => {
+                const identity = artist.catalogId
+                    ? { id: artist.catalogId }
+                    : { artist: artist.name };
+
+                const href = "/frontend/pages/artista.html?" +
+                    new URLSearchParams(identity);
+
+                const card = createCard({
+                    name: artist.name,
+                    subtitle: "Artista em destaque",
+                    image: getImage(artist, artistPlaceholder),
+                    href,
+                    alt: "Artista"
+                });
+
+                artistsGrid.append(card);
+            });
+
+            artistsStatus.textContent = `${artists.length} artistas encontrados.`;
+
+        } catch (error) {
+            console.error("[Synchro] Erro ao carregar artistas do gênero:", error);
+            artistsStatus.textContent = "Não foi possível carregar os artistas agora.";
+        }
+    }
+
+    async function loadAlbums() {
+        albumsStatus.textContent = "Buscando álbuns relacionados...";
+
+        try {
+            const data = await discovery("tag.gettopalbums");
+            const albums = asList(data.topalbums?.album)
+                .filter(album => album?.name && album.name !== "(null)")
+                .slice(0, 12);
+
+            albumsGrid.replaceChildren();
+
+            if (!albums.length) {
+                albumsStatus.textContent = "Nenhum álbum encontrado para este gênero.";
+                return;
+            }
+
+            albums.forEach(album => {
+                const artistName = typeof album.artist === "string"
+                    ? album.artist
+                    : album.artist?.name || "Artista desconhecido";
+
+                const href = "/frontend/pages/album-explorar.html?" +
+                    new URLSearchParams({
+                        album: album.name,
+                        artist: artistName
+                    });
+
+                const card = createCard({
+                    name: album.name,
+                    subtitle: artistName,
+                    image: getImage(album, albumPlaceholder),
+                    href,
+                    alt: "Álbum"
+                });
+
+                albumsGrid.append(card);
+            });
+
+            albumsStatus.textContent = `${albums.length} álbuns encontrados.`;
+
+        } catch (error) {
+            console.error("[Synchro] Erro ao carregar álbuns do gênero:", error);
+            albumsStatus.textContent = "Não foi possível carregar os álbuns agora.";
+        }
+    }
+
+    async function initialize() {
+        await loadArtists();
+        await loadAlbums();
+    }
+
+    initialize();
+})();

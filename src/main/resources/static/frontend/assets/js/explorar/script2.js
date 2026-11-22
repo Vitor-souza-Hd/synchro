@@ -13,11 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
 
     const genresData = [
-        { name: "POP", image: "/frontend/assets/images/cards/michael.webp", link: "https://open.spotify.com/playlist/37i9dQZF1DX6aTaZa0K6VA?si=9a3f83c6bf56418e" },
-        { name: "MPB", image: "/frontend/assets/images/cards/djavan.webp", link: "https://open.spotify.com/playlist/37i9dQZF1DWZlBWh8A1Ygd?si=d4d90b4ba68b4a50" },
-        { name: "FUNK", image: "/frontend/assets/images/funk.jpg", link: "https://open.spotify.com/playlist/37i9dQZF1DWTkIwO2HDifB?si=70f49f1ffd354005" },
-        { name: "ROCK", image: "/frontend/assets/images/cards/queen.webp", link: "https://open.spotify.com/playlist/37i9dQZF1DXcmaoFmN75bi?si=59cadc7d77c84749" },
-        { name: "RAP", image: "/frontend/assets/images/cards/tupac.webp", link: "https://open.spotify.com/playlist/37i9dQZF1DX186v583rmzp?si=fa1f1c99a2fd4f91" }
+        { name: "POP", image: "/frontend/assets/images/cards/michael.webp" },
+        { name: "MPB", image: "/frontend/assets/images/cards/djavan.webp" },
+        { name: "FUNK", image: "/frontend/assets/images/funk.jpg" },
+        { name: "ROCK", image: "/frontend/assets/images/cards/queen.webp" },
+        { name: "RAP", image: "/frontend/assets/images/cards/tupac.webp" }
     ];
 
     const reviewsData = [
@@ -577,14 +577,24 @@ document.addEventListener("DOMContentLoaded", () => {
             const genreCard = document.createElement("div");
             genreCard.classList.add("genre-card");
 
-            genreCard.innerHTML = `
-                <a href="${genre.link || "#"}" target="_blank">
-                    <img loading="lazy" decoding="async" src="${genre.image}" alt="Imagem de ${genre.name}">
-                    <div>
-                        <h3>${genre.name}</h3>
-                    </div>
-                </a>
-            `;
+            const link = document.createElement("a");
+            link.href = "/frontend/pages/genero.html?name=" +
+                encodeURIComponent(genre.name);
+
+            const image = document.createElement("img");
+            image.src = genre.image;
+            image.alt = "Imagem de " + genre.name;
+            image.loading = "lazy";
+            image.decoding = "async";
+
+            const info = document.createElement("div");
+
+            const name = document.createElement("h3");
+            name.textContent = genre.name;
+
+            info.append(name);
+            link.append(image, info);
+            genreCard.append(link);
 
             genresGrid.appendChild(genreCard);
         });
