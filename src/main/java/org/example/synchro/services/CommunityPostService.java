@@ -2,6 +2,8 @@ package org.example.synchro.services;
 
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.dto.UserSearchResult;
+import org.example.synchro.services.CommunityPollService.PollRequest;
+import org.example.synchro.services.CommunityPollService.PollView;
 import org.example.synchro.entities.Album;
 import org.example.synchro.entities.Artista;
 import org.example.synchro.entities.CommunityPost;
@@ -38,23 +40,43 @@ public class CommunityPostService {
     private final ArtistaRepository artists;
     private final AlbumRepository albums;
     private final MusicaRepository songs;
+    private final PostInteractionService interactions;
+    private final CommunityPollService polls;
+    private final PostInteractionNotifications notifications;
+
+    public enum Scope { ALL, FOLLOWING, SAVED }
 
     public record AttachmentView(String type, Long id, String title, String artist, String coverUrl) {}
     public record PostView(Long id, String body, Instant createdAt, Instant editedAt, UserSearchResult author,
-                           String profileImageUrl, String lastFmImageUrl, boolean own, AttachmentView attachment) {}
+                           String profileImageUrl, String lastFmImageUrl, boolean own, AttachmentView attachment,
+                           PostInteractionService.View interaction, PollView poll) {}
     public record Feed(List<PostView> items, Long nextBefore, boolean canPublish, UserSearchResult author, boolean signedIn) {}
     public record FocusedPost(PostView post, boolean signedIn) {}
     private record Attachment(Artista artist, Midia media) {}
 
-    public Feed feed(String token, Long before, Long authorId) {
+    public Feed feed(String token, Long before, Long authorId, Scope scope) {
         Long viewer = currentViewer(token);
+        if (scope != Scope.ALL && viewer == null) throw new UnauthorizedException("Entre para acessar este feed.");
+        if (scope != Scope.ALL && authorId != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecione uma lista do feed.");
+        }
         UserSearchResult author = authorId == null ? null : publicAuthor(users.findById(authorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado.")));
         long cursor = before == null ? Long.MAX_VALUE : before;
         var page = PageRequest.of(0, PAGE_SIZE + 1);
-        var entries = authorId == null ? posts.findByIdLessThanOrderByIdDesc(cursor, page)
-                : posts.findByAuthorIdAndIdLessThanOrderByIdDesc(authorId, cursor, page);
-        var items = entries.stream().limit(PAGE_SIZE).map(post -> view(post, viewer)).toList();
+        var entries = switch (scope) {
+            case FOLLOWING -> posts.findFollowing(viewer, cursor, page);
+            case SAVED -> posts.findSaved(viewer, cursor, page);
+            case ALL -> authorId == null ? posts.findByIdLessThanOrderByIdDesc(cursor, page)
+                    : posts.findByAuthorIdAndIdLessThanOrderByIdDesc(authorId, cursor, page);
+        };
+        var visible = entries.stream().limit(PAGE_SIZE).toList();
+        var ids = visible.stream().map(CommunityPost::getId).toList();
+        var reactions = interactions.views(ids, viewer);
+        var postPolls = polls.findForPosts(ids, viewer);
+        var items = visible.stream().map(post -> view(post, viewer,
+                reactions.getOrDefault(post.getId(), PostInteractionService.EMPTY),
+                postPolls.get(post.getId()))).toList();
         Long nextBefore = entries.size() > PAGE_SIZE ? items.get(PAGE_SIZE - 1).id() : null;
         boolean canPublish = viewer != null && (authorId == null || viewer.equals(authorId));
         return new Feed(items, nextBefore, canPublish, author, viewer != null);
@@ -63,15 +85,19 @@ public class CommunityPostService {
     public FocusedPost focusedPost(String token, long id) {
         Long viewer = currentViewer(token);
         var post = posts.findById(id).orElseThrow(() -> new ResourceNotFoundException("Publicação não encontrada."));
-        return new FocusedPost(view(post, viewer), viewer != null);
+        return new FocusedPost(view(post, viewer, interactionFor(post, viewer), polls.findForPost(id, viewer)),
+                viewer != null);
     }
 
     @Transactional
-    public PostView publish(String token, String text, String attachmentType, Long attachmentId) {
+    public PostView publish(String token, String text, String attachmentType, Long attachmentId, PollRequest poll) {
         Long viewer = requireViewer(token);
         var author = users.findById(viewer).orElseThrow(() -> new UnauthorizedException("Sessão inválida."));
         var attachment = resolveAttachment(attachmentType, attachmentId);
-        return view(posts.save(new CommunityPost(author, text.strip(), attachment.artist(), attachment.media())), viewer);
+        var post = posts.save(new CommunityPost(author, postBody(text, poll != null), attachment.artist(), attachment.media()));
+        polls.create(post, poll);
+        notifications.notifyPostMentions(post);
+        return view(post, viewer, PostInteractionService.EMPTY, polls.findForPost(post.getId(), viewer));
     }
 
     @Transactional
@@ -79,13 +105,29 @@ public class CommunityPostService {
         Long viewer = requireViewer(token);
         var post = ownedPost(id, viewer);
         var attachment = resolveAttachment(attachmentType, attachmentId);
-        post.edit(text.strip(), attachment.artist(), attachment.media());
-        return view(post, viewer);
+        var poll = polls.findForPost(id, viewer);
+        String body = postBody(text, poll != null);
+        boolean textChanged = !post.getBody().equals(body);
+        post.edit(body, attachment.artist(), attachment.media());
+        if (textChanged) notifications.notifyPostMentions(post);
+        return view(post, viewer, interactionFor(post, viewer), poll);
     }
 
     @Transactional
     public void delete(String token, long id) {
         posts.delete(ownedPost(id, requireViewer(token)));
+    }
+
+    private static String postBody(String text, boolean hasPoll) {
+        String body = text == null ? "" : text.strip();
+        if (!hasPoll && body.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Escreva algo ou adicione uma enquete.");
+        }
+        return body;
+    }
+
+    private PostInteractionService.View interactionFor(CommunityPost post, Long viewer) {
+        return interactions.views(List.of(post.getId()), viewer).getOrDefault(post.getId(), PostInteractionService.EMPTY);
     }
 
     private CommunityPost ownedPost(long id, Long viewer) {
@@ -131,12 +173,12 @@ public class CommunityPostService {
         return new UserSearchResult(author.getId(), author.getUsername(), data == null ? null : data.getFullName());
     }
 
-    private static PostView view(CommunityPost post, Long viewer) {
+    private static PostView view(CommunityPost post, Long viewer, PostInteractionService.View reaction, PollView poll) {
         var author = post.getAuthor();
         var data = author.getData();
         return new PostView(post.getId(), post.getBody(), post.getCreatedAt(), post.getEditedAt(), publicAuthor(author),
                 data == null ? null : data.getProfileImageUrl(), data == null ? null : data.getLastFmImageUrl(),
-                author.getId().equals(viewer), attachmentView(post));
+                author.getId().equals(viewer), attachmentView(post), reaction, poll);
     }
 
     private static AttachmentView attachmentView(CommunityPost post) {

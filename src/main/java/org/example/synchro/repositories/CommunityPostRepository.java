@@ -19,6 +19,23 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
     @EntityGraph(attributePaths = {"author", "author.data", "attachedArtist", "attachedMedia"})
     List<CommunityPost> findByAuthorIdAndIdLessThanOrderByIdDesc(long authorId, long before, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"author", "author.data", "attachedArtist", "attachedMedia"})
+    @Query("""
+            SELECT post FROM CommunityPost post WHERE post.id < :before AND EXISTS (
+                SELECT 1 FROM Follow relation WHERE relation.seguidor.id = :viewer AND relation.seguido.id = post.author.id
+            ) ORDER BY post.id DESC
+            """)
+    List<CommunityPost> findFollowing(@Param("viewer") long viewer, @Param("before") long before, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"author", "author.data", "attachedArtist", "attachedMedia"})
+    @Query("""
+            SELECT post FROM CommunityPost post WHERE post.id < :before AND EXISTS (
+                SELECT 1 FROM PostInteraction reaction WHERE reaction.user.id = :viewer
+                    AND reaction.post.id = post.id AND reaction.saved = true
+            ) ORDER BY post.id DESC
+            """)
+    List<CommunityPost> findSaved(@Param("viewer") long viewer, @Param("before") long before, Pageable pageable);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT post FROM CommunityPost post WHERE post.id = :id")
     Optional<CommunityPost> findByIdForUpdate(@Param("id") long id);

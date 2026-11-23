@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.synchro.entities.User;
 import org.example.synchro.repositories.PostCommentRepository;
 import org.example.synchro.repositories.PostNotificationRepository;
+import org.example.synchro.repositories.PostMentionNotificationRepository;
 import org.example.synchro.repositories.UserRepository;
 import org.example.synchro.resources.PostDiscussionResource;
 import org.example.synchro.services.PostDiscussionService;
@@ -12,10 +13,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,7 +39,7 @@ class PostDiscussionTests {
             var users = app.getBean(UserRepository.class);
             users.save(new User(null, "owner", "owner@example.test", "hash", LocalDate.of(2000, 1, 1), null));
             users.save(new User(null, "other", "other@example.test", "hash", LocalDate.of(2000, 1, 1), null));
-            users.save(new User(null, "visitor", "visitor@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            users.save(new User(null, "visitor do som", "visitor@example.test", "hash", LocalDate.of(2000, 1, 1), null));
             long post = expect(201, "POST", "/posts", "owner", "{\"text\":\"Post\"}").path("id").asLong();
             long anotherPost = expect(201, "POST", "/posts", "visitor", "{\"text\":\"Outro post\"}").path("id").asLong();
             String thread = "/posts/" + post + "/comments";
@@ -58,7 +62,9 @@ class PostDiscussionTests {
             long replyId = reply.path("id").asLong();
             assertEquals(commentId, reply.path("parentId").asLong());
             assertEquals("other", reply.path("replyTo").path("username").asText());
-            assertEquals(reply, expect(200, "GET", thread + "/" + replyId, null, null));
+            assertEquals(reply, expect(200, "GET", thread + "/" + replyId, "owner", null));
+            assertTrue(reply.path("own").asBoolean());
+            assertFalse(expect(200, "GET", thread + "/" + replyId, null, null).path("own").asBoolean());
             expect(404, "GET", otherThread + "/" + replyId, "owner", null);
             expect(404, "POST", otherThread, "visitor", "{\"text\":\"Outro post\",\"parentId\":" + commentId + "}");
 
@@ -101,11 +107,74 @@ class PostDiscussionTests {
             assertEquals(1, next.path("items").size());
             assertEquals(commentId, next.path("items").get(0).path("id").asLong());
 
+            String commentPath = thread + "/" + commentId;
+            expect(401, "PUT", commentPath, null, "{\"text\":\"Sem sessão\"}");
+            expect(403, "PUT", commentPath, "owner", "{\"text\":\"De outra pessoa\"}");
+            expect(403, "DELETE", commentPath, "owner", null);
+            expect(404, "PUT", otherThread + "/" + commentId, "other", "{\"text\":\"Post incorreto\"}");
+
+            var edited = expect(200, "PUT", commentPath, "other",
+                    "{\"text\":\"Oi @{visitor do som} @{VISITOR DO SOM} @owner e eu @other\"}");
+            assertTrue(edited.path("editedAt").isTextual());
+            assertTrue(edited.path("own").asBoolean());
+            assertEquals(0, expect(200, "GET", "/post-notifications/unread-count", "owner", null).path("unread").asInt());
+            assertEquals(0, expect(200, "GET", "/post-notifications/unread-count", "other", null).path("unread").asInt());
+            var visitorAlerts = expect(200, "GET", "/post-notifications", "visitor", null);
+            assertEquals(1, visitorAlerts.path("unread").asInt());
+            var commentMention = visitorAlerts.path("items").get(0);
+            assertEquals("MENTION", commentMention.path("type").asText());
+            assertEquals(post, commentMention.path("postId").asLong());
+            assertEquals(commentId, commentMention.path("commentId").asLong());
+            expect(200, "PUT", commentPath, "other", "{\"text\":\"Removi a menção\"}");
+            expect(200, "PUT", commentPath, "other", "{\"text\":\"Outra vez @{visitor do som}\"}");
+            assertEquals(1, expect(200, "GET", "/post-notifications/unread-count", "visitor", null).path("unread").asInt());
+
+            long mentionPost = expect(201, "POST", "/posts", "owner",
+                    "{\"text\":\"Olá @other. contato: teste@other Ignorar @owner\"}").path("id").asLong();
+            var postMention = expect(200, "GET", "/post-notifications", "other", null).path("items").get(0);
+            assertEquals("MENTION", postMention.path("type").asText());
+            assertTrue(postMention.path("commentId").isNull());
+            assertEquals(mentionPost, postMention.path("postId").asLong());
+            String notificationPath = "/post-notifications/" + postMention.path("id").asText();
+            expect(404, "PATCH", notificationPath, "visitor", null);
+            expect(204, "PATCH", notificationPath, "other", null);
+            expect(200, "PUT", "/posts/" + mentionPost, "owner",
+                    "{\"text\":\"Olá @OTHER e também @{visitor do som}\"}");
+            assertEquals(0, expect(200, "GET", "/post-notifications/unread-count", "other", null).path("unread").asInt());
+            assertEquals(2, expect(200, "GET", "/post-notifications/unread-count", "visitor", null).path("unread").asInt());
+            expect(204, "DELETE", "/posts/" + mentionPost, "owner", null);
+            assertEquals(1, app.getBean(PostMentionNotificationRepository.class).count());
+
+            for (int i = 0; i < 13; i++) {
+                expect(201, "POST", otherThread, "owner", "{\"text\":\"Oi @other\"}");
+            }
+            String invalidCursor = URLEncoder.encode("+10000-01-01T00:00:00Z|m|1", StandardCharsets.UTF_8);
+            expect(400, "GET", "/post-notifications?before=" + invalidCursor, "other", null);
+            var alertsPage = expect(200, "GET", "/post-notifications", "other", null);
+            assertEquals(12, alertsPage.path("items").size());
+            String alertsCursor = URLEncoder.encode(alertsPage.path("nextBefore").asText(), StandardCharsets.UTF_8);
+            var alertsNext = expect(200, "GET", "/post-notifications?before=" + alertsCursor, "other", null);
+            var ids = new HashSet<String>();
+            alertsPage.path("items").forEach(item -> assertTrue(ids.add(item.path("id").asText())));
+            alertsNext.path("items").forEach(item -> assertTrue(ids.add(item.path("id").asText())));
+            assertEquals(14, ids.size());
+
+            expect(204, "DELETE", commentPath, "other", null);
+            var removed = expect(200, "GET", commentPath, "other", null);
+            assertTrue(removed.path("deleted").asBoolean());
+            assertEquals("", removed.path("body").asText());
+            assertTrue(removed.path("author").isNull());
+            assertFalse(removed.path("own").asBoolean());
+            assertEquals(commentId, expect(200, "GET", thread + "/" + replyId, null, null).path("parentId").asLong());
+            expect(409, "POST", thread, "owner", "{\"text\":\"Tarde demais\",\"parentId\":" + commentId + "}");
+
+            expect(204, "DELETE", "/posts/" + anotherPost, "visitor", null);
             expect(204, "DELETE", "/posts/" + post, "owner", null);
             assertEquals(0, app.getBean(PostCommentRepository.class).count());
             assertEquals(0, app.getBean(PostNotificationRepository.class).count());
+            assertEquals(0, app.getBean(PostMentionNotificationRepository.class).count());
             expect(404, "GET", thread, null, null);
-            assertEquals(0, expect(200, "GET", otherThread, null, null).path("items").size());
+            expect(404, "GET", otherThread, null, null);
         }
     }
 

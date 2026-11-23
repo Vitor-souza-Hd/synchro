@@ -146,6 +146,26 @@ html.synchro-light .posts-main {
     overflow-wrap: anywhere;
 }
 
+.post-filters,
+.post-reactions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-block: 12px;
+}
+
+.post-reactions {
+    color: var(--post-muted);
+    font-size: .9rem;
+}
+
+.post-filters button[aria-pressed="true"],
+.post-reactions button[aria-pressed="true"] {
+    color: var(--post-accent);
+    border-color: var(--post-accent);
+}
+
 .post-attachment-picker,
 .post-attachment-selected {
     margin-top: 12px;

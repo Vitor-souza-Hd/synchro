@@ -31,7 +31,9 @@ class RestorationFeaturesTests {
             FavoriteAlbumService.class, FavoriteAlbumResource.class,
             FavoriteTrackService.class, FavoriteTrackResource.class, ResourceExceptionHandler.class,
             LastFmCatalogService.class, LastFmCatalogStore.class, CatalogResource.class, FollowResource.class, FriendshipResource.class, FriendshipService.class,
-            CommunityPostResource.class, CommunityPostService.class})
+            CommunityPostResource.class, CommunityPostService.class,
+            PostInteractionResource.class, PostInteractionService.class, PostInteractionNotifications.class,
+            CommunityPollResource.class, CommunityPollService.class})
     static class Config {
         @Bean org.example.synchro.importer.LastFmHistoryClient catalogClient() {
             return mock(org.example.synchro.importer.LastFmHistoryClient.class);
@@ -136,6 +138,81 @@ class RestorationFeaturesTests {
             expect(204, "DELETE", "/posts/" + id, "owner", null);
             assertFalse(repository.existsById(id));
         }
+    }
+
+    @Test
+    void feedRespectsFollowsSavedPostsLikesAndPollVotes() throws Exception {
+        try (var app = new SpringApplicationBuilder(Config.class).profiles("restoration-test")
+                .properties("server.port=0", "spring.datasource.url=jdbc:h2:mem:post-upgrades",
+                        "spring.datasource.driver-class-name=org.h2.Driver", "spring.datasource.username=sa",
+                        "spring.datasource.password=", "spring.jpa.hibernate.ddl-auto=create-drop").run()) {
+            base = "http://localhost:" + app.getEnvironment().getProperty("local.server.port");
+            var users = app.getBean(UserRepository.class);
+            users.save(new User(null, "owner", "owner@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            users.save(new User(null, "other", "other@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+
+            expect(401, "GET", "/posts?scope=FOLLOWING", null, null);
+            expect(401, "GET", "/posts?scope=SAVED", null, null);
+            long first = json.readTree(expect(201, "POST", "/posts", "owner", "{\"text\":\"Meu post\"}").body())
+                    .path("id").asLong();
+            long second = json.readTree(expect(201, "POST", "/posts", "other", "{\"text\":\"Outro post\"}").body())
+                    .path("id").asLong();
+
+            assertEquals(0, postItems("FOLLOWING", "owner").size());
+            expect(200, "POST", "/follow/2", "owner", null);
+            assertEquals(1, postItems("FOLLOWING", "owner").size());
+            assertEquals(second, postItems("FOLLOWING", "owner").get(0).path("id").asLong());
+            expect(200, "DELETE", "/follow/2", "owner", null);
+            assertEquals(0, postItems("FOLLOWING", "owner").size());
+
+            expect(401, "PUT", "/posts/" + second + "/like", null, null);
+            String like = "/posts/" + second + "/like";
+            assertEquals(1, json.readTree(expect(200, "PUT", like, "owner", null).body()).path("likes").asInt());
+            assertEquals(1, json.readTree(expect(200, "PUT", like, "owner", null).body()).path("likes").asInt());
+            assertEquals(2, json.readTree(expect(200, "PUT", like, "other", null).body()).path("likes").asInt());
+            var publicItem = postItems("ALL", null).get(0);
+            assertEquals(2, publicItem.path("interaction").path("likes").asInt());
+            assertFalse(publicItem.path("interaction").path("liked").asBoolean());
+
+            String bookmark = "/posts/" + second + "/bookmark";
+            expect(200, "PUT", bookmark, "owner", null);
+            assertEquals(second, postItems("SAVED", "owner").get(0).path("id").asLong());
+            assertEquals(0, postItems("SAVED", "other").size());
+            var state = json.readTree(expect(200, "DELETE", like, "owner", null).body());
+            assertEquals(1, state.path("likes").asInt());
+            assertTrue(state.path("saved").asBoolean());
+            expect(200, "DELETE", bookmark, "owner", null);
+            assertEquals(0, postItems("SAVED", "owner").size());
+            assertEquals(first, postItems("ALL", null).get(1).path("id").asLong());
+
+            long previous = app.getBean(CommunityPostRepository.class).count();
+            expect(400, "POST", "/posts", "owner",
+                    "{\"poll\":{\"question\":\"Qual?\",\"options\":[\"Rock\",\" rock \"]}}");
+            assertEquals(previous, app.getBean(CommunityPostRepository.class).count());
+            var poll = json.readTree(expect(201, "POST", "/posts", "owner",
+                    "{\"poll\":{\"question\":\"Qual gênero?\",\"options\":[\"Rock\",\"MPB\"]}}").body());
+            long pollPost = poll.path("id").asLong();
+            assertEquals("Qual gênero?", poll.path("poll").path("question").asText());
+            String vote = "/posts/" + pollPost + "/poll/vote";
+            expect(401, "PUT", vote, null, "{\"optionId\":0}");
+            expect(400, "PUT", vote, "owner", "{\"optionId\":99}");
+            expect(200, "PUT", vote, "owner", "{\"optionId\":0}");
+            expect(200, "PUT", vote, "owner", "{\"optionId\":1}");
+            expect(200, "PUT", vote, "other", "{\"optionId\":0}");
+            var pollView = json.readTree(expect(200, "GET", "/posts/" + pollPost, "owner", null).body())
+                    .path("post").path("poll");
+            assertEquals(2, pollView.path("totalVotes").asInt());
+            assertEquals(1, pollView.path("selectedOption").asInt());
+            assertEquals(1, pollView.path("options").get(0).path("votes").asInt());
+            assertEquals(1, pollView.path("options").get(1).path("votes").asInt());
+            assertTrue(postItems("ALL", null).get(0).path("poll").path("selectedOption").isNull());
+            expect(204, "DELETE", "/posts/" + pollPost, "owner", null);
+            expect(404, "PUT", vote, "owner", "{\"optionId\":0}");
+        }
+    }
+
+    private com.fasterxml.jackson.databind.JsonNode postItems(String scope, String session) throws Exception {
+        return json.readTree(expect(200, "GET", "/posts?scope=" + scope, session, null).body()).path("items");
     }
 
     @Test

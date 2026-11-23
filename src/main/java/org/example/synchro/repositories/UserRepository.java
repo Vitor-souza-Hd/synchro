@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -27,6 +28,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     User findByUsername(String username);
+
+    @Query("SELECT account FROM User account WHERE LOWER(account.username) IN :names")
+    List<User> findForMentions(@Param("names") Set<String> names);
 
     @Query("SELECT user FROM User user " +
             "WHERE LOWER(REPLACE(user.username, ' ', '')) = " +

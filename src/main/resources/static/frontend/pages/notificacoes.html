@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notificações | Synchro</title>
+    <script src="/frontend/assets/js/explorar/tema-global.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=fotos-reviews">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/favoritos.css?v=home-sidebar-spacing">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-biblioteca.css">
+    <link rel="stylesheet" href="/frontend/assets/css/features.css?v=foto-da-conta">
+    <link rel="stylesheet" href="/frontend/assets/css/auth.css">
+    <link rel="stylesheet" href="/frontend/assets/css/search.css">
+    <link rel="stylesheet" href="/frontend/assets/css/publicacoes.css?v=controle-feed">
+    <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css?v=notificacoes-menu">
+    <script src="/frontend/assets/js/auth.js?v=foto-da-conta" defer></script>
+    <script src="/frontend/assets/js/search.js?v=busca-eficiente" defer></script>
+    <script src="/frontend/assets/js/post-menu.js" defer></script>
+    <script src="/frontend/assets/js/post-notifications.js" defer></script>
+</head>
+<body class="synchro-biblioteca">
+    <div class="feature-session">
+        <div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div>
+        <div class="session-actions" hidden><button type="button" class="logout-button">Sair</button><p class="session-error" role="alert" hidden></p></div>
+    </div>
+    <div class="container">
+        <aside id="postsSidebar" class="sidebar" aria-label="Menu principal">
+            <div class="logo"><i class="bx bx-pulse" aria-hidden="true"></i><a href="/frontend/pages/explorar.html">SYNCHRO</a></div>
+            <nav class="menu" aria-label="Menu">
+                <h5>Menu</h5>
+                <ul>
+                    <li><i class="bx bxs-bolt-circle" aria-hidden="true"></i><a href="/frontend/pages/explorar.html">Explorar</a></li>
+                    <li><i class="bx bxs-volume-full" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#generos">Gêneros</a></li>
+                    <li><i class="bx bxs-album" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#albuns">Álbuns</a></li>
+                    <li><i class="bx bxs-microphone" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#artistas">Artistas</a></li>
+                    <li><i class="bx bxs-star" aria-hidden="true"></i><a href="/frontend/pages/recomendacoes.html">Recomendações</a></li>
+                    <li><i class="bx bxs-chat" aria-hidden="true"></i><a href="/frontend/pages/publicacoes.html">Publicações</a></li>
+                    <li><i class="bx bxs-group" aria-hidden="true"></i><a href="/frontend/pages/pessoas.html">Pessoas</a></li>
+                    <li class="fav-menu-active"><i class="bx bx-bell" aria-hidden="true"></i><a href="/frontend/pages/notificacoes.html" data-post-notifications-link aria-current="page">Notificações <span class="post-notifications-count" data-post-notifications-badge hidden></span></a></li>
+                </ul>
+            </nav>
+            <nav class="menu" aria-label="Sua biblioteca">
+                <h5>Sua biblioteca</h5>
+                <ul>
+                    <li><i class="bx bx-undo" aria-hidden="true"></i><a href="/frontend/pages/recentes.html">Recentes</a></li>
+                    <li><i class="bx bxs-heart" aria-hidden="true"></i><a href="/frontend/pages/favoritos.html">Favoritos</a></li>
+                    <li><i class="bx bxs-playlist" aria-hidden="true"></i><a href="/frontend/pages/playlists.html">Suas playlists</a></li>
+                    <li><i class="bx bxs-cog" aria-hidden="true"></i><a href="/frontend/pages/configuracoes.html">Configurações</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="favorites-main posts-main">
+            <header class="favorites-topbar">
+                <button id="postsMenuToggle" class="favorites-menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="postsSidebar">
+                    <i class="bx bx-menu" aria-hidden="true"></i>
+                </button>
+                <div class="search-box favorites-search-box">
+                    <i class="bx bx-search" aria-hidden="true"></i>
+                    <input class="search" type="search" placeholder="O que você quer ouvir?" aria-label="Buscar músicas, artistas, álbuns ou usuários" autocomplete="off">
+                </div>
+                <a class="favorites-profile-link" href="/frontend/pages/perfil.html" aria-label="Meu perfil">
+                    <img class="personal-profile-icon" src="/frontend/assets/images/personal-profile-icon.png" width="28" height="28" alt="">
+                </a>
+            </header>
+
+            <div class="posts-column">
+                <div class="favorites-heading">
+                    <h1>Notificações</h1>
+                    <a href="/frontend/pages/publicacoes.html">Voltar para Publicações</a>
+                </div>
+                <section id="postNotificationsPage" class="post-panel" aria-label="Notificações recebidas" hidden></section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -40,11 +40,32 @@ public class PostComment {
     @Column(nullable = false)
     private Instant createdAt;
 
+    private Instant editedAt;
+
+    private Instant deletedAt;
+
     public PostComment(CommunityPost post, User author, PostComment parent, String body) {
         this.post = post;
         this.author = author;
         this.parent = parent;
         this.body = body;
-        this.createdAt = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        this.createdAt = now();
+    }
+
+    public void edit(String body) {
+        if (this.body.equals(body)) return;
+        this.body = body;
+        editedAt = now();
+    }
+
+    public void delete() {
+        if (deletedAt == null) {
+            body = "";
+            deletedAt = now();
+        }
+    }
+
+    private static Instant now() {
+        return Instant.now().truncatedTo(ChronoUnit.MILLIS);
     }
 }

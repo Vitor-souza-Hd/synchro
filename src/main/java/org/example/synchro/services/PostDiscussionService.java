@@ -13,8 +13,10 @@ import org.example.synchro.services.exception.InvalidTokenException;
 import org.example.synchro.services.exception.ResourceNotFoundException;
 import org.example.synchro.services.exception.UnauthorizedException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -31,23 +33,21 @@ public class PostDiscussionService {
     private final PostNotificationRepository notifications;
     private final UserRepository users;
     private final CookieService cookies;
+    private final PostInteractionNotifications interactionNotifications;
 
     public record CommentView(Long id, Long parentId, String body, UserSearchResult author,
-                              UserSearchResult replyTo, Instant createdAt) {}
+                              UserSearchResult replyTo, Instant createdAt, boolean own, boolean deleted, Instant editedAt) {}
     public record CommentsPage(List<CommentView> items, Long nextBefore) {}
-    public record NotificationView(Long id, Long postId, Long commentId, UserSearchResult actor,
-                                   PostNotification.Type type, Instant createdAt, boolean read) {}
-    public record NotificationsPage(List<NotificationView> items, Long nextBefore, long unread) {}
-
-    public CommentsPage listComments(long postId, Long before) {
+    public CommentsPage listComments(String token, long postId, Long before) {
         if (!posts.existsById(postId)) throw missingPost();
         var page = comments.findByPostIdAndIdLessThanOrderByIdDesc(postId, cursor(before), pageRequest());
-        return new CommentsPage(page.stream().limit(PAGE_SIZE).map(PostDiscussionService::viewComment).toList(),
+        Long viewer = viewerId(token);
+        return new CommentsPage(page.stream().limit(PAGE_SIZE).map(comment -> viewComment(comment, viewer)).toList(),
                 page.size() > PAGE_SIZE ? page.get(PAGE_SIZE - 1).getId() : null);
     }
 
-    public CommentView getComment(long postId, long commentId) {
-        return viewComment(findComment(postId, commentId));
+    public CommentView getComment(String token, long postId, long commentId) {
+        return viewComment(findComment(postId, commentId), viewerId(token));
     }
 
     @Transactional
@@ -57,45 +57,77 @@ public class PostDiscussionService {
         // Serialize writes with deletion of the post.
         var post = posts.findByIdForUpdate(postId).orElseThrow(PostDiscussionService::missingPost);
         var parent = parentId == null ? null : findComment(postId, parentId);
+        if (parent != null && parent.getDeletedAt() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Este comentário foi excluído.");
+        }
         var comment = comments.save(new PostComment(post, author, parent, text.strip()));
-        User recipient = parent == null ? post.getAuthor() : parent.getAuthor();
+        User recipient = discussionRecipient(comment);
         if (!recipient.getId().equals(viewerId)) {
             var type = parent == null ? PostNotification.Type.COMMENT : PostNotification.Type.REPLY;
             notifications.save(new PostNotification(recipient, comment, type));
         }
-        return viewComment(comment);
-    }
-
-    public NotificationsPage listNotifications(String token, Long before) {
-        long viewerId = requireViewerId(token);
-        var page = notifications.findByRecipientIdAndIdLessThanOrderByIdDesc(viewerId, cursor(before), pageRequest());
-        return new NotificationsPage(page.stream().limit(PAGE_SIZE).map(PostDiscussionService::viewNotification).toList(),
-                page.size() > PAGE_SIZE ? page.get(PAGE_SIZE - 1).getId() : null,
-                notifications.countByRecipientIdAndReadAtIsNull(viewerId));
+        interactionNotifications.notifyCommentMentions(comment, recipient);
+        return viewComment(comment, viewerId);
     }
 
     @Transactional
-    public void readNotification(String token, long id) {
-        if (notifications.markRead(id, requireViewerId(token), Instant.now()) == 0) {
-            throw new ResourceNotFoundException("Notificação não encontrada.");
+    public CommentView editComment(String token, long postId, long commentId, String text) {
+        long viewer = requireViewerId(token);
+        var comment = ownedComment(postId, commentId, viewer);
+        if (comment.getDeletedAt() != null) {
+            throw new ResourceNotFoundException("Este comentário foi excluído.");
         }
+        comment.edit(text.strip());
+        interactionNotifications.notifyCommentMentions(comment, discussionRecipient(comment));
+        return viewComment(comment, viewer);
     }
 
     @Transactional
+    public void deleteComment(String token, long postId, long commentId) {
+        ownedComment(postId, commentId, requireViewerId(token)).delete();
+    }
+
+    public PostInteractionNotifications.NotificationsPage listNotifications(String token, String before) {
+        return interactionNotifications.list(requireViewerId(token), before);
+    }
+
+    public PostInteractionNotifications.UnreadCount unreadNotifications(String token) {
+        return interactionNotifications.unread(requireViewerId(token));
+    }
+
+    public void readNotification(String token, String id) {
+        interactionNotifications.markRead(requireViewerId(token), id);
+    }
+
     public void readAllNotifications(String token) {
-        notifications.markAllRead(requireViewerId(token), Instant.now());
+        interactionNotifications.markAllRead(requireViewerId(token));
+    }
+
+    private PostComment ownedComment(long postId, long commentId, long viewer) {
+        posts.findByIdForUpdate(postId).orElseThrow(PostDiscussionService::missingPost);
+        var comment = findComment(postId, commentId);
+        if (!comment.getAuthor().getId().equals(viewer)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o autor pode alterar este comentário.");
+        }
+        return comment;
+    }
+
+    private static User discussionRecipient(PostComment comment) {
+        return comment.getParent() == null ? comment.getPost().getAuthor() : comment.getParent().getAuthor();
     }
 
     private long requireViewerId(String token) {
-        try {
-            if (cookies.checkCookie(token)) {
-                Long id = cookies.getId(token);
-                if (id != null) return id;
-            }
-        } catch (InvalidTokenException | NumberFormatException ignored) {
-            // Treat invalid or expired sessions as signed out.
-        }
+        Long id = viewerId(token);
+        if (id != null) return id;
         throw invalidSession();
+    }
+
+    private Long viewerId(String token) {
+        try {
+            return cookies.checkCookie(token) ? cookies.getId(token) : null;
+        } catch (InvalidTokenException | NumberFormatException ignored) {
+            return null;
+        }
     }
 
     private PostComment findComment(long postId, long commentId) {
@@ -103,23 +135,15 @@ public class PostDiscussionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Comentário não encontrado nesta publicação."));
     }
 
-    private static CommentView viewComment(PostComment comment) {
+    private static CommentView viewComment(PostComment comment, Long viewer) {
         var parent = comment.getParent();
+        boolean deleted = comment.getDeletedAt() != null;
+        var author = deleted ? null : PostInteractionNotifications.publicUser(comment.getAuthor());
+        var replyTo = parent == null || parent.getDeletedAt() != null ? null
+                : PostInteractionNotifications.publicUser(parent.getAuthor());
         return new CommentView(comment.getId(), parent == null ? null : parent.getId(), comment.getBody(),
-                publicUser(comment.getAuthor()), parent == null ? null : publicUser(parent.getAuthor()),
-                comment.getCreatedAt());
-    }
-
-    private static NotificationView viewNotification(PostNotification notification) {
-        var comment = notification.getComment();
-        return new NotificationView(notification.getId(), comment.getPost().getId(), comment.getId(),
-                publicUser(comment.getAuthor()), notification.getType(), comment.getCreatedAt(),
-                notification.getReadAt() != null);
-    }
-
-    private static UserSearchResult publicUser(User user) {
-        var data = user.getData();
-        return new UserSearchResult(user.getId(), user.getUsername(), data == null ? null : data.getFullName());
+                author, replyTo, comment.getCreatedAt(), !deleted && comment.getAuthor().getId().equals(viewer),
+                deleted, comment.getEditedAt());
     }
 
     private static long cursor(Long before) {

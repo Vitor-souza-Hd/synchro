@@ -1,20 +1,10 @@
-.post-discussion,
-.post-notifications {
+.post-discussion {
     margin-top: 14px;
     padding-top: 12px;
     border-top: 1px solid var(--post-line);
 }
 
-.post-notifications {
-    margin: 0 0 16px;
-    padding: 12px 16px;
-    border: 1px solid var(--post-line);
-    border-radius: 14px;
-    background: var(--post-surface);
-}
-
-.post-discussion-toggle,
-.post-notifications-toggle {
+.post-discussion-toggle {
     width: fit-content;
     color: var(--post-accent);
     cursor: pointer;
@@ -26,9 +16,19 @@
     margin-inline-start: 8px;
     padding: 1px 7px;
     border-radius: 20px;
-    background: var(--post-accent);
-    color: var(--post-surface);
+    background: var(--post-accent, #f19ab5);
+    color: var(--post-surface, #251e29);
     font-size: .875rem;
+}
+
+[data-post-notifications-link] {
+    display: inline-flex;
+    align-items: center;
+}
+
+.post-notifications-count[hidden],
+.post-mention-choices[hidden] {
+    display: none;
 }
 
 .post-comment-form {
@@ -50,7 +50,9 @@
 }
 
 .post-discussion-actions,
-.post-comment-header {
+.post-comment-header,
+.post-comment-tools,
+.post-notification-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
@@ -59,6 +61,27 @@
 
 .post-discussion-actions {
     justify-content: flex-end;
+}
+
+.post-comment-tools button {
+    font-size: .875rem;
+}
+
+.post-mention-choices {
+    display: grid;
+    gap: 4px;
+    margin: 6px 0 0;
+    padding: 6px;
+    border: 1px solid var(--post-line);
+    border-radius: 8px;
+    background: var(--post-surface);
+    list-style: none;
+}
+
+.post-mention-choices button {
+    width: 100%;
+    text-align: left;
+    overflow-wrap: anywhere;
 }
 
 .post-comment-login {

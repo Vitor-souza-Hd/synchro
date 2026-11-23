@@ -12,15 +12,20 @@
     <link rel="stylesheet" href="/frontend/assets/css/features.css?v=foto-da-conta">
     <link rel="stylesheet" href="/frontend/assets/css/auth.css">
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
-    <link rel="stylesheet" href="/frontend/assets/css/publicacoes.css?v=interacoes">
-    <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css">
+    <link rel="stylesheet" href="/frontend/assets/css/publicacoes.css?v=controle-feed">
+    <link rel="stylesheet" href="/frontend/assets/css/post-polls.css">
+    <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css?v=notificacoes-menu">
     <script src="/frontend/assets/js/auth.js?v=foto-da-conta" defer></script>
     <script src="/frontend/assets/js/search.js?v=busca-eficiente" defer></script>
     <script src="/frontend/assets/js/image-visibility.js" defer></script>
     <script src="/frontend/assets/js/explorar/favorite-images.js?v=fotos-artistas-perfil-2" defer></script>
     <script src="/frontend/assets/js/post-attachments.js" defer></script>
-    <script src="/frontend/assets/js/post-discussion.js" defer></script>
-    <script src="/frontend/assets/js/publicacoes.js?v=interacoes" defer></script>
+    <script src="/frontend/assets/js/post-mentions.js" defer></script>
+    <script src="/frontend/assets/js/post-polls.js?v=polls-1" defer></script>
+    <script src="/frontend/assets/js/post-discussion.js?v=editar-comentarios" defer></script>
+    <script src="/frontend/assets/js/post-menu.js" defer></script>
+    <script src="/frontend/assets/js/publicacoes.js?v=controle-feed" defer></script>
+    <script src="/frontend/assets/js/post-notifications.js" defer></script>
 </head>
 <body class="synchro-biblioteca">
     <div class="feature-session">
@@ -40,6 +45,7 @@
                     <li><i class="bx bxs-star" aria-hidden="true"></i><a href="/frontend/pages/recomendacoes.html">Recomendações</a></li>
                     <li class="fav-menu-active"><i class="bx bxs-chat" aria-hidden="true"></i><a href="/frontend/pages/publicacoes.html" aria-current="page">Publicações</a></li>
                     <li><i class="bx bxs-group" aria-hidden="true"></i><a href="/frontend/pages/pessoas.html">Pessoas</a></li>
+                    <li><i class="bx bx-bell" aria-hidden="true"></i><a href="/frontend/pages/notificacoes.html" data-post-notifications-link>Notificações <span class="post-notifications-count" data-post-notifications-badge hidden></span></a></li>
                 </ul>
             </nav>
             <nav class="menu" aria-label="Sua biblioteca">
@@ -72,11 +78,15 @@
                     <a id="allPosts" href="/frontend/pages/publicacoes.html" hidden>Ver publicações da comunidade</a>
                 </div>
 
-                <section id="postNotifications" hidden></section>
+                <nav id="postFilters" class="post-filters" aria-label="Filtrar publicações" hidden>
+                    <button type="button" data-feed-scope="ALL" aria-pressed="true">Comunidade</button>
+                    <button type="button" data-feed-scope="FOLLOWING" aria-pressed="false">Seguindo</button>
+                    <button type="button" data-feed-scope="SAVED" aria-pressed="false">Salvas</button>
+                </nav>
 
                 <form id="postForm" class="post-panel post-form" hidden>
                     <label id="postLabel" for="postText">Escreva uma publicação</label>
-                    <textarea id="postText" rows="4" maxlength="2000" required aria-describedby="postCount"></textarea>
+                    <textarea id="postText" rows="4" maxlength="2000" aria-describedby="postCount"></textarea>
                     <div id="postAttachmentSelected" class="post-attachment-selected" hidden>
                         <p id="postAttachmentName"></p>
                         <button id="clearPostAttachment" type="button">Remover anexo</button>

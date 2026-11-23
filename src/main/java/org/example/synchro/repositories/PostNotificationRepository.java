@@ -14,7 +14,14 @@ import java.util.List;
 public interface PostNotificationRepository extends JpaRepository<PostNotification, Long> {
 
     @EntityGraph(attributePaths = {"comment", "comment.author", "comment.author.data"})
-    List<PostNotification> findByRecipientIdAndIdLessThanOrderByIdDesc(long recipientId, long before, Pageable pageable);
+    @Query("""
+            SELECT n FROM PostNotification n JOIN n.comment c
+            WHERE n.recipient.id = :recipient AND
+                (c.createdAt < :time OR (c.createdAt = :time AND n.id < :before))
+            ORDER BY c.createdAt DESC, n.id DESC
+            """)
+    List<PostNotification> inbox(@Param("recipient") long recipient, @Param("time") Instant time,
+                                  @Param("before") long before, Pageable page);
 
     long countByRecipientIdAndReadAtIsNull(long recipientId);
 

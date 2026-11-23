@@ -1,7 +1,6 @@
 (() => {
     const dateFormat = new Intl.DateTimeFormat('pt-BR', {dateStyle: 'short', timeStyle: 'short'});
     const query = new URLSearchParams(window.location.search);
-    const notifications = new WeakSet();
 
     function element(tag, className, text) {
         const node = document.createElement(tag);
@@ -83,26 +82,75 @@
         form.hidden = !signedIn;
         actions.append(cancel, send);
         form.append(label, text, actions);
+        window.SynchroPostMentions?.initialize(text);
         panel.append(toggle, form, login, writeStatus, loadStatus, list, more);
         article.append(panel);
 
         const shown = new Map();
         let nextBefore = null;
         let reply = null;
+        let editing = null;
+        let draft = '';
         let loaded = false;
         let loading;
         let sending = false;
 
         function setReply(comment) {
+            if (editing) {
+                text.value = draft;
+                draft = '';
+                editing = null;
+            }
             reply = comment;
             label.textContent = comment ? 'Responder a ' + authorName(comment.author) : 'Escreva um comentário';
             send.textContent = comment ? 'Responder' : 'Comentar';
+            cancel.textContent = 'Cancelar resposta';
             cancel.hidden = !comment;
         }
 
-        function render(comment, prepend = false) {
+        function startEdit(comment) {
+            if (sending) return;
+            if (!editing) draft = text.value;
+            reply = null;
+            editing = comment;
+            text.value = comment.body;
+            label.textContent = 'Editar comentário';
+            send.textContent = 'Salvar';
+            cancel.textContent = 'Cancelar edição';
+            cancel.hidden = false;
+            writeStatus.textContent = '';
+            text.focus();
+        }
+
+        function commentUrl(id) {
+            return path + '/' + encodeURIComponent(id);
+        }
+
+        function setBusy(busy) {
+            sending = send.disabled = text.disabled = cancel.disabled = busy;
+        }
+
+        async function remove(comment) {
+            if (sending || !window.confirm('Excluir este comentário?')) return;
+            setBusy(true);
+            writeStatus.textContent = '';
+            try {
+                await request(commentUrl(comment.id), {method: 'DELETE'});
+                if (editing?.id === comment.id || reply?.id === comment.id) setReply(null);
+                render({...comment, own: false, deleted: true, body: ''}, false, true).focus();
+                writeStatus.textContent = 'Comentário excluído.';
+            } catch (error) {
+                if (error.status === 401) login.hidden = false;
+                writeStatus.textContent = error.status === 401 ? 'Sua sessão expirou.' : 'Não foi possível excluir o comentário.';
+            } finally {
+                setBusy(false);
+            }
+        }
+
+        function render(comment, prepend = false, replace = false) {
             const id = String(comment.id);
-            if (shown.has(id)) return shown.get(id);
+            const previous = shown.get(id);
+            if (previous && !replace) return previous;
             const item = element('li', comment.parentId == null ? 'post-comment' : 'post-comment post-comment-nested');
             item.id = 'post-comment-' + id;
             item.tabIndex = -1;
@@ -110,6 +158,7 @@
             const author = element('a', 'post-comment-author', authorName(comment.author));
             author.href = '/frontend/pages/perfil-publico.html?' + new URLSearchParams({user: comment.author.id});
             header.append(author, timestamp(comment.createdAt));
+            if (comment.editedAt && !comment.deleted) header.append(element('span', 'post-discussion-meta', 'Editado'));
             item.append(header);
             if (comment.parentId != null) {
                 const parent = element('a', 'post-discussion-meta',
@@ -117,17 +166,28 @@
                 parent.href = linkToComment(post.id, comment.parentId);
                 item.append(parent);
             }
-            item.append(element('p', 'post-comment-body', comment.body));
-            if (signedIn) {
+            item.append(element('p', 'post-comment-body', comment.deleted ? 'Comentário excluído.' : comment.body));
+            if (signedIn && !comment.deleted) {
+                const tools = element('div', 'post-comment-tools');
                 const respond = button('Responder', 'post-comment-reply', () => {
+                    if (sending) return;
                     setReply(comment);
+                    writeStatus.textContent = '';
                     text.focus();
                 });
                 respond.setAttribute('aria-label', 'Responder ao comentário de ' + authorName(comment.author));
-                item.append(respond);
+                tools.append(respond);
+                if (comment.own) {
+                    tools.append(button('Editar comentário', 'post-comment-edit', () => startEdit(comment)),
+                        button('Excluir comentário', 'post-comment-delete', () => remove(comment)));
+                }
+                item.append(tools);
             }
             shown.set(id, item);
-            if (prepend) list.prepend(item);
+            if (previous) {
+                if (previous.classList.contains('post-comment-target')) item.classList.add('post-comment-target');
+                previous.replaceWith(item);
+            } else if (prepend) list.prepend(item);
             else list.append(item);
             return item;
         }
@@ -167,20 +227,21 @@
                 writeStatus.textContent = 'Escreva um comentário antes de enviar.';
                 return;
             }
-            sending = true;
-            send.disabled = text.disabled = cancel.disabled = true;
-            writeStatus.textContent = 'Enviando…';
+            setBusy(true);
+            writeStatus.textContent = editing ? 'Salvando…' : 'Enviando…';
             try {
+                const focused = editing;
                 const parentId = reply?.id ?? null;
-                const comment = await request(path, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: message, parentId})
+                const comment = await request(focused ? commentUrl(focused.id) : path, {
+                    method: focused ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(focused ? {text: message} : {text: message, parentId})
                 });
-                text.value = '';
+                if (!focused) text.value = '';
                 setReply(null);
-                render(comment, true);
+                render(comment, !focused, Boolean(focused));
                 if (loaded) loadStatus.textContent = '';
-                writeStatus.textContent = parentId == null ? 'Comentário publicado.' : 'Resposta publicada.';
+                writeStatus.textContent = focused ? 'Comentário atualizado.' :
+                    parentId == null ? 'Comentário publicado.' : 'Resposta publicada.';
             } catch (error) {
                 if (error.status === 401) {
                     login.hidden = false;
@@ -189,8 +250,7 @@
                     writeStatus.textContent = 'Não foi possível enviar. Tente novamente.';
                 }
             } finally {
-                send.disabled = text.disabled = cancel.disabled = false;
-                sending = false;
+                setBusy(false);
             }
         });
 
@@ -200,7 +260,7 @@
             load().then(async () => {
                 try {
                     const target = shown.get(focusId) ||
-                        render(await request(path + '/' + encodeURIComponent(focusId)), true);
+                        render(await request(commentUrl(focusId)), true);
                     target.classList.add('post-comment-target');
                     target.focus();
                 } catch {
@@ -210,107 +270,5 @@
         }
     }
 
-    function initializeNotifications(container, signedIn) {
-        if (!container) return;
-        container.hidden = !signedIn;
-        if (!signedIn || notifications.has(container)) return;
-        notifications.add(container);
-
-        const panel = element('details', 'post-notifications');
-        const toggle = element('summary', 'post-notifications-toggle', 'Notificações');
-        const count = element('span', 'post-notifications-count');
-        count.setAttribute('aria-live', 'polite');
-        count.hidden = true;
-        toggle.append(count);
-        const message = status();
-        const list = element('ul', 'post-notification-list');
-        list.setAttribute('aria-label', 'Notificações de publicações');
-        const more = button('Ver notificações anteriores', 'post-notifications-more', () => load(true));
-        const readAll = button('Marcar todas como lidas', 'post-notifications-read', markAll);
-        more.hidden = readAll.hidden = true;
-        panel.append(toggle, message, readAll, list, more);
-        container.append(panel);
-
-        let items = [];
-        let nextBefore = null;
-        let unread = 0;
-        let loading = false;
-
-        function render() {
-            count.hidden = unread === 0;
-            count.textContent = unread ? String(unread) : '';
-            count.setAttribute('aria-label', unread ? unread + ' não lidas' : '');
-            readAll.hidden = unread === 0;
-            list.replaceChildren(...items.map(item => {
-                const row = element('li', 'post-notification');
-                const action = item.type === 'REPLY' ? ' respondeu ao seu comentário.' : ' comentou na sua publicação.';
-                const link = element('a', 'post-notification-link', authorName(item.actor) + action);
-                if (!item.read) link.append(element('span', 'post-notification-new', ' Nova'));
-                link.href = linkToComment(item.postId, item.commentId);
-                if (!item.read) link.addEventListener('click', () => {
-                    request('/post-notifications/' + encodeURIComponent(item.id), {method: 'PATCH', keepalive: true})
-                        .then(() => {
-                            if (!item.read) unread = Math.max(0, unread - 1);
-                            item.read = true;
-                            render();
-                        }).catch(() => {});
-                });
-                row.append(link, timestamp(item.createdAt));
-                return row;
-            }));
-            message.textContent = items.length ? '' : 'Você ainda não tem notificações.';
-        }
-
-        async function load(append = false) {
-            if (loading || container.hidden || (append && nextBefore == null)) return;
-            loading = more.disabled = readAll.disabled = true;
-            if (!items.length) message.textContent = 'Carregando notificações…';
-            try {
-                const params = append ? '?' + new URLSearchParams({before: nextBefore}) : '';
-                const page = await request('/post-notifications' + params);
-                const existingIds = new Set(items.map(item => item.id));
-                const latestIds = new Set(page.items.map(item => item.id));
-                if (append) {
-                    items.push(...page.items.filter(item => !existingIds.has(item.id)));
-                    nextBefore = page.nextBefore;
-                } else {
-                    const last = page.items.at(-1);
-                    const older = last ? items.filter(item => item.id < last.id && !latestIds.has(item.id)) : [];
-                    items = [...page.items, ...older];
-                    if (!older.length) nextBefore = page.nextBefore;
-                }
-                unread = page.unread;
-                more.hidden = nextBefore == null;
-                more.textContent = 'Ver notificações anteriores';
-                render();
-            } catch (error) {
-                if (error.status === 401) container.hidden = true;
-                else message.textContent = 'Não foi possível carregar as notificações.';
-            } finally {
-                loading = more.disabled = readAll.disabled = false;
-            }
-        }
-
-        async function markAll() {
-            if (loading) return;
-            loading = more.disabled = readAll.disabled = true;
-            try {
-                await request('/post-notifications/read-all', {method: 'PATCH'});
-                items.forEach(item => { item.read = true; });
-                unread = 0;
-                render();
-                message.textContent = 'Notificações marcadas como lidas.';
-            } catch {
-                message.textContent = 'Não foi possível marcar as notificações como lidas.';
-            } finally {
-                loading = more.disabled = readAll.disabled = false;
-            }
-        }
-
-        panel.addEventListener('toggle', () => { if (panel.open) load(); });
-        window.addEventListener('focus', () => load());
-        load();
-    }
-
-    window.SynchroPostDiscussion = {attach, initializeNotifications};
+    window.SynchroPostDiscussion = {attach};
 })();
