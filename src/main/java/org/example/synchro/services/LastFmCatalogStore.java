@@ -134,8 +134,12 @@ public class LastFmCatalogStore {
         }
         for (JsonNode track : nodes(node.path("tracks").path("track"))) {
             if (text(track, "name").isBlank()) continue;
+            String trackArtist = artistName(track);
+            String credited = trackArtist.isBlank() ? artist : trackArtist;
+            if (!credited.isBlank() && !compatibleArtist(
+                    songs.findByTituloKey(CatalogName.key(text(track, "name"))).orElse(null), credited)) continue;
             var song = song(track, false);
-            if (song.getArtistas().isEmpty() && !artist.isBlank()) song.addArtista(namedArtist(artist));
+            if (song.getArtistas().isEmpty() && !credited.isBlank()) song.addArtista(namedArtist(credited));
             if (song.getAlbum() == null) song.setAlbum(album);
             Long seconds = number(track.path("duration"));
             if (seconds != null && seconds > 0 && song.getDuracao() == null) song.setDuracao(Duration.ofSeconds(seconds));
@@ -150,9 +154,16 @@ public class LastFmCatalogStore {
         metadata(song.getLastFm(), node, complete);
         String artist = artistName(node);
         if (!artist.isBlank()) song.addArtista(namedArtist(artist));
-        if (node.path("album").isObject() && !text(node.path("album"), "title").isBlank()) {
-            if (complete || song.getAlbum() == null) song.setAlbum(album(node.path("album"), false));
-            if (!image(node.path("album")).isBlank()) song.getLastFm().setImageUrl(image(node.path("album")));
+        var albumNode = node.path("album");
+        String albumTitle = text(albumNode, "title");
+        if (albumNode.isObject() && !albumTitle.isBlank()) {
+            String albumArtist = artistName(albumNode);
+            if (albumArtist.isBlank()) albumArtist = artist;
+            var existingAlbum = albums.findByTituloKey(CatalogName.key(albumTitle)).orElse(null);
+            if (albumArtist.isBlank() || compatibleArtist(existingAlbum, albumArtist)) {
+                if (complete || song.getAlbum() == null) song.setAlbum(album(albumNode, false));
+                if (!image(albumNode).isBlank()) song.getLastFm().setImageUrl(image(albumNode));
+            }
         }
         if (complete) {
             Long millis = number(node.path("duration"));
@@ -166,6 +177,42 @@ public class LastFmCatalogStore {
             }
         }
         return song;
+    }
+
+    @Transactional(readOnly = true)
+    public boolean knowsArtist(String name) {
+        return artists.findByNomeKey(CatalogName.key(name)).isPresent();
+    }
+
+    @Transactional
+    public Long saveRankedArtistItem(String type, JsonNode node, String artist) {
+        String title = CatalogName.key(text(node, "name"));
+        Midia existing = "album".equals(type) ? albums.findByTituloKey(title).orElse(null)
+                : songs.findByTituloKey(title).orElse(null);
+        if (!compatibleArtist(existing, artist)) return null;
+        Midia media = "album".equals(type) ? album(node, false) : song(node, false);
+        var metadata = media.getLastFm();
+        if (!ArtistPhotoStore.hasUsableImage(metadata.getImageUrl()) && ArtistPhotoStore.hasUsableImage(image(node))) {
+            metadata.setImageUrl(image(node));
+        }
+        if (metadata.getPlaycount() == null) metadata.setPlaycount(number(node.path("playcount")));
+        if (metadata.getListeners() == null) metadata.setListeners(number(node.path("listeners")));
+        if (metadata.getUrl() == null && !text(node, "url").isBlank()) metadata.setUrl(text(node, "url"));
+        if (metadata.getMbid() == null && !text(node, "mbid").isBlank()) metadata.setMbid(text(node, "mbid"));
+        if (media instanceof Musica track && track.getDuracao() == null) {
+            Long seconds = number(node.path("duration"));
+            if (seconds != null && seconds > 0) track.setDuracao(Duration.ofSeconds(seconds));
+        }
+        return media.getId();
+    }
+
+    private boolean compatibleArtist(Midia existing, String artist) {
+        if (existing == null) return true;
+        String target = CatalogName.key(artist);
+        var linked = existing instanceof Album album ? album.getArtistas() : ((Musica) existing).getArtistas();
+        String credit = existing.getLastFm().getArtistName();
+        return linked.stream().anyMatch(item -> target.equals(CatalogName.key(item.getNome())))
+                || (credit != null && !credit.isBlank() ? target.equals(CatalogName.key(credit)) : linked.isEmpty());
     }
 
     @Transactional

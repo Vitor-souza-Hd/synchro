@@ -7,14 +7,21 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=shared-sidebar-1">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=weekly-music-genres">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=contador-seguidores">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-usuario.css?v=20261105-compact-profile-1">
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
     <link rel="stylesheet" href="/frontend/assets/css/auth.css">
     <link rel="stylesheet" href="/frontend/assets/css/features.css">
     <script src="/frontend/assets/js/explorar/tema-global.js"></script>
     <script src="/frontend/assets/js/auth.js" defer></script>
-    <script src="/frontend/assets/js/user.js?v=perfis-separados" defer></script>
+    <script src="/frontend/assets/js/user.js?v=publicacoes" defer></script>
+    <script src="/frontend/assets/js/friendships.js" defer></script>
+    <script src="/frontend/assets/js/explorar/perfil-musical.js?v=perfil-publico" defer></script>
+    <script src="/frontend/assets/js/image-visibility.js" defer></script>
+    <script src="/frontend/assets/js/explorar/favorite-images.js?v=fotos-artistas-perfil-2" defer></script>
+    <script src="/frontend/assets/js/explorar/user3.js?v=avaliacoes-artistas" defer></script>
+    <script src="/frontend/assets/js/music-profile-genres.js?v=tags-compartilhadas" defer></script>
+    <script src="/frontend/assets/js/explorar/generos-perfil.js?v=generos-parciais" defer></script>
     <script src="/frontend/assets/js/search.js?v=busca-eficiente" defer></script>
 </head>
 <body class="synchro-usuario" data-profile="public">
@@ -41,6 +48,7 @@
                 <li><i class="bx bxs-volume-full" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#generos">Gêneros</a></li>
                 <li><i class="bx bxs-album" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#albuns">Álbuns</a></li>
                 <li><i class="bx bxs-microphone" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#artistas">Artistas</a></li>
+                <li><i class="bx bxs-star" aria-hidden="true"></i><a href="/frontend/pages/recomendacoes.html">Recomendações</a></li>
             </ul>
         </nav>
     </aside>
@@ -58,24 +66,31 @@
             </nav>
         </header>
         <section class="profile-header" aria-labelledby="profileHeading">
-            <div class="banner-background"></div>
+            <div class="banner-background" aria-hidden="true">
+                <img id="publicProfileBanner" alt="" referrerpolicy="no-referrer" hidden>
+            </div>
             <div class="banner-content">
                 <div class="user" id="profileIdentity">
                     <div class="user-card">
-                        <img id="profileImage" decoding="async" src="../assets/images/user/userphoto.jpg" alt="Foto de perfil">
-                        <h3 id="profileName"></h3>
+                        <img id="profileImage" decoding="async" referrerpolicy="no-referrer" src="../assets/images/user/userphoto.jpg" alt="Foto de perfil">
                         <p id="profileUsername"></p>
                     </div>
                 </div>
                 <div class="banner-info">
                     <h1 id="profileHeading">Perfil público</h1>
+                    <p><a id="profilePostsLink" class="profile-account-settings" hidden>Ver publicações</a></p>
+                    <p id="profileBiography" class="profile-biography" hidden></p>
                     <button id="followProfile" type="button" class="lastfm-button lastfm-button-secondary" hidden>Seguir</button>
                     <p id="followProfileStatus" role="status"></p>
+                    <div id="profileFriendshipActions" class="friendship-actions"></div>
+                    <p id="profileFriendshipStatus" role="status"></p>
                     <p id="profileLastFm"></p>
                     <div id="lastFmDetails" class="lastfm-details" hidden>
                         <a id="lastFmProfileLink" target="_blank" rel="noopener noreferrer">Ver perfil no Last.fm ↗</a>
                     </div>
                     <div class="profile-stats">
+                        <div><h3 id="profileFollowers">—</h3><p>Seguidores</p></div>
+                        <div><h3 id="profileFollowing">—</h3><p>Seguindo</p></div>
                         <div><h3 id="profileScrobbles">—</h3><p>Synchs</p></div>
                         <div><h3 id="profileArtists">—</h3><p>Artistas</p></div>
                         <div id="lastFmTracksStat" hidden><h3 id="profileTracks">—</h3><p>Faixas</p></div>
@@ -83,6 +98,61 @@
                     </div>
                 </div>
             </div>
+        </section>
+
+        <section class="music-profile" aria-labelledby="musicProfileTitle">
+            <h2 id="musicProfileTitle">Perfil musical</h2>
+            <div class="music-profile-genres" id="publicMusicGenres" hidden>
+                <h3>Principais gêneros</h3>
+                <ol id="musicProfileGenres"></ol>
+                <p id="musicProfileGenresStatus" role="status"></p>
+                <button id="retryMusicGenres" type="button" hidden>Tentar atualizar gêneros</button>
+            </div>
+            <p class="music-profile-period">Destaques dos últimos 7 dias</p>
+            <p id="musicProfileStatus" role="status"></p>
+            <dl id="musicProfileHighlights" class="music-profile-highlights"></dl>
+            <button id="retryMusicProfile" type="button" hidden>Tentar novamente</button>
+        </section>
+
+        <section class="top-artists" id="publicTopArtists" aria-labelledby="publicTopArtistsTitle" hidden>
+            <h2 id="publicTopArtistsTitle">Artistas favoritos do momento</h2>
+            <div class="artist"></div>
+        </section>
+
+        <section class="music-profile" id="publicRankings" aria-labelledby="publicRankingsTitle" hidden>
+            <h2 id="publicRankingsTitle">Relatório musical</h2>
+            <div class="public-ranking-controls">
+                <label for="rankingPeriod">Período</label>
+                <select id="rankingPeriod">
+                    <option value="7day">Últimos 7 dias</option>
+                    <option value="1month">Último mês</option>
+                    <option value="3month">Últimos 3 meses</option>
+                    <option value="6month">Últimos 6 meses</option>
+                    <option value="12month">Últimos 12 meses</option>
+                    <option value="overall">Todo o histórico</option>
+                </select>
+                <button id="retryRankings" type="button" hidden>Tentar novamente</button>
+            </div>
+            <p id="rankingStatus" role="status"></p>
+            <div class="weekly-report">
+                <section class="weekly-card"><h3>Top artistas</h3><div class="report-artists"></div></section>
+                <section class="weekly-card"><h3>Top álbuns</h3><div class="report-albums"></div></section>
+                <section class="weekly-card"><h3>Top músicas</h3><div class="report-musics"></div></section>
+                <section class="weekly-card"><h3>Top gêneros</h3><div class="report-genres"></div></section>
+            </div>
+        </section>
+
+        <section class="music-profile" aria-labelledby="publicFavoriteArtistsTitle">
+            <h2 id="publicFavoriteArtistsTitle">Artistas salvos no Synchro</h2>
+            <p id="publicFavoriteArtistsStatus" role="status">Carregando artistas favoritos…</p>
+            <div id="publicFavoriteArtists"></div>
+        </section>
+
+        <section class="music-profile" aria-labelledby="publicReviewsTitle">
+            <h2 id="publicReviewsTitle">Avaliações publicadas</h2>
+            <p id="publicReviewStatus" role="status"></p>
+            <div id="publicReviewList"></div>
+            <button id="morePublicReviews" type="button" hidden>Ver mais avaliações</button>
         </section>
     </main>
 </div>

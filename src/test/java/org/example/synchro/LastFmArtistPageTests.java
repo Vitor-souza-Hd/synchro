@@ -26,6 +26,21 @@ class LastFmArtistPageTests {
     }
 
     @Test
+    void supportsCurrentGalleryPhotosAndUsesNextImageWhenTheFirstIsBroken() {
+        String nextHash = "abcdef0123456789abcdef0123456789";
+        String first = "https://lastfm-img.freetls.fastly.net/i/u/avatar170s/" + HASH;
+        String second = "https://lastfm-img.freetls.fastly.net/i/u/avatar170s/" + nextHash;
+        String html = """
+                <ul class='image-list'>
+                  <li><a href='/music/BIA+SOULL/+images/%s'><img src='%s'></a></li>
+                  <li><a href='/music/BIA+SOULL/+images/%s'><img src='%s'></a></li>
+                </ul>
+                """.formatted(HASH, first, nextHash, second);
+        assertEquals(first, LastFmArtistPage.photo(html, "BIA SOULL").orElseThrow());
+        assertEquals(second, LastFmArtistPage.photo(html, "BIA SOULL", first).orElseThrow());
+    }
+
+    @Test
     void rejectsGenericImagesAndUntrustedLinks() {
         String html = "<ul class='image-list'><a href='/music/slowGM/+images/2a96cbd8b46e442fc41c2b86b821562f'>" +
                 "<img src='https://lastfm.freetls.fastly.net/2a96cbd8b46e442fc41c2b86b821562f.jpg'></a>" +

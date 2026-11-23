@@ -1,5 +1,8 @@
 
-document.addEventListener("synchro:own-profile", () => {
+document.addEventListener('synchro:own-profile', initializeProfileArtistPhotos);
+document.addEventListener('synchro:public-profile', initializeProfileArtistPhotos);
+
+function initializeProfileArtistPhotos() {
 
     // =====================================================
     // FOTOS DOS ARTISTAS - LAST.FM / WIKIDATA / WIKIMEDIA COMMONS
@@ -384,4 +387,4 @@ document.addEventListener("synchro:own-profile", () => {
     });
 
     updateArtistCards();
-});
+}

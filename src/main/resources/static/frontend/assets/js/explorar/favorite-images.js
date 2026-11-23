@@ -6,7 +6,7 @@
     const cacheAge = 24 * 60 * 60 * 1000;
     const unavailableAge = 15000;
     const lookupExpiry = {apple: 300000, cover: 120000, musicbrainz: 120000};
-    const lookupTimeout = {apple: 13000, cover: 22000, musicbrainz: 22000};
+    const lookupTimeout = {apple: 13000, artistPhoto: 11000, cover: 22000, musicbrainz: 22000};
 
     async function readLookup(url, source, entry) {
         try {
@@ -68,7 +68,8 @@
     function imageUrl(value) {
         try {
             if (typeof value !== 'string' || !value.trim()) return null;
-            const url = new URL(value, location.origin);
+            const path = value.trim().replace(/^\.\.\/assets\//, images).replace(/^frontend\/assets\//, images);
+            const url = new URL(path, location.origin);
             if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password ||
                     /placeholder|2a96cbd8b46e442fc41c2b86b821562f|placehold\.co/i.test(url.href)) return null;
             if (!/^https?:\/\//i.test(value.trim()) &&
@@ -161,13 +162,13 @@
     }
 
     async function* artistPhotos(artist, id, request, active) {
-        const saved = (id ? await request('/catalog/artists/' + id)
-            : await request('/catalog/artists/by-name', {name: artist}))?.artist;
-        yield saved?.imgUrl;
-        yield saved?.lastFm?.imageUrl;
-        if (saved?.id) {
-            const photo = await request('/catalog/artists/' + encodeURIComponent(saved.id) + '/photo');
-            yield photo?.imgUrl;
+        const path = id ? '/catalog/artists/' + encodeURIComponent(id) + '/photo' : '/catalog/artists/by-name/photo';
+        const params = id ? {} : {name: artist};
+        const photo = await request(path, params, 'artistPhoto');
+        yield photo?.imgUrl;
+        if (photo?.imgUrl && active()) {
+            const replacement = await request(path, {...params, refresh: 'true'}, 'artistPhoto');
+            yield replacement?.imgUrl;
         }
         for (const lang of ['pt', 'en']) {
             if (!active()) return;

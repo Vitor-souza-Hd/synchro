@@ -319,6 +319,53 @@
     transform: scale(1.12);
 }
 
+.review-modal input[type="number"] {
+    width: 5rem;
+    padding: .5rem;
+    border: 1px solid currentColor;
+    border-radius: .5rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+}
+
+#artistReviewList:not(:empty) {
+    display: grid;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.artist-review-card {
+    padding: 12px 14px;
+    border: 1px solid rgba(128, 128, 128, .45);
+    border-radius: 10px;
+    overflow-wrap: anywhere;
+}
+
+.artist-review-card > div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.artist-review-card p {
+    margin-top: 6px;
+    white-space: pre-wrap;
+}
+
+.artist-review-more,
+.artist-review-card button {
+    border: 1px solid currentColor;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
 .review-modal textarea {
     width: 100%;
     min-height: 130px;

@@ -3,6 +3,7 @@ package org.example.synchro.resources;
 
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.services.FavoriteArtistService;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,12 @@ public class FavoriteArtistResource {
         return ResponseEntity.ok(
                 favoriteArtistService.listar(token)
         );
+    }
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<List<String>> publicArtists(@PathVariable long userId) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(favoriteArtistService.publicArtistNames(userId));
     }
 
     @GetMapping("/check")

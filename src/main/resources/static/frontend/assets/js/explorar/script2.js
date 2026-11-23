@@ -254,7 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })) : null;
 
     if (artistsGrid) {
-        const artistsStatus = document.getElementById('popularArtistsStatus');
         const recommendationStatus = document.getElementById('artistRecommendationStatus');
         let personalized = null;
         let dailyRanking = [];
@@ -373,11 +372,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         loadArtistPhoto(image, artist);
                     }
                 });
-
-                if (artistsStatus) {
-                    artistsStatus.textContent = 'Artistas carregados com sucesso: ' +
-                        new Intl.ListFormat('pt-BR').format(artistasPopulares.map(artist => artist.nome)) + '.';
-                }
         }
         carregarCatalogo();
         showDailyArtists();
@@ -613,7 +607,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         function showReview(item) {
             const track = item.mediaType === 'track';
-            const artist = item.artistName || '';
+            const artistReview = item.mediaType === 'artist';
+            const artist = artistReview ? item.title : item.artistName || '';
             const card = document.createElement('article');
             card.className = 'reviews-card';
 
@@ -625,12 +620,12 @@ document.addEventListener("DOMContentLoaded", () => {
             info.className = 'review-info';
             const heading = document.createElement('h3');
             const mediaLink = document.createElement('a');
-            mediaLink.href = '/frontend/pages/' + (track ? 'musica' : 'album') + '.html?' +
+            mediaLink.href = '/frontend/pages/' + (artistReview ? 'artista' : track ? 'musica' : 'album') + '.html?' +
                 new URLSearchParams({id: item.mediaId});
             mediaLink.textContent = item.title || 'Mídia sem título';
             heading.append(mediaLink);
             const subtitle = document.createElement('h5');
-            subtitle.textContent = artist || (track ? 'Música' : 'Álbum');
+            subtitle.textContent = artistReview ? 'Artista' : artist || (track ? 'Música' : 'Álbum');
             info.append(heading, subtitle);
             if (item.rating != null) {
                 const rating = document.createElement('span');
@@ -649,13 +644,23 @@ document.addEventListener("DOMContentLoaded", () => {
             const avatar = document.createElement('img');
             avatar.className = 'user-avatar';
             avatar.alt = '';
+            avatar.width = 35;
+            avatar.height = 35;
             avatar.loading = 'lazy';
-            avatar.onerror = () => { avatar.onerror = null; avatar.src = imageRoot + 'user/userphoto.jpg'; };
-            avatar.src = safeReviewImage(item.avatarUrl) || imageRoot + 'user/userphoto.jpg';
+            avatar.decoding = 'async';
+            avatar.referrerPolicy = 'no-referrer';
+            const avatarSources = [...new Set([item.profileImageUrl, item.avatarUrl]
+                .map(safeReviewImage).filter(Boolean))];
+            function loadAvatar() {
+                const source = avatarSources.shift();
+                avatar.onerror = source ? loadAvatar : null;
+                avatar.src = source || imageRoot + 'user/userphoto.jpg';
+            }
+            loadAvatar();
             const profile = document.createElement('a');
             profile.href = '/frontend/pages/perfil-publico.html?' + new URLSearchParams({user: item.authorId});
-            profile.textContent = '@' + item.username;
-            author.append(avatar, profile);
+            profile.append(avatar, '@' + item.username);
+            author.append(profile);
 
             card.append(header, comment, author);
             reviewsGrid.append(card);
@@ -663,7 +668,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const cover = safeReviewImage(item.coverUrl);
             if (window.SynchroFavoriteImages) {
                 window.SynchroFavoriteImages.show(artwork, {
-                    kind: track ? 'track' : 'album', id: item.mediaId, title: item.title, artist,
+                    kind: artistReview ? 'artist' : track ? 'track' : 'album', id: item.mediaId, title: item.title, artist,
                     className: 'album-cover', preferredImages: cover ? [cover] : [], alt: ''
                 });
             } else {
@@ -671,8 +676,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 image.className = 'album-cover';
                 image.alt = '';
                 image.loading = 'lazy';
-                image.onerror = () => { image.onerror = null; image.src = imageRoot + 'catalog-placeholder.svg'; };
-                image.src = cover || imageRoot + 'catalog-placeholder.svg';
+                const placeholder = imageRoot + (artistReview ? 'artist-placeholder.svg' : 'catalog-placeholder.svg');
+                image.onerror = () => { image.onerror = null; image.src = placeholder; };
+                image.src = cover || placeholder;
                 artwork.append(image);
             }
         }

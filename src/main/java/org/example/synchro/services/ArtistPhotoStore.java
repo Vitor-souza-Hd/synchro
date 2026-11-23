@@ -1,12 +1,15 @@
 package org.example.synchro.services;
 
 import lombok.RequiredArgsConstructor;
+import org.example.synchro.entities.Artista;
+import org.example.synchro.entities.CatalogName;
 import org.example.synchro.repositories.ArtistaRepository;
 import org.example.synchro.services.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +20,19 @@ public class ArtistPhotoStore {
     @Transactional(readOnly = true)
     public Reference reference(long id) {
         var artist = artists.findById(id).orElseThrow(() -> new ResourceNotFoundException("Artista não encontrado"));
-        return new Reference(id, artist.getNome(), artist.getImgUrl());
+        return reference(artist);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Reference> referenceByName(String name) {
+        return artists.findByNomeKey(CatalogName.key(name))
+                .map(ArtistPhotoStore::reference);
+    }
+
+    private static Reference reference(Artista artist) {
+        String image = artist.getImgUrl();
+        if (!hasUsableImage(image)) image = artist.getLastFm().getImageUrl();
+        return new Reference(artist.getId(), artist.getNome(), image);
     }
 
     @Transactional

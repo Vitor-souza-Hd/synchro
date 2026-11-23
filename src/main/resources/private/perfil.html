@@ -7,7 +7,7 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=shared-sidebar-1">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=weekly-music-genres">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=contador-seguidores">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-usuario.css?v=20261105-compact-profile-1">
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
     <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
@@ -40,6 +40,7 @@
             <ul>
                 <li><i class="bx bx-undo" aria-hidden="true"></i><a href="/frontend/pages/recentes.html">Recentes</a></li>
                 <li><i class="bx bxs-photo-album" aria-hidden="true"></i><a href="/frontend/pages/perfil.html#minhas-avaliacoes">Avaliações</a></li>
+                <li><i class="bx bxs-group" aria-hidden="true"></i><a href="/frontend/pages/pessoas.html#amizades">Amizades</a></li>
                 <li><i class="bx bxs-heart" aria-hidden="true"></i><a href="/frontend/pages/favoritos.html">Favoritos</a></li>
                 <li><i class="bx bxs-cog" aria-hidden="true"></i><a href="/frontend/pages/configuracoes.html">Configurações</a></li>
             </ul>
@@ -86,6 +87,7 @@
                     </div>
                     <div class="banner-info">
                         <h1 id="profileHeading">Meu perfil</h1>
+                        <p><a id="profilePostsLink" class="profile-account-settings" hidden>Ver publicações</a></p>
                         <p><a id="viewPublicProfile" class="profile-account-settings" hidden>Ver perfil público</a></p>
                         <div class="profile-biography owner-only">
                             <p id="profileBiography" style="white-space: pre-wrap;"></p>
@@ -97,6 +99,7 @@
                         </div>
 
                         <div class="profile-stats">
+                        <div><h3 id="profileFollowers">—</h3><p>Seguidores</p></div>
                             <div><h3 id="profileScrobbles">—</h3><p>Synchs</p></div>
                             <div><h3 id="profileArtists">—</h3><p>Artistas</p></div>
                             <div id="lastFmTracksStat" hidden><h3 id="profileTracks">—</h3><p>Faixas</p></div>
@@ -264,15 +267,15 @@
     </main>
 </div>
 
-<script src="/frontend/assets/js/user.js?v=perfis-separados"></script>
-<script src="/frontend/assets/js/explorar/perfil-musical.js"></script>
-<script src="/frontend/assets/js/explorar/user3.js?v=20261110-fast-images"></script>
+<script src="/frontend/assets/js/user.js?v=publicacoes"></script>
+<script src="/frontend/assets/js/explorar/perfil-musical.js?v=perfil-publico"></script>
+<script src="/frontend/assets/js/explorar/user3.js?v=avaliacoes-artistas"></script>
 <script src="/frontend/assets/js/search.js?v=busca-eficiente"></script>
 <script src="/frontend/assets/js/explorar/foto-perfil.js"></script>
-<script src="/frontend/assets/js/music-profile-genres.js"></script>
-<script src="/frontend/assets/js/explorar/generos-perfil.js?v=shared-music-genres"></script>
+<script src="/frontend/assets/js/music-profile-genres.js?v=tags-compartilhadas"></script>
+<script src="/frontend/assets/js/explorar/generos-perfil.js?v=generos-parciais"></script>
 <script src="/frontend/assets/js/explorar/banner-perfil.js"></script>
 <script src="/frontend/assets/js/image-visibility.js"></script>
-<script src="/frontend/assets/js/explorar/fotos-artistas-perfil.js?v=20261110-fast-images"></script>
+<script src="/frontend/assets/js/explorar/favorite-images.js?v=fotos-artistas-perfil-2"></script>
 </body>
 </html>

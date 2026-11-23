@@ -37,6 +37,12 @@ public class FavoriteArtistService {
                 .toList();
     }
 
+    public List<String> publicArtistNames(long userId) {
+        return favoriteRepository.findByUserIdOrderByArtistNameAsc(userId).stream()
+                .map(FavoriteArtist::getArtistName)
+                .toList();
+    }
+
     public Map<String, Object> verificar(
             String token,
             String artist

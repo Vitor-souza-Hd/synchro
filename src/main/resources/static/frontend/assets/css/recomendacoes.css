@@ -1,0 +1,78 @@
+.recommendation-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.recommendation-nav a {
+    padding: 7px 12px;
+    border: 1px solid currentColor;
+    border-radius: 18px;
+    color: #ff91ad;
+    font-size: .875rem;
+}
+
+.recommendation-nav a:hover,
+.recommendation-nav a:focus-visible {
+    text-decoration: underline;
+}
+
+.recommendations-page .favorites-category {
+    scroll-margin-top: 20px;
+}
+
+.recommendation-grid {
+    list-style: none;
+    padding: 0;
+}
+
+.recommendation-grid h3 {
+    margin-bottom: 8px;
+    overflow-wrap: anywhere;
+    font-size: 18px;
+    color: inherit;
+}
+
+.recommendation-grid p {
+    overflow-wrap: anywhere;
+}
+
+.recommendation-grid p + p {
+    margin-top: 5px;
+}
+
+html.synchro-light .recommendation-nav a,
+html.synchro-light .recommendations-page .favorites-feedback a {
+    color: #a63865;
+}
+
+html.synchro-light .recommendations-page .favorite-album-card .favorite-card-link {
+    color: #30202b;
+}
+
+@media (max-width: 900px) {
+    .recommendations-page .favorites-topbar {
+        gap: 10px;
+    }
+
+    .recommendations-page .favorites-search-box {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .recommendations-page .favorites-topbar {
+        flex-wrap: wrap;
+    }
+
+    .recommendations-page .favorites-search-box {
+        order: 1;
+        flex-basis: 100%;
+    }
+
+    .recommendation-grid h3 {
+        font-size: 16px;
+    }
+}

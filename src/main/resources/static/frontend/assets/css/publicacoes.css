@@ -1,0 +1,230 @@
+.posts-main {
+    --post-surface: #211c24;
+    --post-line: #493745;
+    --post-text: #f7edf4;
+    --post-muted: #cab9c7;
+    --post-accent: #ff9db9;
+    color: var(--post-text);
+}
+
+html.synchro-light .posts-main {
+    --post-surface: #fff;
+    --post-line: #e1c7d5;
+    --post-text: #30202b;
+    --post-muted: #65515e;
+    --post-accent: #913557;
+}
+
+@media (min-width: 769px) {
+    #postsMenuToggle {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .posts-main .favorites-topbar {
+        gap: 8px;
+    }
+
+    .posts-main .favorites-search-box {
+        min-width: 0;
+        margin: 0;
+    }
+}
+
+.posts-column {
+    max-width: 760px;
+    margin-inline: auto;
+}
+
+.posts-column a {
+    color: var(--post-accent);
+    overflow-wrap: anywhere;
+}
+
+.posts-main [hidden],
+.posts-column [role="status"]:empty {
+    display: none;
+}
+
+.post-panel {
+    padding: 16px;
+    border: 1px solid var(--post-line);
+    border-radius: 14px;
+    background: var(--post-surface);
+    color: var(--post-text);
+}
+
+.post-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.post-form textarea {
+    display: block;
+    width: 100%;
+    resize: vertical;
+    padding: 10px;
+    border: 1px solid var(--post-line);
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+}
+
+.post-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+#postCount {
+    margin-inline-end: auto;
+    color: var(--post-muted);
+}
+
+.posts-column button {
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid var(--post-line);
+    border-radius: 8px;
+    background: var(--post-surface);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.posts-column button:disabled {
+    cursor: default;
+    opacity: .6;
+}
+
+.posts-column .post-primary {
+    border-color: var(--post-accent);
+    color: var(--post-accent);
+    font-weight: 700;
+}
+
+.posts-column :focus-visible {
+    outline: 2px solid var(--post-accent);
+    outline-offset: 3px;
+}
+
+.posts-feed {
+    display: grid;
+    gap: 12px;
+    margin-block: 16px;
+}
+
+.post-author {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: fit-content;
+}
+
+.post-author img {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.post-meta {
+    margin: 6px 0 12px;
+    color: var(--post-muted);
+    font-size: .875rem;
+}
+
+.post-body {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.post-attachment-picker,
+.post-attachment-selected {
+    margin-top: 12px;
+}
+
+.post-attachment-picker summary {
+    width: fit-content;
+    color: var(--post-accent);
+    cursor: pointer;
+}
+
+.post-attachment-picker label {
+    margin-top: 10px;
+}
+
+.post-attachment-search,
+.post-attachment-selected {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.post-attachment-selected {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    color: var(--post-muted);
+}
+
+.post-attachment-search input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--post-line);
+    border-radius: 8px;
+    background: inherit;
+    color: inherit;
+    font: inherit;
+}
+
+#postAttachmentResults:not(:empty) {
+    display: grid;
+    gap: 4px;
+    list-style: none;
+    margin-top: 8px;
+    padding: 0;
+}
+
+#postAttachmentResults button {
+    width: 100%;
+    text-align: start;
+    overflow-wrap: anywhere;
+}
+
+.post-attachment {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 8px;
+    border: 1px solid var(--post-line);
+    border-radius: 10px;
+}
+
+.post-attachment-artwork {
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.post-attachment-artwork img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.post-attachment small {
+    display: block;
+    color: var(--post-muted);
+}

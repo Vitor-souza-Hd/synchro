@@ -34,6 +34,8 @@ public final class ReleaseRecommendations {
 
     public record Album(String name, String artist, LocalDate releaseDate, List<String> images, long listeners, long plays) {}
     public record Candidate(Album album, Set<String> tags, int rank) {}
+    public record NewRelease(String name, String artist, LocalDate releaseDate, List<String> images,
+                             String type, Set<String> tags, int rank) {}
     public record Selection(List<Album> albums, int matchedCount) {}
     private record Match(Candidate candidate, double affinity) {}
 

@@ -73,6 +73,15 @@ class LastFmProfileTests {
                 response = sessionError.get() > 0 ? "{\"error\":" + sessionError.get() + ",\"message\":\"Authorization failed\"}"
                         : "{\"session\":{\"name\":\"lastfm-listener\",\"key\":\"private-session-key\",\"subscriber\":0}}";
                 if (sessionError.get() > 0) httpStatus = 403;
+            } else if ("user.gettopartists".equals(params.get("method"))) {
+                if ("lastfm-listener".equals(params.get("user")) && ("7day".equals(params.get("period")) || "1month".equals(params.get("period")))
+                        && "10".equals(params.get("limit"))) {
+                    response = """
+                            {"topartists":{"artist":[{"name":"Artista da Alice","playcount":"12"}]}}
+                            """;
+                } else {
+                    response = "{\"error\":6,\"message\":\"Unexpected ranking request\"}";
+                }
             } else if (offline.get()) {
                 response = "{\"error\":11,\"message\":\"Offline\"}";
             } else {
@@ -101,6 +110,9 @@ class LastFmProfileTests {
             var jwt = context.getBean(JwtService.class);
             User alice = new User(null, "alice", "alice@example.com", "unused", LocalDate.of(2000, 1, 1), "name-only");
             alice.getData().setFullName("Synchro Name");
+            alice.getData().setBiography("Minha biografia");
+            alice.getData().setProfileImageUrl("https://example.test/alice-photo.jpg");
+            alice.getData().setBannerImageUrl("https://example.test/alice-banner.jpg");
             alice = users.save(alice);
             User bob = users.save(new User(null, "bob", "bob@example.com", "unused", LocalDate.of(2001, 1, 1), null));
             String aliceCookie = "token_jwt=" + jwt.generateToken(alice.getId(), alice.getUsername(), alice.getEmail());
@@ -159,10 +171,25 @@ class LastFmProfileTests {
             JsonNode publicProfile = JSON.readTree(publicResponse.body());
             assertTrue(publicProfile.path("lastFmConnected").asBoolean());
             assertEquals(3210, publicProfile.path("data").path("scrobbles").asInt());
-            assertEquals("Last.fm Name", publicProfile.path("data").path("lastFmRealName").asText());
+            var appearance = publicProfile.path("appearance");
+            assertEquals("Minha biografia", appearance.path("biography").asText());
+            assertEquals("https://example.test/alice-photo.jpg", appearance.path("profileImageUrl").asText());
+            assertEquals("https://example.test/alice-banner.jpg", appearance.path("bannerImageUrl").asText());
+            assertEquals(genres.path("genres"), appearance.path("genres"));
             assertFalse(publicProfile.has("email"));
-            assertFalse(publicResponse.body().contains("Hip-hop"));
+            assertFalse(publicProfile.has("birthDay"));
+            assertFalse(publicProfile.path("data").has("lastFmRealName"));
             assertFalse(publicResponse.body().contains("private-session-key"));
+            var highlights = request(browser, base + "/last-fm/profiles/" + alice.getId() + "/top/artists", bobCookie, "GET");
+            assertEquals(200, highlights.statusCode(), highlights.body());
+            assertEquals("Artista da Alice", JSON.readTree(highlights.body())
+                    .path("topartists").path("artist").get(0).path("name").asText());
+            assertEquals(204, request(browser, base + "/last-fm/profiles/" + bob.getId() + "/top/artists", null, "GET").statusCode());
+            assertEquals(400, request(browser, base + "/last-fm/profiles/" + alice.getId() + "/top/invalid", null, "GET").statusCode());
+            assertEquals(200, request(browser, base + "/last-fm/profiles/" + alice.getId() + "/top/artists?period=1month",
+                    null, "GET").statusCode());
+            assertEquals(400, request(browser, base + "/last-fm/profiles/" + alice.getId() + "/top/artists?period=invalid",
+                    null, "GET").statusCode());
             assertFalse(profile(browser, base, bobCookie).path("lastFmConnected").asBoolean());
             assertRedirect(request(browser, callback + "&token=" + TOKEN, aliceCookie, "GET"), "invalid_state");
             assertEquals(1, sessionCalls.get());

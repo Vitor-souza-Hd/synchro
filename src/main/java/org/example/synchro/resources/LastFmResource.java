@@ -121,6 +121,22 @@ public class LastFmResource {
     }
 
     private record PendingAuth(String state, Long userId, Instant expiresAt) implements java.io.Serializable {}
+
+    @GetMapping(value = "/profiles/{userId}/top/{type}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<?>> getPublicTop(@PathVariable Long userId, @PathVariable String type,
+                                                  @RequestParam(defaultValue = "7day") String period) {
+        if (!validRanking(type, period)) return Mono.just(ResponseEntity.badRequest().build());
+
+        return lastfmService.getTopBySynchroId(userId, type, period)
+                .<ResponseEntity<?>>map(json -> ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                        .contentType(MediaType.APPLICATION_JSON).body(json))
+                .onErrorResume(org.example.synchro.services.exception.ResourceNotFoundException.class,
+                        error -> Mono.just(ResponseEntity.notFound().build()))
+                .onErrorResume(org.example.synchro.services.exception.ResourceConflictException.class,
+                        error -> Mono.just(ResponseEntity.noContent().build()))
+                .onErrorResume(error -> Mono.just(ResponseEntity.status(502).build()));
+    }
+
     @GetMapping(
             value = "/me/top/{type}",
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -130,8 +146,7 @@ public class LastFmResource {
             @PathVariable String type,
             @RequestParam(defaultValue = "7day") String period) {
         if (!cookieService.checkCookie(cookie)) return Mono.just(unauthorized());
-        if (!java.util.Set.of("artists", "albums", "tracks").contains(type)
-                || !java.util.Set.of("overall", "7day", "1month", "3month", "6month", "12month").contains(period)) {
+        if (!validRanking(type, period)) {
             return Mono.just(ResponseEntity.badRequest().body(Map.of("error", "Tipo ou período de ranking inválido.")));
         }
 
@@ -153,6 +168,11 @@ public class LastFmResource {
     // =========================================================
     // CONSULTAR TAGS DE UM ARTISTA
     // =========================================================
+
+    private static boolean validRanking(String type, String period) {
+        return java.util.Set.of("artists", "albums", "tracks").contains(type)
+                && java.util.Set.of("overall", "7day", "1month", "3month", "6month", "12month").contains(period);
+    }
 
     @GetMapping(
             value = "/artist/tags",

@@ -107,6 +107,37 @@ class ArtistPhotoTests {
     }
 
     @Test
+    void replacesBrokenPhotoWithNextLastFmImage() {
+        var store = mock(ArtistPhotoStore.class);
+        String broken = "https://example.test/broken.jpg";
+        String replacement = "https://example.test/second.jpg";
+        var reference = new ArtistPhotoStore.Reference(1, "Test Artist", broken);
+        when(store.referenceByName("Test Artist")).thenReturn(java.util.Optional.of(reference));
+        when(store.savePhoto(reference, replacement, true)).thenReturn(replacement);
+        var config = new LastFmConfig(); config.setApiKey("test-key");
+        var client = lastFmProvider("""
+                {"artist":{"name":"Test Artist","image":[
+                  {"size":"mega","#text":"https://example.test/broken.jpg"},
+                  {"size":"large","#text":"https://example.test/second.jpg"}]}}
+                """);
+        var service = new ArtistPhotoService(store, client, config, Duration.ofSeconds(2));
+        assertEquals(broken, service.findByName("Test Artist", false).block().imgUrl());
+        assertEquals(replacement, service.findByName("Test Artist", true).block().imgUrl());
+        verify(store).savePhoto(reference, replacement, true);
+    }
+
+    @Test
+    void findsPhotoForAnArtistWithoutCatalogEntry() {
+        var store = mock(ArtistPhotoStore.class);
+        when(store.referenceByName("Test Artist")).thenReturn(java.util.Optional.empty());
+        var service = service(store, Duration.ofSeconds(2));
+        noPublicPhotos(service);
+        ReflectionTestUtils.setField(service, "wikidata", provider(new AtomicInteger(), ENTITY));
+        assertEquals(PHOTO, service.findByName("Test Artist", false).block().imgUrl());
+        verify(store, never()).savePhoto(any(), anyString(), anyBoolean());
+    }
+
+    @Test
     void missingLastFmPhotosOrProviderFailureFallBackToWikidata() {
         var config = new LastFmConfig(); config.setApiKey("test-key");
         for (String body : new String[]{
@@ -155,6 +186,11 @@ class ArtistPhotoTests {
             assertEquals(PHOTO, new ObjectMapper().readTree(response.body()).path("imgUrl").asText());
             assertEquals(PHOTO, artists.findById(artist.getId()).orElseThrow().getImgUrl());
             assertEquals(2, calls.get(), "Only the matching musician entity is queried");
+            var byName = HttpClient.newHttpClient().send(HttpRequest.newBuilder(
+                    URI.create(base + "/catalog/artists/by-name/photo?name=Test%20Artist")).build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, byName.statusCode(), byName.body());
+            assertEquals(PHOTO, new ObjectMapper().readTree(byName.body()).path("imgUrl").asText());
+            assertEquals(2, calls.get(), "The name lookup reuses the photo already stored");
             var restarted = service(app.getBean(ArtistPhotoStore.class), Duration.ofSeconds(1));
             ReflectionTestUtils.setField(restarted, "wikidata", WebClient.builder().exchangeFunction(request -> {
                 fail("A saved photo must not trigger another provider lookup"); return Mono.empty();

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PreDestroy;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
@@ -24,6 +25,16 @@ public class LastFmCatalogService {
     private final Map<String, CompletableFuture<Cached>> searches = new LinkedHashMap<>();
     private final ConcurrentHashMap<String, CompletableFuture<Boolean>> refreshes = new ConcurrentHashMap<>();
     private final Object catalogWrites = new Object();
+    private static final int ARTIST_RANKING_LIMIT = 30;
+    private static final Duration ARTIST_IMPORT_INTERVAL = Duration.ofHours(6);
+    private final Map<String, Instant> importedArtistRankings = new LinkedHashMap<>(16, 0.75f, true);
+    private final ConcurrentHashMap<String, CompletableFuture<Void>> artistJobs = new ConcurrentHashMap<>();
+    private final ExecutorService artistWorkers = new ThreadPoolExecutor(2, 2, 0, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(24), task -> {
+                var thread = new Thread(task, "artist-catalog");
+                thread.setDaemon(true);
+                return thread;
+            }, new ThreadPoolExecutor.AbortPolicy());
     // A bounded pool keeps slow providers away from HTTP request threads.
     private final ExecutorService searchWorkers = new ThreadPoolExecutor(3, 3, 0, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(30), task -> {
@@ -122,7 +133,89 @@ public class LastFmCatalogService {
     }
 
     @PreDestroy
-    public void stopSearchWorkers() { searchWorkers.shutdownNow(); }
+    public void stopSearchWorkers() {
+        searchWorkers.shutdownNow();
+        artistWorkers.shutdownNow();
+    }
+
+    public CompletableFuture<Void> refreshArtistInBackground(long id) {
+        return queueArtistJob("profile:" + id, () -> enrich("artist", id));
+    }
+
+    public void importArtistRanking(String method, String artist, String body) {
+        boolean albums = method.equals("artist.gettopalbums");
+        if ((!albums && !method.equals("artist.gettoptracks")) || artist == null || artist.isBlank()) return;
+        String key = method + ':' + org.example.synchro.entities.CatalogName.key(artist);
+        synchronized (importedArtistRankings) {
+            if (Instant.now().isBefore(importedArtistRankings.getOrDefault(key, Instant.EPOCH))) return;
+        }
+        queueArtistJob(key, () -> importArtistItems(key, artist, body, albums));
+    }
+
+    private void importArtistItems(String key, String artist, String body, boolean albums) {
+        if (!store.knowsArtist(artist)) return;
+        var details = new LinkedHashSet<Long>();
+        try {
+            var group = JSON.readTree(body).path(albums ? "topalbums" : "toptracks");
+            var items = LastFmCatalogStore.nodes(group.path(albums ? "album" : "track")).stream()
+                    .limit(ARTIST_RANKING_LIMIT).toList();
+            if (items.isEmpty()) return;
+            String providerArtist = group.path("@attr").path("artist").asText("").strip();
+            String type = albums ? "album" : "track";
+            var savedTitles = new HashSet<String>();
+            for (var item : items) {
+                if (Thread.currentThread().isInterrupted()) return;
+                String name = item.path("name").asText("").strip();
+                if (name.isBlank() || name.length() > 255 || "(null)".equalsIgnoreCase(name)) continue;
+                String credited = LastFmCatalogStore.artistName(item);
+                if (!credited.isBlank() && !credited.equalsIgnoreCase(artist.strip())
+                        && !credited.equalsIgnoreCase(providerArtist)) continue;
+                if (!(item instanceof com.fasterxml.jackson.databind.node.ObjectNode object)
+                        || !savedTitles.add(org.example.synchro.entities.CatalogName.key(name))) continue;
+                var normalized = object.deepCopy().put("name", name).put("artist", artist.strip());
+                synchronized (catalogWrites) {
+                    // Separate short transactions keep background imports from holding the catalog lock for a whole list.
+                    try {
+                        var id = store.saveRankedArtistItem(type, normalized, artist);
+                        if (id != null && details.size() < (albums ? 3 : 5)) details.add(id);
+                    } catch (DataIntegrityViolationException ignored) {
+                        // A conflicting entry must not stop the rest of the ranking from being imported.
+                    }
+                }
+            }
+            synchronized (importedArtistRankings) {
+                importedArtistRankings.put(key, Instant.now().plus(ARTIST_IMPORT_INTERVAL));
+                if (importedArtistRankings.size() > 512) {
+                    importedArtistRankings.remove(importedArtistRankings.keySet().iterator().next());
+                }
+            }
+            details.forEach(id -> queueArtistJob("detail:" + type + ':' + id, () -> refresh(type, id)));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException ignored) {
+            // Invalid provider data is not stored.
+        }
+    }
+
+    private CompletableFuture<Void> queueArtistJob(String key, Runnable task) {
+        var pending = new CompletableFuture<Void>();
+        var existing = artistJobs.putIfAbsent(key, pending);
+        if (existing != null) return existing;
+        try {
+            artistWorkers.execute(() -> {
+                try {
+                    task.run();
+                    pending.complete(null);
+                } catch (RuntimeException failure) {
+                    pending.completeExceptionally(failure);
+                } finally {
+                    artistJobs.remove(key, pending);
+                }
+            });
+        } catch (RejectedExecutionException full) {
+            pending.complete(null);
+            artistJobs.remove(key, pending);
+        }
+        return pending;
+    }
 
     public void enrich(String type, long id) {
         if (!refresh(type, id)) return;

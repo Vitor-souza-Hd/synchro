@@ -5,9 +5,10 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.Value;
 
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"autor_id", "artista_id"}),
+        indexes = @Index(name = "ix_review_artist", columnList = "artista_id, id"))
 @Getter
 @Setter
 public class Review {
@@ -30,6 +31,10 @@ public class Review {
     private Midia midia;
     private String midiatype;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "artista_id")
+    private Artista artist;
+
     public Review() {
 
     }
@@ -40,6 +45,15 @@ public class Review {
         this.review = review;
         this.midiatype = midia.getClass().getSimpleName();
         this.author_Name = author.getUsername();
+    }
+
+    public Review(Integer rating, String review, Artista artist, UserData author) {
+        this.rating = rating;
+        this.review = review;
+        this.artist = artist;
+        this.midiatype = "Artista";
+        this.author_Name = author.getUsername();
+        author.addReview(this);
     }
 
 }

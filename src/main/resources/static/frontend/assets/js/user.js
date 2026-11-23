@@ -52,20 +52,23 @@ function initializeProfileMenu() {
 const isPublicProfile = document.body.dataset.profile === 'public';
 // Cada aba do perfil compartilha a resposta entre rankings, gêneros e contadores.
 const profileRankings = new Map();
-function fetchProfileRanking(type, period) {
-    const key = type + ':' + period;
+function fetchProfileRanking(type, period, publicProfileId) {
+    const key = (publicProfileId ?? 'me') + ':' + type + ':' + period;
     const cached = profileRankings.get(key);
     if (cached && Date.now() < cached.expires) return cached.request;
     const entry = {expires: Infinity};
-    entry.request = fetch('/last-fm/me/top/' + type + '?period=' + encodeURIComponent(period), {
-        credentials: 'same-origin', cache: 'no-store', headers: {Accept: 'application/json'}
+    const endpoint = publicProfileId == null ? '/last-fm/me/top/' + type
+        : '/last-fm/profiles/' + encodeURIComponent(publicProfileId) + '/top/' + type;
+    entry.request = fetch(endpoint + '?' + new URLSearchParams({period}), {
+        credentials: 'same-origin', cache: 'no-store', headers: {Accept: 'application/json'},
+        signal: AbortSignal.timeout(18000)
     }).then(async response => {
         if (!response.ok) {
             const error = new Error('Ranking indisponível.');
             error.status = response.status;
             throw error;
         }
-        const data = await response.json();
+        const data = response.status === 204 ? {['top' + type]: {}} : await response.json();
         entry.expires = Date.now() + 60000;
         return data;
     }).catch(error => {
@@ -119,10 +122,16 @@ async function loadCurrentUserProfile() {
 
         const user = await response.json();
         renderCurrentUser(user);
+        const posts = document.getElementById('profilePostsLink');
+        if (posts) {
+            posts.href = 'publicacoes.html?' + new URLSearchParams({user: user.id});
+            posts.hidden = false;
+        }
         document.getElementById("profileStatus").hidden = true;
         document.getElementById("profilePage").hidden = false;
+        initializeFollowProfile(user.id);
         if (isPublicProfile) {
-            initializeFollowProfile(publicUser);
+            document.dispatchEvent(new CustomEvent('synchro:public-profile', {detail: user}));
         } else {
             const publicLink = document.getElementById('viewPublicProfile');
             if (/^\d+$/.test(user.id)) {
@@ -148,9 +157,13 @@ async function initializeFollowProfile(profileId) {
     let following = false;
 
     function render(state) {
+        setProfileText('profileFollowers', formatCount(state.followers));
+        setProfileText('profileFollowing', formatCount(state.followingCount));
         following = state.following;
-        button.hidden = !state.canFollow;
-        button.textContent = following ? 'Deixar de seguir' : 'Seguir';
+        if (button) {
+            button.hidden = !state.canFollow;
+            button.textContent = following ? 'Deixar de seguir' : 'Seguir';
+        }
     }
 
     try {
@@ -158,9 +171,9 @@ async function initializeFollowProfile(profileId) {
         if (!response.ok) throw new Error();
         const state = await response.json();
         render(state);
-        if (!state.canFollow) return;
+        if (!button || !status || !state.canFollow) return;
     } catch {
-        status.textContent = 'Não foi possível consultar se você segue este perfil.';
+        if (status) status.textContent = 'Não foi possível consultar se você segue este perfil.';
         return;
     }
 
@@ -189,7 +202,7 @@ function renderCurrentUser(user) {
     const data = user.data || {};
     const displayName = data.fullName?.trim() || user.username || "Usuário";
     document.title = `SYNCHRO | ${displayName}`;
-    setProfileText("profileName", displayName);
+    if (!isPublicProfile) setProfileText("profileName", displayName);
     setProfileText("profileUsername", user.username ? `@${user.username}` : "");
     if (!isPublicProfile) {
         const genderNames = {female: "Feminino", male: "Masculino", other: "Outro"};
@@ -202,8 +215,43 @@ function renderCurrentUser(user) {
         : "Last.fm não conectado");
     setProfileText("profileScrobbles", formatCount(data.scrobbles));
     setProfileText("profileArtists", formatCount(data.artistas));
-    document.getElementById("profileImage").alt = `Foto de perfil de ${displayName}`;
+    const image = document.getElementById("profileImage");
+    image.alt = `Foto de perfil de ${displayName}`;
+    if (isPublicProfile) renderPublicAppearance(user.appearance || {}, displayName, image);
     renderLastFm(user);
+}
+
+function renderPublicAppearance(appearance, displayName, photo) {
+    setProfileText('profileHeading', displayName);
+    photo.dataset.customPhoto = publicImageUrl(appearance.profileImageUrl);
+
+    const banner = document.getElementById('publicProfileBanner');
+    const bannerUrl = publicImageUrl(appearance.bannerImageUrl);
+    if (bannerUrl) {
+        banner.addEventListener('load', () => { banner.hidden = false; }, {once: true});
+        banner.src = bannerUrl;
+    }
+
+    const biography = document.getElementById('profileBiography');
+    biography.textContent = appearance.biography || '';
+    biography.hidden = !biography.textContent.trim();
+
+    const list = document.getElementById('musicProfileGenres');
+    for (const genre of appearance.genres || []) {
+        const item = document.createElement('li');
+        item.textContent = genre;
+        list.append(item);
+    }
+    document.getElementById('publicMusicGenres').hidden = !list.childElementCount;
+}
+
+function publicImageUrl(value) {
+    try {
+        const url = new URL(value);
+        return url.protocol === 'https:' && !url.username && !url.password ? url.href : '';
+    } catch {
+        return '';
+    }
 }
 
 function renderLastFm(user) {
@@ -227,18 +275,11 @@ function renderLastFm(user) {
     setProfileText('profileAlbums', formatCount(data.lastFmAlbums));
     const image = document.getElementById('profileImage');
     const fallback = '../assets/images/user/userphoto.jpg';
-    image.dataset.defaultPhoto = fallback;
+    image.dataset.defaultPhoto = connected ? publicImageUrl(data.lastFmImageUrl) || fallback : fallback;
     showProfilePhoto(image);
-    if (!connected) return;
-
-    document.getElementById('lastFmProfileLink').href = `https://www.last.fm/user/${encodeURIComponent(user.lastFmUsername)}`;
-    try {
-        const url = new URL(data.lastFmImageUrl);
-        if (url.protocol === 'https:' && !url.username && !url.password) {
-            image.dataset.defaultPhoto = url.href;
-            showProfilePhoto(image);
-        }
-    } catch { /* Keep the default photo when Last.fm has no image. */ }
+    if (connected) {
+        document.getElementById('lastFmProfileLink').href = `https://www.last.fm/user/${encodeURIComponent(user.lastFmUsername)}`;
+    }
 }
 
 function showProfilePhoto(image) {

@@ -23,13 +23,15 @@ public class FollowResource {
     private final UserRepository users;
     private final CookieService cookies;
 
-    public record FollowStatus(boolean canFollow, boolean following) {}
+    public record FollowStatus(boolean canFollow, boolean following, long followers, long followingCount) {}
+
+    private record FollowPermission(boolean canFollow, boolean following) {}
 
     @GetMapping("/{targetId}")
     public ResponseEntity<FollowStatus> getStatus(@CookieValue(name = "token_jwt", required = false) String token,
                                                   @PathVariable Long targetId) {
         if (!users.existsById(targetId)) throw new ResourceNotFoundException("Usuário não encontrado");
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(status(token, targetId));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(withCounts(targetId, status(token, targetId)));
     }
 
     @GetMapping("/check/{targetId}")
@@ -49,7 +51,7 @@ public class FollowResource {
         if (!follows.existsBySeguidorIdAndSeguidoId(viewer.getId(), targetId)) {
             follows.save(new Follow(viewer, target));
         }
-        return new FollowStatus(true, true);
+        return withCounts(targetId, new FollowPermission(true, true));
     }
 
     @DeleteMapping("/{targetId}")
@@ -60,17 +62,22 @@ public class FollowResource {
         users.findByIdForUpdate(viewerId).orElseThrow(() -> new UnauthorizedException("Sessão inválida"));
         if (!users.existsById(targetId)) throw new ResourceNotFoundException("Usuário não encontrado");
         follows.findBySeguidorIdAndSeguidoId(viewerId, targetId).ifPresent(follows::delete);
-        return new FollowStatus(true, false);
+        return withCounts(targetId, new FollowPermission(true, false));
     }
 
-    private FollowStatus status(String token, Long targetId) {
+    private FollowStatus withCounts(Long targetId, FollowPermission permission) {
+        return new FollowStatus(permission.canFollow(), permission.following(),
+                follows.countBySeguidoId(targetId), follows.countBySeguidorId(targetId));
+    }
+
+    private FollowPermission status(String token, Long targetId) {
         try {
-            if (!cookies.checkCookie(token)) return new FollowStatus(false, false);
+            if (!cookies.checkCookie(token)) return new FollowPermission(false, false);
             Long viewerId = cookies.getId(token);
             boolean canFollow = !viewerId.equals(targetId) && users.existsById(viewerId);
-            return new FollowStatus(canFollow, canFollow && follows.existsBySeguidorIdAndSeguidoId(viewerId, targetId));
+            return new FollowPermission(canFollow, canFollow && follows.existsBySeguidorIdAndSeguidoId(viewerId, targetId));
         } catch (InvalidTokenException | NumberFormatException ignored) {
-            return new FollowStatus(false, false);
+            return new FollowPermission(false, false);
         }
     }
 

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recomendações | Synchro</title>
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=shared-sidebar-1">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/favoritos.css?v=home-sidebar-spacing">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-biblioteca.css">
+    <link rel="stylesheet" href="/frontend/assets/css/features.css?v=foto-da-conta">
+    <link rel="stylesheet" href="/frontend/assets/css/auth.css">
+    <link rel="stylesheet" href="/frontend/assets/css/search.css">
+    <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
+    <link rel="stylesheet" href="/frontend/assets/css/recomendacoes.css?v=layout-favoritos">
+    <script src="/frontend/assets/js/explorar/tema-global.js"></script>
+    <script src="/frontend/assets/js/auth.js?v=foto-da-conta" defer></script>
+    <script src="/frontend/assets/js/search.js?v=busca-eficiente" defer></script>
+    <script src="/frontend/assets/js/playlists.js?v=20261101-4" defer></script>
+    <script src="/frontend/assets/js/image-visibility.js" defer></script>
+    <script src="/frontend/assets/js/explorar/favorite-images.js?v=capas-alternativas" defer></script>
+    <script src="/frontend/assets/js/recomendacoes.js?v=lancamentos-personalizados" defer></script>
+</head>
+<body class="synchro-biblioteca recommendations-page">
+    <div class="feature-session">
+        <div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div>
+        <div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div>
+    </div>
+    <div class="container">
+
+        <aside id="recommendation-sidebar" class="sidebar" aria-label="Menu principal">
+            <div class="logo">
+                <i class="bx bx-pulse" aria-hidden="true"></i>
+                <a href="/frontend/pages/explorar.html">SYNCHRO</a>
+            </div>
+            <nav class="menu" aria-label="Explorar catálogo">
+                <h5>Menu</h5>
+                <ul>
+                    <li><i class="bx bxs-bolt-circle" aria-hidden="true"></i><a href="/frontend/pages/explorar.html">Explorar</a></li>
+                    <li><i class="bx bxs-volume-full" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#generos">Gêneros</a></li>
+                    <li><i class="bx bxs-album" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#albuns">Álbuns</a></li>
+                    <li><i class="bx bxs-microphone" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#artistas">Artistas</a></li>
+                    <li class="fav-menu-active"><i class="bx bxs-star" aria-hidden="true"></i><a href="/frontend/pages/recomendacoes.html" aria-current="page">Recomendações</a></li>
+                </ul>
+            </nav>
+            <nav class="menu" aria-label="Sua biblioteca">
+                <h5>Sua Biblioteca</h5>
+                <ul>
+                    <li><i class="bx bx-undo" aria-hidden="true"></i><a href="/frontend/pages/recentes.html">Recentes</a></li>
+                    <li><i class="bx bxs-photo-album" aria-hidden="true"></i><a href="/frontend/pages/perfil.html#minhas-avaliacoes">Avaliações</a></li>
+                    <li><i class="bx bxs-heart" aria-hidden="true"></i><a href="/frontend/pages/favoritos.html">Favoritos</a></li>
+                    <li><i class="bx bxs-folder" aria-hidden="true"></i><a aria-disabled="true">Local</a></li>
+                    <li><i class="fa-solid fa-ticket" aria-hidden="true"></i><a aria-disabled="true">Shows perto de você</a></li>
+                    <li><i class="bx bxs-cog" aria-hidden="true"></i><a href="/frontend/pages/configuracoes.html">Configurações</a></li>
+                </ul>
+            </nav>
+            <nav class="menu" aria-label="Playlists">
+                <h5>Playlist</h5>
+                <ul>
+                    <li><i class="bx bxs-plus-square" aria-hidden="true"></i><a href="#" data-create-playlist aria-haspopup="dialog">Criar uma nova</a></li>
+                    <li><i class="bx bxs-caret-right-circle" aria-hidden="true"></i><a href="/frontend/pages/playlists.html" data-my-playlists>Suas Playlists</a></li>
+                    <li><i class="bx bxs-caret-right-circle" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#recomendados">Recomendados</a></li>
+                    <li><i class="bx bxs-caret-right-circle" aria-hidden="true"></i><a aria-disabled="true">Playlists do Synchro</a></li>
+                </ul>
+            </nav>
+
+            <div class="nav-footer">
+                <a aria-disabled="true">Legal</a>
+                <a aria-disabled="true">Centro de Privacidade</a>
+                <a aria-disabled="true">Política de Privacidade</a>
+                <a aria-disabled="true">Cookies</a>
+                <a aria-disabled="true">Sobre Anúncios</a>
+                <a aria-disabled="true">Acessibilidades</a>
+            </div>
+            <button class="nav-language-button" type="button" disabled>
+                <i class="fa-solid fa-globe" aria-hidden="true"></i>
+                Português do Brasil
+            </button>
+        </aside>
+        <main class="favorites-main">
+            <header class="favorites-topbar">
+                <button class="favorites-menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="recommendation-sidebar">
+                    <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                </button>
+                <a href="/frontend/pages/explorar.html" class="favorites-home-link">
+                    <i class="fa-solid fa-house" aria-hidden="true"></i> Início
+                </a>
+                <div class="search-box favorites-search-box">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input class="search" type="search" placeholder="O que você quer ouvir?" aria-label="Buscar músicas, artistas, álbuns ou usuários" autocomplete="off">
+                </div>
+                <a class="favorites-home-link" href="/frontend/pages/pessoas.html" aria-label="Encontrar pessoas">
+                    <i class="fa-solid fa-users" aria-hidden="true"></i>
+                </a>
+                <a class="favorites-home-link settings-shortcut" href="/frontend/pages/configuracoes.html" aria-label="Configurações">
+                    <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                </a>
+                <a class="favorites-profile-link" href="/frontend/pages/perfil.html" aria-label="Meu perfil">
+                    <img class="personal-profile-icon" src="/frontend/assets/images/personal-profile-icon.png" width="28" height="28" alt="">
+                </a>
+            </header>
+
+            <div class="favorites-heading">
+                <h1><i class="bx bxs-star" aria-hidden="true"></i> Recomendações</h1>
+                <nav class="recommendation-nav" aria-label="Ir para a categoria">
+                    <a href="#lancamentos">Lançamentos recentes</a>
+                    <a href="#seus-gostos">Baseados nos seus gostos</a>
+                    <a href="#populares">Populares</a>
+                </nav>
+            </div>
+
+            <section id="lancamentos" class="favorites-category" aria-labelledby="recentHeading">
+                <div class="favorites-category-heading">
+                    <h2 id="recentHeading"><i class="bx bxs-calendar" aria-hidden="true"></i> Lançamentos recentes</h2>
+                </div>
+                <div class="favorites-feedback" role="status">
+                    <p data-status>Carregando lançamentos…</p>
+                </div>
+                <ul data-results class="favorites-grid recommendation-grid" role="list"></ul>
+            </section>
+
+            <section id="seus-gostos" class="favorites-category" aria-labelledby="tasteHeading">
+                <div class="favorites-category-heading">
+                    <h2 id="tasteHeading"><i class="bx bxs-heart" aria-hidden="true"></i> Baseados nos seus gostos</h2>
+                </div>
+                <div class="favorites-feedback" role="status">
+                    <p data-status>Carregando sugestões…</p>
+                    <a href="/frontend/pages/login.html" data-login hidden>Entrar na sua conta</a>
+                </div>
+                <ul data-results class="favorites-grid recommendation-grid" role="list"></ul>
+            </section>
+
+            <section id="populares" class="favorites-category" aria-labelledby="popularHeading">
+                <div class="favorites-category-heading">
+                    <h2 id="popularHeading"><i class="bx bxs-hot" aria-hidden="true"></i> Populares</h2>
+                </div>
+                <div class="favorites-feedback" role="status">
+                    <p data-status>Carregando álbuns populares…</p>
+                </div>
+                <ul data-results class="favorites-grid recommendation-grid" role="list"></ul>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
+

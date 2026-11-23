@@ -1,4 +1,8 @@
-document.addEventListener('synchro:own-profile', ({detail: user}) => {
+document.addEventListener('synchro:own-profile', renderMusicProfile, {once: true});
+document.addEventListener('synchro:public-profile', renderMusicProfile, {once: true});
+
+function renderMusicProfile({detail: user, type: eventType}) {
+    const isPublic = eventType === 'synchro:public-profile';
     const status = document.getElementById('musicProfileStatus');
     const highlights = document.getElementById('musicProfileHighlights');
     const retry = document.getElementById('retryMusicProfile');
@@ -10,7 +14,8 @@ document.addEventListener('synchro:own-profile', ({detail: user}) => {
     ];
 
     if (!user.lastFmConnected) {
-        status.textContent = 'Conecte sua conta Last.fm nas configurações do perfil para ver seu resumo musical.';
+        status.textContent = isPublic ? 'Este perfil ainda não tem destaques do Last.fm.'
+            : 'Conecte sua conta Last.fm nas configurações do perfil para ver seu resumo musical.';
         return;
     }
 
@@ -45,9 +50,9 @@ document.addEventListener('synchro:own-profile', ({detail: user}) => {
 
     async function load() {
         retry.hidden = true;
-        status.textContent = 'Carregando seu perfil musical…';
+        status.textContent = 'Carregando destaques musicais…';
         const results = await Promise.allSettled(rankings.map(async ({type, item}) => {
-            const data = await fetchProfileRanking(type, '7day');
+            const data = await fetchProfileRanking(type, '7day', isPublic ? user.id : undefined);
             const ranking = data?.['top' + type];
             if (!ranking || typeof ranking !== 'object') throw new Error('Ranking indisponível.');
             const entries = ranking[item];
@@ -64,10 +69,10 @@ document.addEventListener('synchro:own-profile', ({detail: user}) => {
         });
         status.textContent = failed
             ? (highlights.childElementCount ? 'Parte dos dados do Last.fm está indisponível.' : 'Não foi possível carregar seu perfil musical agora.')
-            : (highlights.childElementCount ? '' : 'O Last.fm ainda não tem reproduções registradas para você neste período.');
+            : (highlights.childElementCount ? '' : 'O Last.fm ainda não tem reproduções registradas neste período.');
         retry.hidden = failed === 0;
     }
 
     retry.addEventListener('click', load);
     load();
-}, {once: true});
+}

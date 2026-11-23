@@ -91,11 +91,6 @@ const artistsGrid = document.querySelector('.artists')
                 artwork.append(image);
             }
         }
-        const status = document.getElementById('popularArtistsStatus');
-        if (status) {
-            status.textContent = 'Artistas carregados com sucesso: ' +
-                new Intl.ListFormat('pt-BR').format(artists.map(artist => artist.name)) + '.';
-        }
     }
 
     async function loadGenreArtists(genre, tag) {

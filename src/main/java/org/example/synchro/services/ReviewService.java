@@ -12,6 +12,7 @@ import org.example.synchro.entities.Midia;
 import org.example.synchro.entities.Review;
 import org.example.synchro.entities.User;
 import org.example.synchro.entities.UserData;
+import org.example.synchro.repositories.ArtistaRepository;
 import org.example.synchro.repositories.MidiaRepository;
 import org.example.synchro.repositories.MusicaRepository;
 import org.example.synchro.repositories.ReviewRepository;
@@ -34,6 +35,8 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final MusicaRepository musicaRepository;
     private final MidiaRepository midiaRepository;
+    private final ArtistaRepository artistRepository;
+    private static final int PUBLIC_PAGE_SIZE = 12;
     private final CookieService cookieService;
 
     public ReviewDto postReview(
@@ -123,7 +126,67 @@ public class ReviewService {
                 .map(this::toRecentReview).toList();
     }
 
+    public record PublicReviewPage(List<RecentReviewDto> items, Long nextBefore) {}
+    public record ArtistReviews(PublicReviewPage reviews, ReviewDto own, boolean signedIn, Double average, long total) {}
+
+    public ReviewDto postArtistReview(String cookie, ReviewRequest request, long artistId) {
+        Long userId = viewerId(cookie);
+        if (userId == null) throw new InvalidTokenException("Entre para avaliar artistas.");
+        var user = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+        var artist = artistRepository.findById(artistId)
+                .orElseThrow(() -> new ResourceNotFoundException("Artista não encontrado."));
+        var existing = reviewRepository.findByAuthorUserIdAndArtistId(userId, artistId);
+        var review = existing.orElseGet(() -> new Review(request.getRating(), request.getReview(), artist, user.getData()));
+        review.setRating(request.getRating());
+        review.setReview(request.getReview());
+        return new ReviewDto(reviewRepository.save(review));
+    }
+
+    @Transactional(readOnly = true)
+    public ArtistReviews artistReviews(String cookie, long artistId, long before) {
+        if (!artistRepository.existsById(artistId)) throw new ResourceNotFoundException("Artista não encontrado.");
+        Long viewer = viewerId(cookie);
+        var own = viewer == null ? null
+                : reviewRepository.findByAuthorUserIdAndArtistId(viewer, artistId).map(ReviewDto::new).orElse(null);
+        var page = publicPage(reviewRepository.findPublicReviewsByArtist(artistId, before,
+                PageRequest.of(0, PUBLIC_PAGE_SIZE + 1)));
+        return new ArtistReviews(page, own, viewer != null, reviewRepository.averageForArtist(artistId),
+                reviewRepository.countByArtistId(artistId));
+    }
+
+    private Long viewerId(String cookie) {
+        try {
+            return cookieService.checkCookie(cookie) ? cookieService.getId(cookie) : null;
+        } catch (InvalidTokenException | NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public PublicReviewPage publicReviewsByUser(long userId, long before) {
+        return publicPage(reviewRepository.findPublicReviewsByUser(userId, before,
+                PageRequest.of(0, PUBLIC_PAGE_SIZE + 1)));
+    }
+
+    private PublicReviewPage publicPage(List<Review> reviews) {
+        var items = reviews.stream().limit(PUBLIC_PAGE_SIZE).map(this::toRecentReview).toList();
+        Long nextBefore = reviews.size() > PUBLIC_PAGE_SIZE ? items.get(PUBLIC_PAGE_SIZE - 1).id() : null;
+        return new PublicReviewPage(items, nextBefore);
+    }
+
     private RecentReviewDto toRecentReview(Review review) {
+        var author = review.getAuthor();
+        var account = author.getUser();
+        var targetArtist = review.getArtist();
+        if (targetArtist != null) {
+            String photo = targetArtist.getImgUrl();
+            if (!ArtistPhotoStore.hasUsableImage(photo)) photo = targetArtist.getLastFm().getImageUrl();
+            return new RecentReviewDto(review.getId(), review.getRating(), review.getReview(), account.getId(),
+                    account.getUsername(), author.getLastFmImageUrl(), targetArtist.getId(), "artist",
+                    targetArtist.getNome(), null, photo, author.getProfileImageUrl());
+        }
+
         var media = review.getMidia();
         var track = media instanceof Musica musica ? musica : null;
         var artists = track == null ? ((Album) media).getArtistas() : track.getArtistas();
@@ -136,11 +199,9 @@ public class ReviewService {
         if ((cover == null || cover.isBlank()) && track != null && track.getAlbum() != null) {
             cover = track.getAlbum().getLastFm().getImageUrl();
         }
-        var author = review.getAuthor();
-        var account = author.getUser();
         return new RecentReviewDto(review.getId(), review.getRating(), review.getReview(), account.getId(),
                 account.getUsername(), author.getLastFmImageUrl(), media.getId(), track == null ? "album" : "track",
-                media.getTitulo(), artist, cover);
+                media.getTitulo(), artist, cover, author.getProfileImageUrl());
     }
 
     @Transactional(readOnly = true)

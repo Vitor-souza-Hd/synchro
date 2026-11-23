@@ -1,4 +1,9 @@
-document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
+document.addEventListener('synchro:own-profile', renderProfileSections);
+document.addEventListener('synchro:public-profile', renderProfileSections);
+
+async function renderProfileSections({detail: user, type: eventType}) {
+    const isPublic = eventType === 'synchro:public-profile';
+    const publicId = isPublic ? user.id : undefined;
     const lastFmUser = user.lastFmConnected;
     const artistGrid = document.querySelector('.artist');
     const reviewGrid = document.querySelector('.review');
@@ -73,6 +78,12 @@ document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
                 const title = document.createElement("h3");
                 title.textContent =
                     review.midiaTitulo || "Mídia sem título";
+                if (review.artistId != null) {
+                    const link = document.createElement('a');
+                    link.href = 'artista.html?' + new URLSearchParams({id: review.artistId});
+                    link.textContent = title.textContent;
+                    title.replaceChildren(link);
+                }
 
                 const type = document.createElement("h5");
                 type.textContent =
@@ -80,7 +91,7 @@ document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
                         ? "Música"
                         : review.midiatype === "Album"
                             ? "Álbum"
-                            : "Mídia";
+                            : review.midiatype === "Artista" ? "Artista" : "Mídia";
 
                 const comment = document.createElement("p");
                 comment.textContent = review.review || "";
@@ -112,7 +123,15 @@ document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
         }
     }
 
-    carregarMinhasAvaliacoes();
+    if (isPublic) {
+        loadPublicFavoriteArtists(user.id);
+        loadPublicReviews(user.id);
+        document.getElementById('publicTopArtists').hidden = !lastFmUser;
+        document.getElementById('publicRankings').hidden = !lastFmUser;
+        if (!lastFmUser) return;
+    } else {
+        carregarMinhasAvaliacoes();
+    }
 
 
     // A biblioteca de playlists é carregada por features.js usando a conta autenticada.
@@ -248,29 +267,17 @@ document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
 
             info.append(title, desc);
 
-            const imageUrl =
-                Array.isArray(item.image) &&
-                item.image
-                    .map(i => i?.['#text'])
-                    .filter(Boolean)
-                    .pop();
-
-            if (
-                imageUrl &&
-                /^https:\/\//i.test(imageUrl)
-            ) {
-                const image = document.createElement('img');
-                image.loading = 'lazy';
-                image.decoding = 'async';
-                image.src = imageUrl;
-                image.alt = 'Foto de ' + item.name;
-
-                link.appendChild(image);
-            }
-
-            link.appendChild(info);
-            card.appendChild(link);
-            artistGrid.appendChild(card);
+            const artwork = document.createElement('div');
+            artwork.className = 'profile-artist-photo';
+            link.append(artwork, info);
+            card.append(link);
+            artistGrid.append(card);
+            const preferredImages = Array.isArray(item.image)
+                ? item.image.map(image => image?.['#text']).reverse()
+                : [];
+            window.SynchroFavoriteImages.show(artwork, {
+                kind: 'artist', artist: item.name, title: item.name, preferredImages, alt: ''
+            });
         });
     }
 
@@ -391,7 +398,7 @@ document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
         let timedOut = false;
         async function load(type, itemName, render, containers) {
             try {
-                const data = await fetchProfileRanking(type, period);
+                const data = await fetchProfileRanking(type, period, publicId);
                 if (requestNumber === latestRankingRequest) render(topArray(data, 'top' + type, itemName));
             } catch (error) {
                 if (requestNumber !== latestRankingRequest) return;
@@ -432,8 +439,8 @@ document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
         // para o relatorio semanal.
 
         const resultados = await Promise.allSettled([
-            user.data?.artistas == null ? fetchProfileRanking("artists", "overall") : null,
-            user.data?.lastFmAlbums == null ? fetchProfileRanking("albums", "overall") : null
+            user.data?.artistas == null ? fetchProfileRanking("artists", "overall", publicId) : null,
+            user.data?.lastFmAlbums == null ? fetchProfileRanking("albums", "overall", publicId) : null
         ]);
 
         const artistas = resultados[0];
@@ -484,7 +491,92 @@ document.addEventListener("synchro:own-profile", async ({ detail: user }) => {
         carregarTotaisMusicais()
     ]);
 
-});
+}
+
+async function loadPublicFavoriteArtists(userId) {
+    const list = document.getElementById('publicFavoriteArtists');
+    const status = document.getElementById('publicFavoriteArtistsStatus');
+    try {
+        const response = await fetch('/favorites/artists/users/' + encodeURIComponent(userId), {cache: 'no-store'});
+        if (!response.ok) throw new Error('Favoritos indisponíveis');
+        const artists = await response.json();
+        for (const artist of artists) {
+            const card = document.createElement('article');
+            card.className = 'artist-card';
+            const link = document.createElement('a');
+            link.href = 'artista.html?' + new URLSearchParams({artist});
+            const artwork = document.createElement('div');
+            artwork.className = 'profile-artist-photo';
+            const name = document.createElement('h3');
+            name.textContent = artist;
+            link.append(artwork, name);
+            card.append(link);
+            list.append(card);
+            window.SynchroFavoriteImages?.show(artwork, {kind: 'artist', artist, title: artist, alt: ''});
+        }
+        status.hidden = artists.length > 0;
+        status.textContent = artists.length ? '' : 'Este perfil ainda não marcou artistas como favoritos.';
+    } catch {
+        status.textContent = 'Não foi possível carregar os artistas favoritos.';
+    }
+}
+
+function loadPublicReviews(userId) {
+    const list = document.getElementById('publicReviewList');
+    const status = document.getElementById('publicReviewStatus');
+    const more = document.getElementById('morePublicReviews');
+    let before;
+
+    function renderReview(review) {
+        const card = document.createElement('article');
+        card.className = 'review-card';
+        const content = document.createElement('div');
+        const title = document.createElement('h3');
+        const link = document.createElement('a');
+        const track = review.mediaType === 'track';
+        const artistReview = review.mediaType === 'artist';
+        link.href = (artistReview ? 'artista.html' : track ? 'musica.html' : 'album.html')
+            + '?' + new URLSearchParams({id: review.mediaId});
+        link.textContent = review.title;
+        title.append(link);
+        const details = document.createElement('p');
+        details.textContent = [artistReview ? 'Artista' : track ? 'Música' : 'Álbum', review.artistName, review.rating == null ? null : review.rating + '/10']
+            .filter(Boolean).join(' · ');
+        content.append(title, details);
+        if (review.review) {
+            const comment = document.createElement('p');
+            comment.textContent = review.review;
+            content.append(comment);
+        }
+        card.append(content);
+        list.append(card);
+    }
+
+    async function load() {
+        more.disabled = true;
+        status.textContent = 'Carregando avaliações…';
+        try {
+            const params = before == null ? '' : '?' + new URLSearchParams({before});
+            const response = await fetch('/review/users/' + encodeURIComponent(userId) + params, {cache: 'no-store'});
+            if (!response.ok) throw new Error('Avaliações indisponíveis');
+            const data = await response.json();
+            data.items.forEach(renderReview);
+            before = data.nextBefore;
+            status.textContent = list.childElementCount ? '' : 'Este perfil ainda não publicou avaliações.';
+            more.textContent = 'Ver mais avaliações';
+            more.hidden = before == null;
+        } catch {
+            status.textContent = 'Não foi possível carregar as avaliações.';
+            more.textContent = 'Tentar novamente';
+            more.hidden = false;
+        } finally {
+            more.disabled = false;
+        }
+    }
+
+    more.addEventListener('click', load);
+    load();
+}
 
 
 // =========================================================

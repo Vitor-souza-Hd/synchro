@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Publicações | Synchro</title>
+    <script src="/frontend/assets/js/explorar/tema-global.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=fotos-reviews">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/favoritos.css?v=home-sidebar-spacing">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-biblioteca.css">
+    <link rel="stylesheet" href="/frontend/assets/css/features.css?v=foto-da-conta">
+    <link rel="stylesheet" href="/frontend/assets/css/auth.css">
+    <link rel="stylesheet" href="/frontend/assets/css/search.css">
+    <link rel="stylesheet" href="/frontend/assets/css/publicacoes.css?v=interacoes">
+    <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css">
+    <script src="/frontend/assets/js/auth.js?v=foto-da-conta" defer></script>
+    <script src="/frontend/assets/js/search.js?v=busca-eficiente" defer></script>
+    <script src="/frontend/assets/js/image-visibility.js" defer></script>
+    <script src="/frontend/assets/js/explorar/favorite-images.js?v=fotos-artistas-perfil-2" defer></script>
+    <script src="/frontend/assets/js/post-attachments.js" defer></script>
+    <script src="/frontend/assets/js/post-discussion.js" defer></script>
+    <script src="/frontend/assets/js/publicacoes.js?v=interacoes" defer></script>
+</head>
+<body class="synchro-biblioteca">
+    <div class="feature-session">
+        <div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div>
+        <div class="session-actions" hidden><button type="button" class="logout-button">Sair</button><p class="session-error" role="alert" hidden></p></div>
+    </div>
+    <div class="container">
+        <aside id="postsSidebar" class="sidebar" aria-label="Menu principal">
+            <div class="logo"><i class="bx bx-pulse" aria-hidden="true"></i><a href="/frontend/pages/explorar.html">SYNCHRO</a></div>
+            <nav class="menu" aria-label="Menu">
+                <h5>Menu</h5>
+                <ul>
+                    <li><i class="bx bxs-bolt-circle" aria-hidden="true"></i><a href="/frontend/pages/explorar.html">Explorar</a></li>
+                    <li><i class="bx bxs-volume-full" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#generos">Gêneros</a></li>
+                    <li><i class="bx bxs-album" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#albuns">Álbuns</a></li>
+                    <li><i class="bx bxs-microphone" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#artistas">Artistas</a></li>
+                    <li><i class="bx bxs-star" aria-hidden="true"></i><a href="/frontend/pages/recomendacoes.html">Recomendações</a></li>
+                    <li class="fav-menu-active"><i class="bx bxs-chat" aria-hidden="true"></i><a href="/frontend/pages/publicacoes.html" aria-current="page">Publicações</a></li>
+                    <li><i class="bx bxs-group" aria-hidden="true"></i><a href="/frontend/pages/pessoas.html">Pessoas</a></li>
+                </ul>
+            </nav>
+            <nav class="menu" aria-label="Sua biblioteca">
+                <h5>Sua biblioteca</h5>
+                <ul>
+                    <li><i class="bx bx-undo" aria-hidden="true"></i><a href="/frontend/pages/recentes.html">Recentes</a></li>
+                    <li><i class="bx bxs-heart" aria-hidden="true"></i><a href="/frontend/pages/favoritos.html">Favoritos</a></li>
+                    <li><i class="bx bxs-playlist" aria-hidden="true"></i><a href="/frontend/pages/playlists.html">Suas playlists</a></li>
+                    <li><i class="bx bxs-cog" aria-hidden="true"></i><a href="/frontend/pages/configuracoes.html">Configurações</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="favorites-main posts-main">
+            <header class="favorites-topbar">
+                <button id="postsMenuToggle" class="favorites-menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="postsSidebar">
+                    <i class="bx bx-menu" aria-hidden="true"></i>
+                </button>
+                <div class="search-box favorites-search-box">
+                    <i class="bx bx-search" aria-hidden="true"></i>
+                    <input class="search" type="search" placeholder="O que você quer ouvir?" aria-label="Buscar músicas, artistas, álbuns ou usuários" autocomplete="off">
+                </div>
+                <a class="favorites-profile-link" href="/frontend/pages/perfil.html" aria-label="Meu perfil">
+                    <img class="personal-profile-icon" src="/frontend/assets/images/personal-profile-icon.png" width="28" height="28" alt="">
+                </a>
+            </header>
+
+            <div class="posts-column">
+                <div class="favorites-heading">
+                    <h1 id="postsTitle">Publicações</h1>
+                    <a id="allPosts" href="/frontend/pages/publicacoes.html" hidden>Ver publicações da comunidade</a>
+                </div>
+
+                <section id="postNotifications" hidden></section>
+
+                <form id="postForm" class="post-panel post-form" hidden>
+                    <label id="postLabel" for="postText">Escreva uma publicação</label>
+                    <textarea id="postText" rows="4" maxlength="2000" required aria-describedby="postCount"></textarea>
+                    <div id="postAttachmentSelected" class="post-attachment-selected" hidden>
+                        <p id="postAttachmentName"></p>
+                        <button id="clearPostAttachment" type="button">Remover anexo</button>
+                    </div>
+                    <details id="postAttachmentPicker" class="post-attachment-picker">
+                        <summary>Anexar música, álbum ou artista</summary>
+                        <label for="postAttachmentQuery">Buscar no catálogo</label>
+                        <div class="post-attachment-search">
+                            <input id="postAttachmentQuery" type="search" maxlength="200" autocomplete="off">
+                            <button id="searchPostAttachment" type="button">Buscar</button>
+                        </div>
+                        <p id="postAttachmentStatus" role="status"></p>
+                        <ul id="postAttachmentResults" role="list"></ul>
+                    </details>
+                    <div class="post-actions">
+                        <span id="postCount">0/2000</span>
+                        <button id="cancelPostEdit" type="button" hidden>Cancelar</button>
+                        <button class="post-primary" id="savePost" type="submit">Publicar</button>
+                    </div>
+                </form>
+                <p id="postActionStatus" role="status"></p>
+                <p id="postLogin" hidden><a href="/frontend/pages/login.html">Entre na sua conta</a> para publicar.</p>
+
+                <section aria-label="Publicações da comunidade">
+                    <p id="postsStatus" class="favorites-feedback" role="status">Carregando publicações…</p>
+                    <div id="postsFeed" class="posts-feed"></div>
+                    <button id="morePosts" type="button" hidden>Ver mais publicações</button>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

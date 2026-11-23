@@ -7,8 +7,10 @@ import org.example.synchro.entities.Artista;
 import org.example.synchro.entities.CatalogName;
 import org.example.synchro.repositories.*;
 import org.example.synchro.services.exception.ResourceNotFoundException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 import java.util.List;
 
 @RestController
@@ -35,14 +37,16 @@ public class CatalogResource {
 
     @PostMapping("/{type}/{id}/refresh")
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
-    public void refresh(@PathVariable String type, @PathVariable long id) {
+    public Mono<Void> refresh(@PathVariable String type, @PathVariable long id) {
         String apiType = switch (type) {
             case "songs" -> "track";
             case "albums" -> "album";
             case "artists" -> "artist";
             default -> throw new ResourceNotFoundException("Tipo não encontrado");
         };
+        if ("artist".equals(apiType)) return Mono.fromFuture(lastFm.refreshArtistInBackground(id), true);
         lastFm.enrich(apiType, id);
+        return Mono.empty();
     }
 
     @GetMapping("/songs/{id}")
@@ -50,6 +54,21 @@ public class CatalogResource {
         return SearchResultDTO.Song.from(songs.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Música não encontrada")));
     }
+
+    @GetMapping("/albums/top")
+    public List<CatalogHighlight> topAlbums() {
+        return albums.findPopular(PageRequest.of(0, 18)).stream().map(album -> {
+            var metadata = album.getLastFm();
+            String name = metadata.getArtistName();
+            if (name == null || name.isBlank()) {
+                name = album.getArtistas().stream().map(Artista::getNome).sorted().findFirst().orElse(null);
+            }
+            var images = metadata.getImageUrl() == null ? List.<String>of() : List.of(metadata.getImageUrl());
+            return new CatalogHighlight(album.getId(), album.getTitulo(), name, images);
+        }).toList();
+    }
+
+    public record CatalogHighlight(Long id, String name, String artist, List<String> images) {}
 
     @GetMapping("/albums/{id}")
     public AlbumDetails album(@PathVariable Long id) {
@@ -80,7 +99,7 @@ public class CatalogResource {
 
     @GetMapping("/users/{id}")
     public PublicProfileDto user(@PathVariable Long id) {
-        return users.findById(id).map(PublicProfileDto::from)
+        return users.findById(id).map(PublicProfileDto::details)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 

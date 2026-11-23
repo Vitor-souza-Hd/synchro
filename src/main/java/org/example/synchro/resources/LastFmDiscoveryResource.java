@@ -124,6 +124,10 @@ public class LastFmDiscoveryResource {
                         })
                         .subscribeOn(Schedulers.boundedElastic());
             }
+            if (lookup.method().equals("artist.gettoptracks") || lookup.method().equals("artist.gettopalbums")) {
+                catalog.importArtistRanking(lookup.method(), lookup.values().get("artist"), result.body());
+                return Mono.just(result);
+            }
             return Mono.fromRunnable(() -> catalog.persistDiscovery(lookup.method(), result.body()))
                     .subscribeOn(Schedulers.boundedElastic()).thenReturn(result);
         }).doOnNext(result -> {

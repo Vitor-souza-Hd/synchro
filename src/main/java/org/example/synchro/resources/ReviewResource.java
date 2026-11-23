@@ -57,9 +57,31 @@ public class ReviewResource {
         }
     }
 
+    @GetMapping("/artists/{artistId}")
+    public ResponseEntity<ReviewService.ArtistReviews> artistReviews(
+            @CookieValue(name = "token_jwt", required = false) String cookie,
+            @PathVariable long artistId, @RequestParam(required = false) Long before) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(reviewService.artistReviews(cookie, artistId, before == null ? Long.MAX_VALUE : before));
+    }
+
+    @PostMapping("/artists/{artistId}")
+    public ReviewDto saveArtistReview(
+            @CookieValue(name = "token_jwt", required = false) String cookie,
+            @PathVariable long artistId, @jakarta.validation.Valid @RequestBody ReviewRequest reviewRequest) {
+        return reviewService.postArtistReview(cookie, reviewRequest, artistId);
+    }
+
     @GetMapping("/recent")
     public ResponseEntity<List<RecentReviewDto>> recent() {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(reviewService.recentPublicReviews());
+    }
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<ReviewService.PublicReviewPage> publicReviews(
+            @PathVariable long userId, @RequestParam(required = false) Long before) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(reviewService.publicReviewsByUser(userId, before == null ? Long.MAX_VALUE : before));
     }
 
     @GetMapping

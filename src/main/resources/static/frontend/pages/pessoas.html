@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Encontrar pessoas | Synchro</title>
     <script src="/frontend/assets/js/explorar/tema-global.js"></script>
-    <link rel="stylesheet" href="/frontend/assets/css/people-search.css">
+    <link rel="stylesheet" href="/frontend/assets/css/people-search.css?v=amizades">
     <script src="/frontend/assets/js/people-search.js" defer></script>
+    <script src="/frontend/assets/js/friendships.js" defer></script>
 </head>
 <body>
     <header class="people-header">
@@ -31,6 +32,30 @@
             <span id="peoplePageNumber"></span>
             <button id="peopleNext" type="button">Próxima</button>
         </nav>
+
+        <section id="amizades" class="people-friendships" aria-labelledby="friendshipsHeading">
+            <h2 id="friendshipsHeading">Amizades</h2>
+            <p id="friendshipListStatus" role="status">Carregando amizades…</p>
+            <a id="friendshipListLogin" href="/frontend/pages/login.html" hidden>Entrar na conta</a>
+            <button id="friendshipListRetry" type="button" hidden>Tentar novamente</button>
+            <div id="friendshipLists" hidden>
+                <section>
+                    <h3>Pedidos recebidos</h3>
+                    <p data-friendship-empty="RECEIVED">Nenhum pedido recebido.</p>
+                    <ul class="friendship-list" data-friendship-list="RECEIVED"></ul>
+                </section>
+                <section>
+                    <h3>Pedidos enviados</h3>
+                    <p data-friendship-empty="SENT">Nenhum pedido enviado.</p>
+                    <ul class="friendship-list" data-friendship-list="SENT"></ul>
+                </section>
+                <section>
+                    <h3>Amigos</h3>
+                    <p data-friendship-empty="FRIENDS">Você ainda não adicionou amigos.</p>
+                    <ul class="friendship-list" data-friendship-list="FRIENDS"></ul>
+                </section>
+            </div>
+        </section>
     </main>
 </body>
 </html>

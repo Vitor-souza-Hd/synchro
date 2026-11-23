@@ -17,11 +17,42 @@ public interface ReviewRepository
             SELECT r FROM Review r
             JOIN FETCH r.author author
             JOIN FETCH author.user
-            JOIN FETCH r.midia media
-            WHERE TYPE(media) IN (Album, Musica)
+            LEFT JOIN FETCH r.midia media
+            LEFT JOIN FETCH r.artist artist
+            WHERE artist IS NOT NULL OR TYPE(media) IN (Album, Musica)
             ORDER BY r.id DESC
             """)
     List<Review> findRecentPublicReviews(Pageable pageable);
+
+    @Query("""
+            SELECT r FROM Review r
+            JOIN FETCH r.author author
+            JOIN FETCH author.user
+            LEFT JOIN FETCH r.midia media
+            LEFT JOIN FETCH r.artist artist
+            WHERE author.user.id = :userId
+              AND (artist IS NOT NULL OR TYPE(media) IN (Album, Musica))
+              AND r.id < :before
+            ORDER BY r.id DESC
+            """)
+    List<Review> findPublicReviewsByUser(@Param("userId") long userId, @Param("before") long before, Pageable pageable);
+
+    @Query("""
+            SELECT r FROM Review r
+            JOIN FETCH r.author author
+            JOIN FETCH author.user
+            JOIN FETCH r.artist artist
+            WHERE artist.id = :artistId AND r.id < :before
+            ORDER BY r.id DESC
+            """)
+    List<Review> findPublicReviewsByArtist(@Param("artistId") long artistId, @Param("before") long before, Pageable pageable);
+
+    Optional<Review> findByAuthorUserIdAndArtistId(Long userId, Long artistId);
+
+    long countByArtistId(long artistId);
+
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.artist.id = :artistId")
+    Double averageForArtist(@Param("artistId") long artistId);
 
     Optional<Review> findByAuthorIdAndMidiaId(
             Long authorId,

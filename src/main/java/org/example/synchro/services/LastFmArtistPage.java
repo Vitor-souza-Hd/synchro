@@ -18,7 +18,8 @@ import java.util.Set;
 /** Read only photos linked to this artist's gallery, never avatars or recommendations. */
 public final class LastFmArtistPage {
     private LastFmArtistPage() {}
-    private static final Set<String> IMAGE_HOSTS = Set.of("lastfm.freetls.fastly.net", "lastfm-img2.akamaized.net", "userserve-ak.last.fm");
+    private static final Set<String> IMAGE_HOSTS = Set.of("lastfm.freetls.fastly.net", "lastfm-img.freetls.fastly.net",
+            "lastfm-img2.akamaized.net", "userserve-ak.last.fm");
     private static class Candidate {
         final String hash;
         String image;
@@ -27,8 +28,12 @@ public final class LastFmArtistPage {
     }
 
     public static Optional<String> photo(String html, String artist) {
+        return photo(html, artist, null);
+    }
+
+    public static Optional<String> photo(String html, String artist, String excludedUrl) {
         String lower = html.toLowerCase(Locale.ROOT);
-        if (lower.contains("cf-chl-") || lower.contains("challenge-platform")) {
+        if (lower.contains("cf-chl-") || lower.contains("challenge-platform") || lower.contains("<title>client challenge</title>")) {
             throw new IllegalStateException("A página de fotos do Last.fm está indisponível.");
         }
         List<Candidate> photos = new ArrayList<>();
@@ -63,7 +68,7 @@ public final class LastFmArtistPage {
         try { new ParserDelegator().parse(new StringReader(html), parser, true); }
         catch (IOException error) { throw new IllegalStateException("Não foi possível ler a galeria do Last.fm.", error); }
         if (!parser.gallery) throw new IllegalStateException("A resposta do Last.fm não contém uma galeria de fotos.");
-        return photos.stream().map(Candidate::url).findFirst();
+        return photos.stream().map(Candidate::url).filter(url -> !url.equals(excludedUrl)).findFirst();
     }
 
     private static String galleryHash(String href, String artist) {
@@ -82,9 +87,11 @@ public final class LastFmArtistPage {
     private static boolean validImage(String url, String hash) {
         try {
             var uri = URI.create(url.startsWith("//") ? "https:" + url : url);
-            return "https".equalsIgnoreCase(uri.getScheme()) && IMAGE_HOSTS.contains(uri.getHost())
+            String path = uri.getPath();
+            String filename = path == null ? "" : path.substring(path.lastIndexOf('/') + 1);
+            return "https".equalsIgnoreCase(uri.getScheme()) && uri.getHost() != null && IMAGE_HOSTS.contains(uri.getHost())
                     && uri.getUserInfo() == null && (uri.getPort() == -1 || uri.getPort() == 443)
-                    && uri.getPath().contains("/" + hash + ".");
+                    && (filename.equals(hash) || filename.startsWith(hash + "."));
         } catch (IllegalArgumentException | NullPointerException ignored) { return false; }
     }
     private static String attribute(MutableAttributeSet attrs, String name) {

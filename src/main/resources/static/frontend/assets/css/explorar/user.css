@@ -1168,6 +1168,107 @@ html.synchro-light :is(.music-profile-period, #musicProfileStatus, #musicProfile
     background-repeat: no-repeat;
 }
 
+#publicProfileBanner {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+[data-profile="public"] .profile-biography {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+[data-profile="public"] .music-profile-genres {
+    margin: 16px 0;
+}
+
+[data-profile="public"] .profile-stats,
+.public-ranking-controls {
+    flex-wrap: wrap;
+}
+
+.public-ranking-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.friendship-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.friendship-actions:empty,
+#profileFriendshipStatus:empty {
+    display: none;
+}
+
+#publicRankings .weekly-report > section {
+    min-width: 0;
+    padding: 12px;
+    overflow-wrap: anywhere;
+}
+
+#publicFavoriteArtists:not(:empty) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+#publicFavoriteArtists .artist-card {
+    width: 100%;
+    min-width: 0;
+    padding: 8px;
+    overflow-wrap: anywhere;
+}
+
+#publicFavoriteArtists .artist-card a {
+    display: block;
+    width: 100%;
+}
+
+.artist-card .profile-artist-photo {
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 50%;
+    margin-bottom: 8px;
+}
+
+.top-artists .profile-artist-photo {
+    max-width: 200px;
+    margin-inline: auto;
+}
+
+.artist-card .profile-artist-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#publicReviewList:not(:empty) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: 12px;
+    margin-block: 14px;
+}
+
+#publicReviewList .review-card {
+    width: 100%;
+    min-width: 0;
+    padding: 16px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 .banner-background::after {
     content: "";
     position: absolute;

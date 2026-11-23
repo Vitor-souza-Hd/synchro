@@ -286,8 +286,6 @@ gap: 20px;
 }
 
 .popular-artists-heading h2 { margin: 0; }
-.popular-artists-heading p { flex: 1 1 260px; color: #fff; font-size: 14px; overflow-wrap: anywhere; }
-html.synchro-light .popular-artists-heading p { color: #30202b; }
 :is(#artistRecommendationStatus, #albumRecommendationStatus, #topArtistRecommendationStatus):not(:empty) { margin-top: 8px; color: #fff; font-size: 14px; }
 html.synchro-light :is(#artistRecommendationStatus, #albumRecommendationStatus, #topArtistRecommendationStatus):not(:empty) { color: #30202b; }
 
@@ -384,7 +382,13 @@ html.synchro-light :is(#artistRecommendationStatus, #albumRecommendationStatus, 
 .review-artwork img { display: block; }
 .review-info, .review-text, .review-user { min-width: 0; overflow-wrap: anywhere; }
 .review-info a { color: inherit; }
-.review-user a { color: #fff; }
+.review-user a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: #fff;
+}
 html.synchro-light .review-user a { color: #715d69; }
 #recentReviewsStatus:empty { display: none; }
 .album-cover{
@@ -432,14 +436,12 @@ html.synchro-light .review-user a { color: #715d69; }
 }
 
 .review-user{
-    display: flex;
-    align-items: center;
-    gap: 10px;
     border-top: 1px solid rgba(255,255,255,0.1);
     padding-top: 12px;
 }
 
 .user-avatar{
+    flex: 0 0 35px;
     width: 35px;
     height: 35px;
     border-radius: 50%;

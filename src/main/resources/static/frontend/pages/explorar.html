@@ -6,15 +6,15 @@
     <title>SYNCHRO</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=reviews-autores">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=fotos-reviews">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-home.css">
     <script src="/frontend/assets/js/explorar/tema-global.js"></script>
 <link rel="stylesheet" href="/frontend/assets/css/auth.css">
-<link rel="stylesheet" href="/frontend/assets/css/features.css">
+<link rel="stylesheet" href="/frontend/assets/css/features.css?v=mais-recomendacoes">
 <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
 <script src="/frontend/assets/js/playlists.js?v=20261101-4" defer></script>
 <script src="/frontend/assets/js/features.js?v=20261105-catalog-interactions-1" defer></script>
-<script src="/frontend/assets/js/auth.js" defer></script>
+<script src="/frontend/assets/js/auth.js?v=foto-da-conta" defer></script>
 <link rel="stylesheet" href="/frontend/assets/css/search.css">
 </head>
 <body class="synchro-home">
@@ -55,6 +55,8 @@
                         <i class="bx bxs-microphone"></i>
                         <a href="/frontend/pages/explorar.html#artistas">Artistas</a>
                     </li>
+                    <li><i class="bx bxs-star" aria-hidden="true"></i><a href="/frontend/pages/recomendacoes.html">Recomendações</a></li>
+                    <li><i class="bx bxs-chat" aria-hidden="true"></i><a href="/frontend/pages/publicacoes.html">Publicações</a></li>
                 </ul>
             </div>
 
@@ -165,7 +167,6 @@
         <section class="content">
             <div class="popular-artists-heading">
                 <h2 id="artistas">Artistas Populares</h2>
-                <p id="popularArtistsStatus" role="status"></p>
             </div>
             <p id="artistRecommendationStatus" role="status"></p>
             <div class="artists">
@@ -180,6 +181,7 @@
                 <h2 id="recomendados">Sugestões para você</h2>
                 <p id="topArtistRecommendationStatus" role="status">Carregando sugestões…</p>
                 <div class="albums" id="topArtistRecommendations"></div>
+                <a class="feature-detail-link recommendation-more" href="/frontend/pages/recomendacoes.html" aria-label="Ver mais recomendações" title="Ver mais recomendações"><span aria-hidden="true">+</span></a>
             </section>
             <h2 id="generos">Gêneros Populares</h2>
             <div class="genres"></div>
@@ -222,8 +224,8 @@
 
     <script src="/frontend/assets/js/image-visibility.js"></script>
     <script src="/frontend/assets/js/explorar/favorite-images.js?v=capas-alternativas"></script>
-    <script src="/frontend/assets/js/music-profile-genres.js"></script>
-    <script src="/frontend/assets/js/explorar/script2.js?v=reviews-reais"></script>
+    <script src="/frontend/assets/js/music-profile-genres.js?v=tags-compartilhadas"></script>
+    <script src="/frontend/assets/js/explorar/script2.js?v=avaliacoes-artistas"></script>
     <script src="/frontend/assets/js/search.js?v=busca-eficiente"></script>
     <script src="/frontend/assets/js/explorar/navegacao.js"></script>
     <script src="/frontend/assets/js/explorar/navegacao-global.js"></script>

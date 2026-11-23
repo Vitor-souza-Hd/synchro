@@ -30,7 +30,8 @@ class RestorationFeaturesTests {
             FavoriteArtistService.class, FavoriteArtistResource.class,
             FavoriteAlbumService.class, FavoriteAlbumResource.class,
             FavoriteTrackService.class, FavoriteTrackResource.class, ResourceExceptionHandler.class,
-            LastFmCatalogService.class, LastFmCatalogStore.class, CatalogResource.class})
+            LastFmCatalogService.class, LastFmCatalogStore.class, CatalogResource.class, FollowResource.class, FriendshipResource.class, FriendshipService.class,
+            CommunityPostResource.class, CommunityPostService.class})
     static class Config {
         @Bean org.example.synchro.importer.LastFmHistoryClient catalogClient() {
             return mock(org.example.synchro.importer.LastFmHistoryClient.class);
@@ -41,6 +42,8 @@ class RestorationFeaturesTests {
             when(cookies.getId("owner")).thenReturn(1L);
             when(cookies.checkCookie("other")).thenReturn(true);
             when(cookies.getId("other")).thenReturn(2L);
+            when(cookies.checkCookie("visitor")).thenReturn(true);
+            when(cookies.getId("visitor")).thenReturn(3L);
             return cookies;
         }
     }
@@ -59,6 +62,132 @@ class RestorationFeaturesTests {
         var response = request(method, path, session, body);
         assertEquals(code, response.statusCode(), method + " " + path + " " + response.body());
         return response;
+    }
+
+    @Test
+    void postsArePublicButOnlyTheirAuthorsCanEditOrDeleteThem() throws Exception {
+        try (var app = new SpringApplicationBuilder(Config.class).profiles("restoration-test")
+                .properties("server.port=0", "spring.datasource.url=jdbc:h2:mem:community-posts",
+                        "spring.datasource.driver-class-name=org.h2.Driver", "spring.datasource.username=sa",
+                        "spring.datasource.password=", "spring.jpa.hibernate.ddl-auto=create-drop").run()) {
+            base = "http://localhost:" + app.getEnvironment().getProperty("local.server.port");
+            var users = app.getBean(UserRepository.class);
+            var owner = users.save(new User(null, "owner", "owner@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            users.save(new User(null, "other", "other@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+
+            expect(401, "POST", "/posts", null, "{\"text\":\"Sem conta\"}");
+            expect(400, "POST", "/posts", "owner", "{\"text\":\"    \"}");
+            expect(400, "POST", "/posts", "owner", json.writeValueAsString(java.util.Map.of("text", "a".repeat(2001))));
+            var post = json.readTree(expect(201, "POST", "/posts", "owner", "{\"text\":\"  Olá Synchro!  \"}").body());
+            long id = post.path("id").asLong();
+            assertEquals("Olá Synchro!", post.path("body").asText());
+            assertTrue(post.path("own").asBoolean());
+            assertTrue(post.path("createdAt").isTextual());
+            assertFalse(post.path("author").has("email"));
+            assertTrue(post.path("attachment").isNull());
+            var artist = app.getBean(ArtistaRepository.class).save(new Artista("Artista compartilhado", "", null));
+            var song = app.getBean(MusicaRepository.class).save(new Musica("Faixa compartilhada", "", null, null));
+            var album = app.getBean(AlbumRepository.class).save(new Album("Álbum compartilhado", "", null));
+            var artistRequest = json.writeValueAsString(java.util.Map.of("text", "Ouvindo", "attachment",
+                    java.util.Map.of("type", "artist", "id", artist.getId(), "title", "Título alterado pelo cliente")));
+            var artistPost = json.readTree(expect(201, "POST", "/posts", "owner", artistRequest).body());
+            long artistPostId = artistPost.path("id").asLong();
+            assertEquals("Artista compartilhado", artistPost.path("attachment").path("title").asText());
+            var focused = json.readTree(expect(200, "GET", "/posts/" + artistPostId, "other", null).body());
+            assertTrue(focused.path("signedIn").asBoolean());
+            assertFalse(focused.path("post").path("own").asBoolean());
+            assertEquals("artist", focused.path("post").path("attachment").path("type").asText());
+            assertFalse(json.readTree(expect(200, "GET", "/posts/" + artistPostId, null, null).body()).path("signedIn").asBoolean());
+            assertTrue(json.readTree(expect(200, "GET", "/posts?user=1", "other", null).body()).path("signedIn").asBoolean());
+            for (var item : java.util.Map.of("track", song.getId(), "album", album.getId()).entrySet()) {
+                var body = json.writeValueAsString(java.util.Map.of("text", "Novo anexo", "attachment",
+                        java.util.Map.of("type", item.getKey(), "id", item.getValue())));
+                var attached = json.readTree(expect(200, "PUT", "/posts/" + artistPostId, "owner", body).body());
+                assertEquals(item.getKey(), attached.path("attachment").path("type").asText());
+                assertEquals(item.getValue().longValue(), attached.path("attachment").path("id").asLong());
+            }
+            expect(400, "PUT", "/posts/" + artistPostId, "owner", "{\"text\":\"Link inválido\",\"attachment\":{\"type\":\"track\",\"id\":99999}}");
+            var without = json.readTree(expect(200, "PUT", "/posts/" + artistPostId, "owner", "{\"text\":\"Sem anexo\"}").body());
+            assertTrue(without.path("attachment").isNull());
+            expect(204, "DELETE", "/posts/" + artistPostId, "owner", null);
+            expect(404, "GET", "/posts/" + artistPostId, null, null);
+
+            var visitor = json.readTree(expect(200, "GET", "/posts", null, null).body());
+            assertFalse(visitor.path("canPublish").asBoolean());
+            assertFalse(visitor.path("items").get(0).path("own").asBoolean());
+            assertEquals(id, visitor.path("items").get(0).path("id").asLong());
+            assertTrue(json.readTree(expect(200, "GET", "/posts?user=1", "owner", null).body()).path("canPublish").asBoolean());
+            assertFalse(json.readTree(expect(200, "GET", "/posts?user=1", "other", null).body()).path("canPublish").asBoolean());
+            assertEquals(0, json.readTree(expect(200, "GET", "/posts?user=2", null, null).body()).path("items").size());
+
+            expect(403, "PUT", "/posts/" + id, "other", "{\"text\":\"Alteração alheia\"}");
+            expect(403, "DELETE", "/posts/" + id, "other", null);
+            var edited = json.readTree(expect(200, "PUT", "/posts/" + id, "owner", "{\"text\":\"Texto editado\"}").body());
+            assertEquals("Texto editado", edited.path("body").asText());
+            assertTrue(edited.path("editedAt").isTextual());
+            var repository = app.getBean(CommunityPostRepository.class);
+            for (int i = 1; i <= 12; i++) repository.save(new CommunityPost(owner, "Post " + i));
+            var page = json.readTree(expect(200, "GET", "/posts", null, null).body());
+            assertEquals(12, page.path("items").size());
+            assertEquals("Post 12", page.path("items").get(0).path("body").asText());
+            var next = json.readTree(expect(200, "GET", "/posts?before=" + page.path("nextBefore").asLong(), null, null).body());
+            assertEquals(1, next.path("items").size());
+            assertEquals(id, next.path("items").get(0).path("id").asLong());
+            expect(204, "DELETE", "/posts/" + id, "owner", null);
+            assertFalse(repository.existsById(id));
+        }
+    }
+
+    @Test
+    void friendshipRequiresAcceptanceAndOnlyParticipantsCanManageIt() throws Exception {
+        try (var app = new SpringApplicationBuilder(Config.class).profiles("restoration-test")
+                .properties("server.port=0", "spring.datasource.url=jdbc:h2:mem:friendship",
+                        "spring.datasource.driver-class-name=org.h2.Driver", "spring.datasource.username=sa",
+                        "spring.datasource.password=", "spring.jpa.hibernate.ddl-auto=create-drop").run()) {
+            base = "http://localhost:" + app.getEnvironment().getProperty("local.server.port");
+            var users = app.getBean(UserRepository.class);
+            for (String username : new String[]{"owner", "other", "visitor"}) {
+                users.save(new User(null, username, username + "@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            }
+
+            expect(401, "GET", "/friendships", null, null);
+            expect(401, "POST", "/friendships/2", null, null);
+            assertEquals("SELF", friendshipState("GET", 1, "owner"));
+            expect(400, "POST", "/friendships/1", "owner", null);
+            expect(404, "POST", "/friendships/999", "owner", null);
+            assertEquals("NONE", friendshipState("GET", 2, "owner"));
+
+            assertEquals("SENT", friendshipState("POST", 2, "owner"));
+            assertEquals("SENT", friendshipState("POST", 2, "owner"));
+            assertEquals("RECEIVED", friendshipState("GET", 1, "other"));
+            assertEquals("NONE", friendshipState("GET", 1, "visitor"));
+            assertEquals(0, json.readTree(expect(200, "GET", "/friendships", "visitor", null).body()).size());
+            assertEquals(1, app.getBean(FriendshipRepository.class).count());
+            expect(409, "PATCH", "/friendships/2", "owner", null);
+            expect(409, "PATCH", "/friendships/1", "visitor", null);
+            expect(409, "POST", "/friendships/1", "other", null);
+            assertEquals("FRIENDS", friendshipState("PATCH", 1, "other"));
+            expect(409, "DELETE", "/friendships/2?state=SENT", "owner", null);
+            assertEquals("FRIENDS", friendshipState("GET", 2, "owner"));
+            var connections = json.readTree(expect(200, "GET", "/friendships", "owner", null).body());
+            assertEquals("FRIENDS", connections.get(0).path("state").asText());
+            assertEquals("other", connections.get(0).path("user").path("username").asText());
+            assertFalse(connections.get(0).path("user").has("email"));
+            assertEquals(0, app.getBean(FollowRepository.class).count());
+
+            expect(200, "DELETE", "/friendships/2?state=FRIENDS", "owner", null);
+            assertEquals("NONE", friendshipState("GET", 1, "other"));
+            assertEquals("SENT", friendshipState("POST", 1, "other"));
+            expect(200, "DELETE", "/friendships/2?state=RECEIVED", "owner", null);
+            assertEquals("NONE", friendshipState("GET", 1, "other"));
+            assertEquals("SENT", friendshipState("POST", 1, "other"));
+            expect(200, "DELETE", "/friendships/1?state=SENT", "other", null);
+            assertEquals("NONE", friendshipState("GET", 2, "owner"));
+        }
+    }
+
+    private String friendshipState(String method, long target, String session) throws Exception {
+        return json.readTree(expect(200, method, "/friendships/" + target, session, null).body()).path("state").asText();
     }
 
     @Test
@@ -85,6 +214,12 @@ class RestorationFeaturesTests {
                 assertEquals(1,json.readTree(expect(200,"GET",path,"owner",null).body()).size());
                 assertEquals(0,json.readTree(expect(200,"GET",path,"other",null).body()).size());
             }
+            expect(200, "POST", "/favorites/artists", "other", "{\"artist\":\"Other Artist\"}");
+            var publicArtists = json.readTree(expect(200, "GET", "/favorites/artists/users/1", "other", null).body());
+            assertEquals(json.readTree("[\"Artist\"]"), publicArtists);
+            assertEquals(json.readTree("[\"Other Artist\"]"),
+                    json.readTree(expect(200, "GET", "/favorites/artists/users/2", null, null).body()));
+
             assertNotNull(app.getBean(ArtistaRepository.class).findByNome("Artist"));
             assertNotNull(app.getBean(AlbumRepository.class).findByTitulo("Album"));
             assertNotNull(app.getBean(MusicaRepository.class).findByTitulo("Track"));
@@ -104,10 +239,58 @@ class RestorationFeaturesTests {
             var average=json.readTree(expect(200,"GET",media+"/rating",null,null).body());
             assertEquals(7.0,average.path("media").asDouble());
             assertEquals(2,average.path("total").asInt());
+            expect(200, "PUT", "/users/me/profile/image", "owner", "{\"imageUrl\":\"https://example.test/owner.jpg\"}");
+            var recent = json.readTree(expect(200, "GET", "/review/recent", null, null).body());
+            assertEquals("other", recent.get(0).path("username").asText());
+            assertTrue(recent.get(0).path("profileImageUrl").isNull());
+            assertEquals("owner", recent.get(1).path("username").asText());
+            assertEquals("https://example.test/owner.jpg", recent.get(1).path("profileImageUrl").asText());
+            var publicReviews = json.readTree(expect(200, "GET", "/review/users/1", "other", null).body());
+            assertEquals(1, publicReviews.path("items").size());
+            assertEquals("Updated", publicReviews.path("items").get(0).path("review").asText());
+            assertEquals(0, json.readTree(expect(200, "GET", "/review/users/1?before=" + id, null, null).body())
+                    .path("items").size());
+
+            assertEquals(1, json.readTree(expect(200, "POST", "/follow/1", "other", null).body()).path("followers").asLong());
+            assertEquals(1, json.readTree(expect(200, "GET", "/follow/2", null, null).body()).path("followingCount").asLong());
+            assertEquals(0, json.readTree(expect(200, "DELETE", "/follow/1", "other", null).body()).path("followers").asLong());
             assertEquals(1,json.readTree(expect(200,"GET","/review/me","owner",null).body()).size());
             expect(401,"PUT","/review/"+id,"other","{\"rating\":0,\"review\":\"Overwrite\"}");
             expect(401,"DELETE","/review/"+id,"other",null);
             expect(204,"DELETE","/review/"+id,"owner",null);
+
+            long artistId = app.getBean(ArtistaRepository.class).findByNome("Artist").getId();
+            String artistReviews = "/review/artists/" + artistId;
+            expect(401, "POST", artistReviews, null, "{\"rating\":8}");
+            expect(400, "POST", artistReviews, "owner", "{\"rating\":11}");
+            expect(404, "GET", "/review/artists/999999", null, null);
+            var artistReview = json.readTree(expect(200, "POST", artistReviews, "owner",
+                    "{\"rating\":8,\"review\":\"Ótimo artista\"}").body());
+            long artistReviewId = artistReview.path("id").asLong();
+            assertEquals(artistId, artistReview.path("artistId").asLong());
+            assertTrue(artistReview.path("midiaId").isNull());
+            assertEquals("Artista", artistReview.path("midiatype").asText());
+            var revised = json.readTree(expect(200, "POST", artistReviews, "owner",
+                    "{\"rating\":10,\"review\":\"Favorito\"}").body());
+            assertEquals(artistReviewId, revised.path("id").asLong());
+            expect(200, "POST", artistReviews, "other", "{\"rating\":6,\"review\":\"Gostei\"}");
+            var publicArtistReviews = json.readTree(expect(200, "GET", artistReviews, null, null).body());
+            assertFalse(publicArtistReviews.path("signedIn").asBoolean());
+            assertTrue(publicArtistReviews.path("own").isNull());
+            assertEquals(2, publicArtistReviews.path("total").asInt());
+            assertEquals(8.0, publicArtistReviews.path("average").asDouble());
+            assertEquals(2, publicArtistReviews.path("reviews").path("items").size());
+            var ownArtistReviews = json.readTree(expect(200, "GET", artistReviews, "owner", null).body());
+            assertEquals(artistReviewId, ownArtistReviews.path("own").path("id").asLong());
+            assertEquals(artistReviewId, json.readTree(expect(200, "GET", "/review/me", "owner", null).body())
+                    .get(0).path("id").asLong());
+            var publicProfileReviews = json.readTree(expect(200, "GET", "/review/users/1", null, null).body());
+            assertEquals("artist", publicProfileReviews.path("items").get(0).path("mediaType").asText());
+            assertEquals("artist", json.readTree(expect(200, "GET", "/review/recent", null, null).body())
+                    .get(0).path("mediaType").asText());
+            expect(401, "DELETE", "/review/" + artistReviewId, "other", null);
+            expect(204, "DELETE", "/review/" + artistReviewId, "owner", null);
+            assertEquals(1, json.readTree(expect(200, "GET", artistReviews, null, null).body()).path("total").asInt());
 
             expect(401,"PUT","/users/me/profile",null,"{\"biography\":\"Bio\"}");
             expect(200,"PUT","/users/me/profile","owner","{\"biography\":\"My music\"}");

@@ -38,6 +38,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -60,6 +61,7 @@ public class AlbumReleaseResource {
     private final DailyPopularSelections dailySelections;
     private final Mono<List<PopularAlbum>> dailyAlbums;
     private final Map<String, Mono<JsonNode>> marketCharts;
+    private final Map<String, Mono<JsonNode>> songCharts;
     private final Mono<ReleaseSnapshot> releaseRefresh;
     private volatile ReleaseSnapshot lastUsableReleases;
 
@@ -68,7 +70,8 @@ public class AlbumReleaseResource {
         this.lastFm = lastFm;
         this.catalog = catalog;
         this.dailySelections = dailySelections;
-        marketCharts = Map.of("br", cachedChart("br"), "us", cachedChart("us"));
+        marketCharts = Map.of("br", cachedChart("br", "albums"), "us", cachedChart("us", "albums"));
+        songCharts = Map.of("br", cachedChart("br", "songs"), "us", cachedChart("us", "songs"));
         releaseRefresh = Mono.defer(this::loadRecommendationCandidates)
                 .onErrorReturn(new ReleaseSnapshot(List.of(), true, Instant.EPOCH))
                 .doOnNext(this::rememberReleases)
@@ -98,6 +101,54 @@ public class AlbumReleaseResource {
     @GetMapping("/popular")
     public Mono<List<PopularAlbum>> popular() {
         return dailyAlbums;
+    }
+
+    @GetMapping("/recent")
+    public Mono<List<Album>> recentReleases() {
+        return Mono.defer(() -> acrossMarkets(LocalDate.now(DailyPopularSelections.TIME_ZONE), marketCharts, false)
+                .map(releases -> releases.orElseThrow(AlbumReleaseResource::unavailableReleases).stream()
+                        .sorted(Comparator.comparing(Release::releaseDate).reversed().thenComparingInt(Release::rank))
+                        .limit(18).map(item -> chartCandidate(item).album()).toList()));
+    }
+
+    public Mono<List<ReleaseRecommendations.NewRelease>> recentMusic() {
+        return Mono.defer(() -> {
+            var today = LocalDate.now(DailyPopularSelections.TIME_ZONE);
+            return Mono.zip(acrossMarkets(today, marketCharts, false), acrossMarkets(today, songCharts, true))
+                    .map(sources -> {
+                        var albums = sources.getT1();
+                        var songs = sources.getT2();
+                        if (albums.isEmpty() && songs.isEmpty()) throw unavailableReleases();
+                        var results = new ArrayList<ReleaseRecommendations.NewRelease>();
+                        albums.ifPresent(items -> items.forEach(item -> results.add(newRelease(item, "album"))));
+                        songs.ifPresent(items -> items.forEach(item -> results.add(newRelease(item, "track"))));
+                        return results;
+                    });
+        });
+    }
+
+    private Mono<Optional<List<Release>>> acrossMarkets(LocalDate today, Map<String, Mono<JsonNode>> feeds, boolean songs) {
+        return Mono.zip(releases("br", today, 100, feeds.get("br"), songs).map(Optional::of).onErrorReturn(Optional.empty()),
+                        releases("us", today, 100, feeds.get("us"), songs).map(Optional::of).onErrorReturn(Optional.empty()))
+                .map(markets -> {
+                    if (markets.getT1().isEmpty() && markets.getT2().isEmpty()) return Optional.empty();
+                    var unique = new LinkedHashMap<List<String>, Release>();
+                    for (var market : List.of(markets.getT1().orElseGet(List::of), markets.getT2().orElseGet(List::of))) {
+                        for (var release : market) {
+                            unique.merge(albumKey(release.name(), release.artist()), release, this::mergeRelease);
+                        }
+                    }
+                    return Optional.of(List.copyOf(unique.values()));
+                });
+    }
+
+    private static ReleaseRecommendations.NewRelease newRelease(Release release, String type) {
+        return new ReleaseRecommendations.NewRelease(release.name(), release.artist(), release.releaseDate(),
+                release.cover().isBlank() ? List.of() : List.of(release.cover()), type, release.tags(), release.rank());
+    }
+
+    private static ResponseStatusException unavailableReleases() {
+        return new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Lançamentos indisponíveis.");
     }
 
     @GetMapping("/recommendations")
@@ -291,12 +342,16 @@ public class AlbumReleaseResource {
     }
 
     private Mono<List<Release>> releases(String market, LocalDate today, int limit) {
-        return readChart(market).flatMapMany(Flux::fromIterable).index().<Release>handle((entry, sink) -> {
+        return releases(market, today, limit, readChart(market), false);
+    }
+
+    private Mono<List<Release>> releases(String market, LocalDate today, int limit, Mono<JsonNode> feed, boolean songs) {
+        return feed.flatMapMany(Flux::fromIterable).index().<Release>handle((entry, sink) -> {
             var item = entry.getT2();
             String name = item.path("name").asText("").strip();
             String artist = item.path("artistName").asText("").strip();
             String date = item.path("releaseDate").asText("");
-            if (name.isEmpty() || artist.isEmpty() || name.toLowerCase(Locale.ROOT).endsWith(" - single")) return;
+            if (name.isEmpty() || artist.isEmpty() || (!songs && name.toLowerCase(Locale.ROOT).endsWith(" - single"))) return;
             try {
                 var released = LocalDate.parse(date);
                 if (!released.isBefore(today.minusDays(30)) && !released.isAfter(today)) {
@@ -356,9 +411,9 @@ public class AlbumReleaseResource {
         return marketCharts.get(market);
     }
 
-    private Mono<JsonNode> cachedChart(String market) {
-        String appleMusic = "https://rss.marketingtools.apple.com/api/v2/" + market + "/music/most-played/100/albums.json";
-        String iTunes = "https://itunes.apple.com/" + market + "/rss/topalbums/limit=100/json";
+    private Mono<JsonNode> cachedChart(String market, String type) {
+        String appleMusic = "https://rss.marketingtools.apple.com/api/v2/" + market + "/music/most-played/100/" + type + ".json";
+        String iTunes = "https://itunes.apple.com/" + market + "/rss/top" + type + "/limit=100/json";
         return readFeed(appleMusic, "results", Duration.ofSeconds(5))
                 .onErrorResume(error -> readFeed(iTunes, "entry", Duration.ofSeconds(6)).map(this::normalizeITunes))
                 .cacheInvalidateWhen(result -> Mono.delay(CHART_TTL).then());

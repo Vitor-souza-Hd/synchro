@@ -13,6 +13,7 @@ public class ReviewDto {
     private String author_name;
     private String midiaTitulo;
     private Long midiaId;
+    private Long artistId;
 
     public ReviewDto(Review review) {
         this.id = review.getId();
@@ -22,9 +23,10 @@ public class ReviewDto {
         this.author_name = review.getAuthor_Name();
         this.midiaTitulo = (review.getMidia() != null)
                 ? review.getMidia().getTitulo()
-                : null;
+                : review.getArtist() != null ? review.getArtist().getNome() : null;
         this.midiaId = (review.getMidia() != null)
                 ? review.getMidia().getId()
                 : null;
+        this.artistId = review.getArtist() == null ? null : review.getArtist().getId();
     }
 }

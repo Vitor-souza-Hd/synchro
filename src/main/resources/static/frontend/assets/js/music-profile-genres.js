@@ -96,7 +96,7 @@
     async function buscarJson(url) {
         const response = await fetch(url, {
             credentials: "same-origin",
-            signal: AbortSignal.timeout(12000),
+            signal: AbortSignal.timeout(18000),
             headers: {
                 Accept: "application/json"
             }
@@ -116,13 +116,16 @@
         const artistas = obterLista(ranking, "topartists", "artist")
             .filter(artist => artist?.name && Number.isFinite(Number(artist.playcount)) && Number(artist.playcount) > 0)
             .slice(0, 8);
-        const respostas = await Promise.allSettled(artistas.map(artist =>
-            buscarJson("/last-fm/artist/tags?artist=" + encodeURIComponent(artist.name))
-                .then(data => {
-                    if (!data?.toptags) throw new Error("Tags de artista indisponíveis.");
-                    return data;
-                })
-        ));
+        const respostas = await Promise.allSettled(artistas.map(async artist => {
+            const params = new URLSearchParams({
+                method: "artist.getTopTags",
+                artist: artist.name,
+                autocorrect: "1"
+            });
+            const data = await buscarJson("/last-fm/discovery?" + params);
+            if (!data?.toptags) throw new Error("Tags de artista indisponíveis.");
+            return data;
+        }));
         const pontuacoes = new Map();
         let consultasValidas = 0;
 
@@ -198,7 +201,8 @@
 
         if (artistas.length && !consultasValidas) throw new Error("Tags de artistas indisponíveis.");
         const resultado = [...pontuacoes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-        return {resultado, totalArtistas: artistas.length, parcial: consultasValidas < artistas.length};
+        return {resultado, totalArtistas: artistas.length, artistasAnalisados: consultasValidas,
+            parcial: consultasValidas < artistas.length};
     }
 
     function buscarRanking(tipo, periodo) {

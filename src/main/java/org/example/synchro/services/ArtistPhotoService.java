@@ -3,6 +3,7 @@ package org.example.synchro.services;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.synchro.config.LastFmConfig;
+import org.example.synchro.entities.CatalogName;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,6 +19,7 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 @Service
@@ -50,42 +52,58 @@ public class ArtistPhotoService {
     }
 
     public Mono<Photo> find(long id, boolean replaceBroken) {
-        return Mono.fromCallable(() -> store.reference(id)).subscribeOn(Schedulers.boundedElastic()).flatMap(reference -> {
-            if (!replaceBroken && ArtistPhotoStore.hasUsableImage(reference.image())) return Mono.just(new Photo("found", reference.image()));
-            String key = id + ":" + reference.name() + ":" + replaceBroken;
-            if (cache.size() >= 500 && !cache.containsKey(key)) cache.clear();
-            return cache.computeIfAbsent(key, ignored -> Mono.defer(() -> {
-                var unavailable = new AtomicBoolean();
-                return lastFmPhoto(reference.name())
-                    .filter(url -> !replaceBroken || !url.equals(reference.image()))
-                    .timeout(timeout.dividedBy(3)).onErrorResume(error -> { unavailable.set(true); return Mono.empty(); })
-                    .switchIfEmpty(Mono.defer(() -> lastFmPublicPhoto(reference.name())
-                            .filter(url -> !replaceBroken || !url.equals(reference.image()))
-                            .timeout(timeout.dividedBy(3))
-                            .onErrorResume(error -> { unavailable.set(true); return Mono.empty(); })))
-                    .switchIfEmpty(Mono.defer(() -> lookup(reference.name())))
-                    .timeout(timeout)
-                    .map(url -> new Photo("found", url))
-                    .switchIfEmpty(Mono.fromSupplier(() -> new Photo(unavailable.get() ? "unavailable" : "not_found", null)))
-                    .onErrorReturn(new Photo("unavailable", null));
-                })
-                    .flatMap(photo -> photo.imgUrl() == null ? Mono.just(photo)
-                            : Mono.fromCallable(() -> new Photo("found", store.savePhoto(reference, photo.imgUrl(), replaceBroken)))
-                                    .subscribeOn(Schedulers.boundedElastic()))
-                    .cache(photo -> Duration.ofSeconds(switch (photo.status()) {
-                        case "found" -> 86400; case "not_found" -> 1800; default -> 15;
-                    }), error -> Duration.ZERO, () -> Duration.ZERO));
-        });
+        return Mono.fromCallable(() -> store.reference(id)).subscribeOn(Schedulers.boundedElastic())
+                .flatMap(reference -> find(reference, replaceBroken));
     }
 
-    private Mono<String> lastFmPublicPhoto(String name) {
-        String path = "/music/" + URLEncoder.encode(name, StandardCharsets.UTF_8).replace("+", "%20") + "/+images";
+    public Mono<Photo> findByName(String name, boolean replaceBroken) {
+        return Mono.fromCallable(() -> store.referenceByName(name)).subscribeOn(Schedulers.boundedElastic())
+                .flatMap(reference -> reference.map(saved -> find(saved, replaceBroken))
+                        .orElseGet(() -> cachedPhoto("name:" + CatalogName.key(name), () -> lookupPhoto(name, null))));
+    }
+
+    private Mono<Photo> find(ArtistPhotoStore.Reference reference, boolean replaceBroken) {
+        if (!replaceBroken && ArtistPhotoStore.hasUsableImage(reference.image())) {
+            return Mono.just(new Photo("found", reference.image()));
+        }
+        String excludedUrl = replaceBroken ? reference.image() : null;
+        String key = reference.id() + ":" + reference.name() + ":" + replaceBroken + ":" + excludedUrl;
+        return cachedPhoto(key, () -> lookupPhoto(reference.name(), excludedUrl)
+                .flatMap(photo -> photo.imgUrl() == null ? Mono.just(photo)
+                        : Mono.fromCallable(() -> new Photo("found", store.savePhoto(reference, photo.imgUrl(), replaceBroken)))
+                                .subscribeOn(Schedulers.boundedElastic())));
+    }
+
+    private Mono<Photo> cachedPhoto(String key, Supplier<Mono<Photo>> lookup) {
+        if (cache.size() >= 500 && !cache.containsKey(key)) cache.clear();
+        return cache.computeIfAbsent(key, ignored -> Mono.defer(lookup)
+                .cache(photo -> Duration.ofSeconds(switch (photo.status()) {
+                    case "found" -> 86400; case "not_found" -> 1800; default -> 15;
+                }), error -> Duration.ZERO, () -> Duration.ZERO));
+    }
+
+    private Mono<Photo> lookupPhoto(String name, String excludedUrl) {
+        var unavailable = new AtomicBoolean();
+        return lastFmPhoto(name, excludedUrl)
+                .timeout(timeout.dividedBy(3)).onErrorResume(error -> { unavailable.set(true); return Mono.empty(); })
+                .switchIfEmpty(Mono.defer(() -> lastFmPublicPhoto(name, excludedUrl)
+                        .timeout(timeout.dividedBy(3))
+                        .onErrorResume(error -> { unavailable.set(true); return Mono.empty(); })))
+                .switchIfEmpty(Mono.defer(() -> lookup(name, excludedUrl)))
+                .timeout(timeout)
+                .map(url -> new Photo("found", url))
+                .switchIfEmpty(Mono.fromSupplier(() -> new Photo(unavailable.get() ? "unavailable" : "not_found", null)))
+                .onErrorReturn(new Photo("unavailable", null));
+    }
+
+    private Mono<String> lastFmPublicPhoto(String name, String excludedUrl) {
+        String path = "/music/" + URLEncoder.encode(name, StandardCharsets.UTF_8) + "/+images";
         return lastFmSite.get().uri(java.net.URI.create("https://www.last.fm" + path))
                 .retrieve().bodyToMono(String.class)
-                .flatMap(html -> Mono.justOrEmpty(LastFmArtistPage.photo(html, name)));
+                .flatMap(html -> Mono.justOrEmpty(LastFmArtistPage.photo(html, name, excludedUrl)));
     }
 
-    private Mono<String> lastFmPhoto(String name) {
+    private Mono<String> lastFmPhoto(String name, String excludedUrl) {
         if (lastFmConfig.getApiKey() == null || lastFmConfig.getApiKey().isBlank()) return Mono.empty();
         return lastFm.get().uri(builder -> builder.queryParam("method", "artist.getInfo")
                         .queryParam("artist", "{name}").queryParam("autocorrect", 1)
@@ -99,12 +117,13 @@ public class ArtistPhotoService {
                                 case "medium" -> 2; case "small" -> 1; default -> 0;
                             }).reversed())
                             .map(image -> image.path("#text").asText())
-                            .filter(ArtistPhotoStore::hasUsableImage).filter(url -> url.startsWith("https://"))
+                            .filter(ArtistPhotoStore::hasUsableImage)
+                            .filter(url -> url.startsWith("https://") && !url.equals(excludedUrl))
                             .findFirst());
                 });
     }
 
-    private Mono<String> lookup(String name) {
+    private Mono<String> lookup(String name, String excludedUrl) {
         return Flux.fromIterable(List.of("en", "pt")).concatMap(language -> wikidata.get()
                 .uri(builder -> builder.queryParam("action", "wbsearchentities").queryParam("search", "{name}")
                         .queryParam("language", language).queryParam("type", "item").queryParam("limit", 10)
@@ -113,7 +132,8 @@ public class ArtistPhotoService {
                 .flatMapMany(data -> Flux.fromIterable(LastFmCatalogStore.nodes(data.path("search"))))
                 .filter(candidate -> matches(name, candidate.path("label").asText())
                         && musical(candidate.path("description").asText()) && candidate.path("id").asText().matches("Q[1-9][0-9]*"))
-                .take(4).concatMap(candidate -> entityPhoto(candidate.path("id").asText(), name))).next();
+                .take(4).concatMap(candidate -> entityPhoto(candidate.path("id").asText(), name))
+                .filter(url -> !url.equals(excludedUrl))).next();
     }
 
     private Mono<String> entityPhoto(String id, String name) {

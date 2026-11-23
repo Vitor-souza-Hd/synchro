@@ -10,7 +10,7 @@
     <title>SYNCHRO</title>
 
     <link rel="stylesheet" href="../assets/css/style.css?v=shared-sidebar-1">
-    <link rel="stylesheet" href="../assets/css/artista.css">
+    <link rel="stylesheet" href="../assets/css/artista.css?v=avaliacoes-artistas">
 
     <link
         href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
@@ -27,13 +27,13 @@
     <script src="/frontend/assets/js/search.js?v=busca-eficiente" defer></script>
     <!-- Fim do trecho adicionado por IA -->
     <link rel="stylesheet" href="/frontend/assets/css/auth.css?v=20261029-1">
-    <script src="/frontend/assets/js/auth.js?v=20261029-1" defer></script>
+    <script src="/frontend/assets/js/auth.js?v=foto-da-conta" defer></script>
     <!-- Gerado por IA: criação de playlists. -->
     <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
     <!-- Gerado por IA: atualização da compactação de imagens. -->
     <!-- Gerado por IA: correção do salvamento de alterações. -->
     <script src="/frontend/assets/js/playlists.js?v=20261101-4" defer></script>
-<link rel="stylesheet" href="/frontend/assets/css/features.css?v=20261105-unified-artist-1">
+<link rel="stylesheet" href="/frontend/assets/css/features.css?v=foto-da-conta">
 <script src="/frontend/assets/js/features.js?v=20261105-unified-artist-1" defer></script>
 <script src="/frontend/assets/js/explorar/tema-global.js"></script>
 </head>
@@ -81,6 +81,7 @@
                         <i class='bx bxs-microphone'></i>
                         <a href="#">Artistas</a>
                     </li>
+                    <li><i class="bx bxs-star" aria-hidden="true"></i><a href="/frontend/pages/recomendacoes.html">Recomendações</a></li>
 
                 </ul>
 
@@ -282,7 +283,7 @@
 
                     <button class="open-review" type="button">
                         <i class='bx bx-plus'></i>
-                        Resenha
+                        Avaliar artista
                     </button>
                 </div>
 
@@ -335,6 +336,14 @@
                 <div id="artistTopAlbums" class="albums"></div>
             </section>
 
+            <section id="artistReviews" class="artist-section" aria-labelledby="artistReviewsTitle" hidden>
+                <h2 id="artistReviewsTitle">Avaliações da comunidade</h2>
+                <p id="artistReviewAverage"></p>
+                <p id="artistReviewStatus" role="status"></p>
+                <div id="artistReviewList"></div>
+                <button class="artist-review-more" id="moreArtistReviews" type="button" hidden>Ver mais avaliações</button>
+            </section>
+
             <section class="artist-section biography">
 
                 <h2>
@@ -361,40 +370,21 @@
         <h2 id="reviewTitle">Avaliar artista</h2>
         <p class="review-artist" id="reviewArtist"></p>
 
+        <p id="artistReviewLogin" hidden><a href="/frontend/pages/login.html">Entre na sua conta</a> para avaliar este artista.</p>
         <form id="reviewForm">
-            <label>Sua nota</label>
+            <label for="reviewRating">Sua nota de 0 a 10</label>
+            <input type="number" id="reviewRating" min="0" max="10" step="1" required>
 
-            <div class="star-rating" role="group"
-                aria-label="Escolha uma nota de 1 a 5">
-                <button type="button" data-rating="1"
-                    aria-label="1 estrela">★</button>
-                <button type="button" data-rating="2"
-                    aria-label="2 estrelas">★</button>
-                <button type="button" data-rating="3"
-                    aria-label="3 estrelas">★</button>
-                <button type="button" data-rating="4"
-                    aria-label="4 estrelas">★</button>
-                <button type="button" data-rating="5"
-                    aria-label="5 estrelas">★</button>
-            </div>
-
-            <input type="hidden" id="reviewRating" value="0">
-
-            <label for="reviewText">Sua resenha</label>
+            <label for="reviewText">Seu comentário</label>
             <textarea id="reviewText"
-                maxlength="500"
-                placeholder=""
+                maxlength="255"
+                rows="4"
                 required></textarea>
 
             <div class="review-counter">
                 <span id="reviewError" role="status"></span>
-                <span id="charCount">0/500</span>
+                <span id="charCount">0/255</span>
             </div>
-
-            <label class="review-favorite">
-                <input type="checkbox" id="reviewFavorite">
-                Marcar como favorito
-            </label>
 
             <div class="review-actions">
                 <button type="button" id="cancelReview">
@@ -409,7 +399,8 @@
 </div>
 
     <!-- Início do trecho alterado por IA -->
-    <script src="../assets/js/artista.js?v=20261110-fast-images"></script>
+    <script src="../assets/js/artist-reviews.js" defer></script>
+    <script src="../assets/js/artista.js?v=avaliacoes-artistas" defer></script>
     <script src="../assets/js/explorar/recentes.js?v=20261105-unified-artist-1"></script>
     <script src="../assets/js/explorar/navegacao-global.js?v=20261105-unified-artist-1"></script>
     <!-- Fim do trecho alterado por IA -->
