@@ -1,0 +1,24 @@
+name: Verificar desempenho do Synchro
+on:
+  push:
+    branches: [perf/recomendacoes-avaliacoes]
+permissions:
+  contents: read
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Gerar miniatura do ícone
+        run: |
+          convert src/main/resources/static/frontend/assets/images/personal-profile-icon.png -thumbnail 84x84 -strip -quality 82 /tmp/profile-icon.webp
+          echo "PROFILE_WEBP=$(base64 -w 0 /tmp/profile-icon.webp)"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - run: mvn -B -q test
