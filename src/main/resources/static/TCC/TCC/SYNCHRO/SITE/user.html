@@ -55,15 +55,29 @@
                 </div>
                 
             <div class="banner-info">
-            
 
-            <p>Eu gosto de música^^ • Etec de Itaquera • </p>
-            <p>FrontDev do Synchro</p>
+                <p>Eu gosto de música^^ • Etec de Itaquera • </p>
+                <p>FrontDev do Synchro</p>
 
-            <button id="lastfm-connect" class="lastfm-button">
-        <i class="fa-brands fa-lastfm"></i>
-        <span>Conectar seu Last.fm</span>
-            </button>
+                <!-- BOTÕES DE AÇÃO -->
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button id="lastfm-connect" class="lastfm-button">
+                        <i class="fa-brands fa-lastfm"></i>
+                        <span>Conectar seu Last.fm</span>
+                    </button>
+
+                    <!-- BOTÃO PREMIUM (Vai ser controlado pelo JS) -->
+                    <a href="/frontend/pages/assinaturas.html" id="btn-perfil-premium" class="lastfm-button" style="background: #ff6588; border: none; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                        <i class="bx bxs-crown" style="font-size: 18px;"></i>
+                        <span>Seja Premium</span>
+                    </a>
+
+                    <!-- BADGE VIP (Escondido por padrão, aparece se o user for premium) -->
+                    <div id="badge-vip" style="display: none; background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; padding: 8px 16px; border-radius: 20px; font-weight: bold; align-items: center; gap: 5px;">
+                        <i class="bx bxs-crown"></i>
+                        <span>Membro VIP</span>
+                    </div>
+                </div>
 
             <div class="profile-stats">
                 <div>

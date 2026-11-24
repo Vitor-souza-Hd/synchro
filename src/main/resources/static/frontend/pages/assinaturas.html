@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assinaturas - Synchro</title>
+
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-home.css">
+    <link rel="stylesheet" href="/frontend/assets/css/assinaturas.css">
+
+    <script src="/frontend/assets/js/explorar/tema-global.js"></script>
+    <script src="/frontend/assets/js/auth.js" defer></script>
+</head>
+<body class="synchro-home">
+
+<div class="container">
+    <!-- Barra Lateral -->
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="bx bx-pulse"></i>
+            <a href="/frontend/pages/explorar.html">SYNCHRO</a>
+        </div>
+        <div class="menu">
+            <h5>Menu</h5>
+            <ul>
+                <li><i class="bx bxs-bolt-circle"></i><a href="/frontend/pages/explorar.html">Explorar</a></li>
+                <li><i class="bx bxs-volume-full"></i><a href="/frontend/pages/explorar.html#generos">Gêneros</a></li>
+                <li><i class="bx bxs-album"></i><a href="/frontend/pages/explorar.html#albuns">Álbuns</a></li>
+            </ul>
+        </div>
+        <div class="menu">
+            <h5>Sua Biblioteca</h5>
+            <ul>
+                <li><i class="bx bx-undo"></i><a href="/frontend/pages/recentes.html">Recentes</a></li>
+                <li><i class="bx bxs-heart"></i><a href="/frontend/pages/favoritos.html">Favoritos</a></li>
+            </ul>
+        </div>
+        <div class="menu">
+            <h5>Playlist</h5>
+            <ul>
+                <li><i class="bx bxs-caret-right-circle"></i><a href="/frontend/pages/playlists.html">Suas Playlists</a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="assinaturas-page">
+        <header class="top-header">
+            <h1>Assinaturas</h1>
+            <p>Apoie o Synchro e ganhe benefícios exclusivos.</p>
+        </header>
+
+        <div class="planos-grid">
+            <!-- Plano Free -->
+            <div class="plano-card">
+                <div class="plano-header">
+                    <h2>Free</h2>
+                    <span class="preco">R$ 0<span>/mês</span></span>
+                </div>
+                <ul class="beneficios">
+                    <li><i class="bx bx-check"></i> Ouvir músicas e criar playlists</li>
+                    <li><i class="bx bx-check"></i> Conectar com amigos</li>
+                    <li class="inativo"><i class="bx bx-x"></i> Totalmente sem anúncios</li>
+                    <li class="inativo"><i class="bx bx-x"></i> Badge de VIP no perfil</li>
+                </ul>
+                <button class="btn-plano btn-desativado" disabled>Seu plano atual</button>
+            </div>
+
+            <!-- Plano Premium -->
+            <div class="plano-card destaque">
+                <div class="badge-recomendado">RECOMENDADO</div>
+                <div class="plano-header">
+                    <h2>Premium</h2>
+                    <span class="preco">R$ 19,90<span>/mês</span></span>
+                </div>
+                <ul class="beneficios">
+                    <li><i class="bx bx-check"></i> Tudo do plano Free</li>
+                    <li><i class="bx bx-check"></i> Totalmente sem anúncios</li>
+                    <li><i class="bx bx-check"></i> Badge de VIP no perfil ⭐</li>
+                    <li><i class="bx bx-check"></i> Suporte prioritário</li>
+                </ul>
+                <button class="btn-plano btn-premium" id="btn-assinar">Assinar Premium</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Script para lidar com o clique do botão -->
+<script>
+    const btnAssinar = document.getElementById('btn-assinar');
+
+    btnAssinar.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        const textoOriginal = btnAssinar.innerHTML;
+        btnAssinar.innerHTML = "Processando...";
+        btnAssinar.disabled = true;
+
+        try {
+            const response = await fetch('/users/assinar-premium', {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+
+            if (response.ok) {
+                btnAssinar.innerHTML = "Plano Ativo ⭐";
+                btnAssinar.style.backgroundColor = "#1db954"; // Fica verde
+                btnAssinar.style.color = "#fff";
+                btnAssinar.style.border = "none";
+                alert("🎉 Parabéns! Você agora é um assinante Premium!");
+            } else {
+                alert("Você precisa estar logado para assinar o Premium.");
+                btnAssinar.innerHTML = textoOriginal;
+                btnAssinar.disabled = false;
+            }
+        } catch (error) {
+            console.error("Erro ao assinar:", error);
+            alert("Erro de conexão com o servidor.");
+            btnAssinar.innerHTML = textoOriginal;
+            btnAssinar.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,4 +1,3 @@
-
 package org.example.synchro.resources;
 
 import org.example.synchro.dto.PublicProfileDto;
@@ -21,6 +20,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -73,6 +73,21 @@ public class UserResource {
         }
     }
 
+    @PostMapping("/assinar-premium")
+    public ResponseEntity<?> assinarPremium(@CookieValue(name = "token_jwt", required = false) String token) {
+        Long userId = obterIdAutenticado(token);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Sessão expirada. Faça login novamente."));
+        }
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("error", "Usuário não encontrado."));
+        }
+        user.setPremium(true);
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "Assinatura ativada com sucesso!", "isPremium", true));
+    }
+
     // =====================================================
     // GET /users/me
     // =====================================================
@@ -119,7 +134,7 @@ public class UserResource {
         if (userId == null) return ResponseEntity.status(401).build();
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return ResponseEntity.notFound().build();
-        if (!user.hasLastFmConnection() || !user.getLastFmUsername().equalsIgnoreCase(request.lastFmUsername())) {
+        if (user.getLastFmUsername() == null || user.getLastFmUsername().isBlank() || !user.getLastFmUsername().equalsIgnoreCase(request.lastFmUsername())) {
             return ResponseEntity.status(409).build();
         }
         List<String> genres = request.genres().stream().map(String::strip).distinct().toList();
@@ -137,7 +152,7 @@ public class UserResource {
             @jakarta.validation.constraints.NotBlank String lastFmUsername,
             @jakarta.validation.constraints.NotNull @jakarta.validation.constraints.Size(max = 5)
             List<@jakarta.validation.constraints.NotBlank
-                 @jakarta.validation.constraints.Pattern(regexp = "[\\p{L}\\p{M}\\p{N} &-]{1,50}") String> genres) {}
+            @jakarta.validation.constraints.Pattern(regexp = "[\\p{L}\\p{M}\\p{N} &-]{1,50}") String> genres) {}
 
     @PostMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadProfileImage(
@@ -262,8 +277,6 @@ public class UserResource {
 
         UserData data = obterOuCriarDados(user);
 
-        // Altera apenas a foto.
-        // A biografia permanece intacta.
         data.setProfileImageUrl(imageUrl);
 
         userDataRepository.save(data);
@@ -367,7 +380,6 @@ public class UserResource {
 
         String url = request.imageUrl().trim();
 
-        // Uma string vazia remove a personalizacao.
         if (!url.isEmpty() && !urlImagemValida(url)) {
             return ResponseEntity.badRequest().build();
         }
@@ -426,8 +438,6 @@ public class UserResource {
         );
     }
 
-    // Aceita links HTTPS de imagens hospedadas externamente.
-    // Nao aceita HTTP, URLs relativas ou enderecos com credenciais.
     private boolean urlImagemValida(String endereco) {
         if (endereco.isBlank() || endereco.length() > 2000) {
             return false;

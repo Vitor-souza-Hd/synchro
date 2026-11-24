@@ -92,4 +92,19 @@ public class UserService {
         repository.save(user);
     }
 
+    @Transactional
+    public UserDto assinarPremium(String cookie) {
+        if (!cookieService.checkCookie(cookie)) {
+            throw new UnauthorizedException("Sessão inválida ou ausente");
+        }
+
+        User user = repository.findById(cookieService.getId(cookie))
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+
+        user.setPremium(true);
+        User savedUser = repository.save(user);
+
+        return new UserDto(savedUser);
+    }
+
 }

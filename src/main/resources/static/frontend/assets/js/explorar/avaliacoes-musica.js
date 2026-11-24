@@ -117,8 +117,25 @@ document.addEventListener("synchro:song", async ({detail: {params, song}}) => {
         card.className = "music-review-card";
 
         const heading = document.createElement("h3");
-        heading.textContent =
-            `${review.author_name || "Usuário"} • ${review.rating}/10`;
+        heading.append(review.author_name || "Usuário");
+
+        if (review.authorPremium === true) {
+            const vip = document.createElement("span");
+            vip.className = "badge-vip badge-vip-mini";
+            // estilo inline para funcionar mesmo se a página não carregar o CSS do perfil
+            vip.style.cssText =
+                "display:inline-flex;align-items:center;gap:4px;margin-left:6px;" +
+                "padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;" +
+                "background:linear-gradient(45deg,#FFD700,#FFA500);color:#000;" +
+                "vertical-align:middle;";
+
+            const icon = document.createElement("i");
+            icon.className = "bx bxs-crown";
+            vip.append(icon, " VIP");
+            heading.append(vip);
+        }
+
+        heading.append(` • ${review.rating}/10`);
 
         const text = document.createElement("p");
         text.textContent = review.review || "";

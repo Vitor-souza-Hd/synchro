@@ -1,5 +1,6 @@
 package org.example.synchro.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,17 +14,19 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @JsonPropertyOrder({
-  "username",
-  "email",
-  "birthDay",
-  "lastFmUsername",
-  "data"
+        "id",
+        "username",
+        "email",
+        "birthDay",
+        "lastFmUsername",
+        "lastFmConnected",
+        "isPremium",
+        "data"
 })
 public class UserDto implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
 
     private Long id;
     private String username;
@@ -31,6 +34,9 @@ public class UserDto implements Serializable {
     private LocalDate birthDay;
     private String lastFmUsername;
     private boolean lastFmConnected;
+
+    @JsonProperty("isPremium")
+    private boolean isPremium;
 
     private UserDataDto data;
 
@@ -43,8 +49,7 @@ public class UserDto implements Serializable {
         this.birthDay = user.getBirthDay();
         this.lastFmUsername = user.getLastFmUsername();
         this.lastFmConnected = user.hasLastFmConnection();
+        this.isPremium = user.isPremium(); // <--- Adicionado aqui!
         this.data = user.getData() == null ? new UserDataDto() : new UserDataDto(user.getData());
     }
-
-
 }

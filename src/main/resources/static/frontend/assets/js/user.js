@@ -185,12 +185,40 @@ async function initializeFollowProfile(profileId) {
     });
 }
 
+// =====================================================
+// VIP / PREMIUM
+// =====================================================
+// Guarda o último estado conhecido. Assim, se uma resposta (ex.: /last-fm/sync)
+// vier sem o campo de premium, o selo não some.
+let vipState = null;
+
+function renderVip(user) {
+    const data = user.data || {};
+    const flags = [user.isPremium, user.premium, user.is_premium,
+        data.isPremium, data.premium, data.is_premium];
+    const known = flags.filter(v => v !== undefined && v !== null);
+
+    if (known.length > 0) {
+        vipState = known.some(v => v === true || v === 'true' || v === 1);
+    }
+    if (vipState === null) return; // nunca recebemos o campo: não muda nada
+
+    const badge = document.getElementById('vipBadgeContainer');
+    const upgrade = document.getElementById('upgradeContainer');
+    if (badge) badge.hidden = !vipState;
+    // visitante nunca vê o botão de assinar no perfil de outra pessoa
+    if (upgrade) upgrade.hidden = vipState || isPublicProfile;
+}
+
 function renderCurrentUser(user) {
     const data = user.data || {};
     const displayName = data.fullName?.trim() || user.username || "Usuário";
     document.title = `SYNCHRO | ${displayName}`;
     setProfileText("profileName", displayName);
     setProfileText("profileUsername", user.username ? `@${user.username}` : "");
+
+    renderVip(user);
+
     if (!isPublicProfile) {
         const genderNames = {female: "Feminino", male: "Masculino", other: "Outro"};
         setProfileText("profileEmail", user.email ? `E-mail: ${user.email}` : "E-mail não informado");

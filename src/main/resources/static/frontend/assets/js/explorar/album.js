@@ -45,6 +45,13 @@ document.addEventListener("synchro:album", async ({detail: {id: albumId}}) => {
         myUsername = me.username || null;
     } catch { myUsername = null; }
 
+    function vipTag(isPremium) {
+        if (isPremium !== true) return "";
+        return ' <span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;'
+            + 'padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;'
+            + 'background:linear-gradient(45deg,#FFD700,#FFA500);color:#000;vertical-align:middle;">'
+            + '<i class="bx bxs-crown"></i> VIP</span>';
+    }
     function addReviewCard(review) {
         const card = document.createElement("article");
         card.className = "music-review-card";
@@ -55,7 +62,7 @@ document.addEventListener("synchro:album", async ({detail: {id: albumId}}) => {
         card.style.borderLeft = "4px solid #ff1744";
 
         card.innerHTML = `
-            <h3 style="color: white; margin-bottom: 5px;">${escapeHtml(review.author_name || "Usuário")} • ${escapeHtml(review.rating)}/10</h3>
+                 <h3 style="color: white; margin-bottom: 5px;">${escapeHtml(review.author_name || "Usuário")}${vipTag(review.authorPremium)} • ${escapeHtml(review.rating)}/10</h3>
             <p style="color: #b3b3b3;">${escapeHtml(review.review || "")}</p>
         `;
 

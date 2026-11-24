@@ -11,6 +11,7 @@ public class ReviewDto {
     private String review;
     private String midiatype;
     private String author_name;
+    private Boolean authorPremium;
     private String midiaTitulo;
     private Long midiaId;
 
@@ -20,6 +21,9 @@ public class ReviewDto {
         this.review = review.getReview();
         this.midiatype = review.getMidiatype();
         this.author_name = review.getAuthor_Name();
+        this.authorPremium = review.getAuthor() != null
+                && review.getAuthor().getUser() != null
+                && review.getAuthor().getUser().isPremium();
         this.midiaTitulo = (review.getMidia() != null)
                 ? review.getMidia().getTitulo()
                 : null;

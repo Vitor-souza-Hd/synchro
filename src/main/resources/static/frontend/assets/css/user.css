@@ -902,4 +902,13 @@ body{
     80%{border:#c423c4;}
     90%{border:#cd2743;}
     100%{border:#cd2727;}
+
 }
+.badge-vip, .btn-upgrade {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px;
+    font-weight: 700; font-size: .85rem; text-decoration: none;
+}
+.badge-vip { background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; }
+.btn-upgrade { background: #ff6588; color: #fff; }
+.btn-upgrade:hover { background: #ff91b0; }

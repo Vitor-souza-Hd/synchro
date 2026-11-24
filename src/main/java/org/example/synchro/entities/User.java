@@ -3,21 +3,21 @@ package org.example.synchro.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_user")
 @Getter
 @Setter
 public class User implements Serializable {
+
     @Serial
     private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,7 +28,14 @@ public class User implements Serializable {
     private LocalDate birthDay;
     private String lastFmUsername;
 
-    @Column(name = "imagem_perfil")
+
+    @Column(nullable = false)
+    private Boolean isPremium = false; // <--- AQUI ESTÁ A NOSSA NOVA COLUNA
+
+    @OneToMany(mappedBy = "criador", cascade = CascadeType.ALL)
+    private List<Playlist> playlists;
+
+    @Lob
     private byte[] imagemPerfil;
 
     @OneToOne(mappedBy = "synchroUser")
@@ -37,22 +44,11 @@ public class User implements Serializable {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserData data;
 
-    @OneToMany(mappedBy = "criador", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Playlist> playlistsCriadas = new HashSet<>();
-
-    @ManyToMany(mappedBy = "colaboradores")
-    private Set<Playlist> playlists = new HashSet<>();
-
-    public User(){
-
+    public User() {
     }
 
-    public boolean hasLastFmConnection() {
-        return lastFmUsername != null && !lastFmUsername.isBlank()
-                && session != null && session.getSessionKey() != null && !session.getSessionKey().isBlank();
-    }
-
-    public User(Long id, String username, String email, String password, LocalDate birthDay, String lastFmUsername) {
+    public User(Long id, String username, String email, String password,
+                LocalDate birthDay, String lastFmUsername) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -62,15 +58,9 @@ public class User implements Serializable {
         this.data = new UserData(this);
     }
 
-
     @Override
     public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", name='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                '}';
+        return "User{id=" + id + ", name='" + username + "'}";
     }
 
     @Override
@@ -83,5 +73,15 @@ public class User implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+    public boolean hasLastFmConnection() {
+        return this.lastFmUsername != null && !this.lastFmUsername.isBlank();
+    }
+    public boolean isPremium() {
+        return isPremium;
+    }
+
+    public void setPremium(boolean premium) {
+        isPremium = premium;
     }
 }
