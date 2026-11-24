@@ -14,7 +14,14 @@ jobs:
           persist-credentials: false
       - name: Gerar miniatura do ícone
         run: |
-          convert src/main/resources/static/frontend/assets/images/personal-profile-icon.png -thumbnail 84x84 -strip -quality 82 /tmp/profile-icon.webp
+          python3 -m venv /tmp/synchro-image
+          /tmp/synchro-image/bin/pip -q install Pillow
+          /tmp/synchro-image/bin/python - <<'PY'
+          from PIL import Image
+          icon = Image.open("src/main/resources/static/frontend/assets/images/personal-profile-icon.png").convert("RGBA")
+          icon.thumbnail((84, 84), Image.Resampling.LANCZOS)
+          icon.save("/tmp/profile-icon.webp", quality=85, method=6)
+          PY
           echo "PROFILE_WEBP=$(base64 -w 0 /tmp/profile-icon.webp)"
       - uses: actions/setup-java@v4
         with:
