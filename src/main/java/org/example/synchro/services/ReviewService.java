@@ -94,7 +94,7 @@ public class ReviewService {
     // =====================================================
 
     @Transactional(readOnly = true)
-    public List<ReviewDto> listarMinhasReviews(String cookie) {
+    public List<ReviewDto> listarMinhasReviews(String cookie, Long midiaId) {
 
         if (cookie == null ||
                 cookie.isBlank() ||
@@ -111,6 +111,11 @@ public class ReviewService {
             throw new ResourceNotFoundException(
                     "Usuario nao encontrado"
             );
+        }
+
+        if (midiaId != null) {
+            return reviewRepository.findByAuthorUserIdAndMidiaId(userId, midiaId)
+                    .stream().map(ReviewDto::new).toList();
         }
 
         return reviewRepository
@@ -204,42 +209,36 @@ public class ReviewService {
                 media.getTitulo(), artist, cover, author.getProfileImageUrl());
     }
 
+    public record ReviewPage(List<ReviewDto> items, Long nextBefore) {}
+
     @Transactional(readOnly = true)
-    public List<ReviewDto> listarTodas() {
-        return reviewRepository.findAll()
-                .stream()
-                .map(ReviewDto::new)
-                .toList();
+    public ReviewPage listarPagina(long before, Long midiaId) {
+        var limit = PageRequest.of(0, PUBLIC_PAGE_SIZE + 1);
+        var reviews = midiaId == null
+                ? reviewRepository.findByIdLessThanOrderByIdDesc(before, limit)
+                : reviewRepository.findByMidiaIdAndIdLessThanOrderByIdDesc(midiaId, before, limit);
+        var items = reviews.stream().limit(PUBLIC_PAGE_SIZE).map(ReviewDto::new).toList();
+        Long nextBefore = reviews.size() > PUBLIC_PAGE_SIZE ? items.get(PUBLIC_PAGE_SIZE - 1).getId() : null;
+        return new ReviewPage(items, nextBefore);
     }
 
     @Transactional(readOnly = true)
     public MidiaRatingDto buscarMediaPorMidia(Long midiaId) {
-
-        Double media = reviewRepository.calcularMediaPorMidia(midiaId);
-        Long total = reviewRepository.contarReviewsPorMidia(midiaId);
-
-        return new MidiaRatingDto(
-                midiaId,
-                media != null
-                        ? Math.round(media * 100.0) / 100.0
-                        : 0.0,
-                total != null ? total : 0L
-        );
-
+        return ratingSummary(midiaId, 100.0);
     }
+
+    @Transactional(readOnly = true)
     public MidiaRatingDto getRatingDaMidia(Long midiaId) {
-        Double media = reviewRepository.calcularMediaPorMidia(midiaId);
-        Long total = reviewRepository.contarReviewsPorMidia(midiaId);
-
-        // Arredonda para 1 casa decimal
-        Double mediaArredondada = (media != null)
-                ? Math.round(media * 10.0) / 10.0
-                : 0.0;
-
-        Long totalFinal = (total != null) ? total : 0L;
-
-        return new MidiaRatingDto(midiaId, mediaArredondada, totalFinal);
+        return ratingSummary(midiaId, 10.0);
     }
+
+    private MidiaRatingDto ratingSummary(Long midiaId, double scale) {
+        var summary = reviewRepository.summarizeRating(midiaId);
+        Double average = summary.getAverage();
+        double rounded = average == null ? 0.0 : Math.round(average * scale) / scale;
+        return new MidiaRatingDto(midiaId, rounded, summary.getTotal());
+    }
+
     // 4 teste para atualizar/apagar review
     public ReviewDto updateReview(String cookie, Long reviewId, ReviewRequest request) {
         if (!cookieService.checkCookie(cookie)) {

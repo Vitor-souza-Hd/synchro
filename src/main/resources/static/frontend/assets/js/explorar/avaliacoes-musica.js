@@ -170,40 +170,19 @@ document.addEventListener("synchro:song", async ({detail: {params, song}}) => {
         list.appendChild(card);
     }
 
-    async function loadReviews() {
-        const [allReviews, mine] = await Promise.all([
-            requestJson("/review"),
-            myUsername
-                ? requestJson("/review/me")
-                : Promise.resolve([])
-        ]);
+    const reloadReviews = window.createMediaReviewList({
+        list,
+        more: document.getElementById("musicReviewsMore"),
+        emptyText: "Esta música ainda não possui avaliações.",
+        setOwn(review) {
+            myReview = review;
+            openButton.textContent = review ? "Editar minha avaliação" : "Avaliar música";
+        },
+        addReviewCard
+    });
 
-        const relevant = Array.isArray(allReviews)
-            ? allReviews.filter(
-                r => Number(r.midiaId) === Number(midiaId)
-            )
-            : [];
-
-        myReview = Array.isArray(mine)
-            ? mine.find(
-            r => Number(r.midiaId) === Number(midiaId)
-        ) || null
-            : null;
-
-        list.replaceChildren();
-
-        if (!relevant.length) {
-            const p = document.createElement("p");
-            p.textContent =
-                "Esta música ainda não possui avaliações.";
-            list.appendChild(p);
-        } else {
-            relevant.forEach(addReviewCard);
-        }
-
-        openButton.textContent = myReview
-            ? "Editar minha avaliação"
-            : "Avaliar música";
+    function loadReviews() {
+        return reloadReviews(midiaId, Boolean(myUsername));
     }
 
     async function loadAverage() {

@@ -16,6 +16,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.stream.Collectors;
+
+import org.example.synchro.repositories.AlbumRepository.ArtistAlbumCandidate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,14 +57,7 @@ public class RecomendacaoService {
         var result = new ArrayList<Suggestion>();
         var usedAlbums = new HashSet<Long>();
         var usedArtists = new HashSet<String>();
-        var familiar = new ArrayList<Suggestion>();
-        for (var taste : favorites) {
-            String artist = taste.artist().name();
-            albums.findUnreviewedByArtist(userId, CatalogName.key(artist), PageRequest.of(0, 3)).stream()
-                    .filter(album -> familiar.stream().noneMatch(item -> album.getId().equals(item.id())))
-                    .findFirst().ifPresent(album -> familiar.add(card(album, artist, taste.recent()
-                            ? "Você tem ouvido este artista" : "Entre os artistas que você mais ouve")));
-        }
+        var familiar = familiarAlbums(userId, favorites);
 
         familiar.stream().limit(limit / 2).forEach(item -> add(result, usedAlbums, usedArtists, item, limit));
         var catalog = albums.findUnreviewedPopular(userId, PageRequest.of(0, CATALOG_LIMIT)).stream()
@@ -109,6 +105,27 @@ public class RecomendacaoService {
             if (index < tracks.size() && items.size() < MAX_SUGGESTIONS) items.add(recentItem(tracks.get(index)));
         }
         return new RecentRecommendations(items.stream().anyMatch(item -> item.motivo() != null), List.copyOf(items));
+    }
+
+    private List<Suggestion> familiarAlbums(Long userId, List<ListeningTaste> favorites) {
+        if (favorites.isEmpty()) return List.of();
+
+        var keys = favorites.stream().map(taste -> CatalogName.key(taste.artist().name())).toList();
+        var candidates = albums.findUnreviewedByArtists(userId, keys).stream()
+                .collect(Collectors.groupingBy(ArtistAlbumCandidate::getArtistKey));
+        var selected = new HashSet<Long>();
+        var result = new ArrayList<Suggestion>();
+        for (var taste : favorites) {
+            String artist = taste.artist().name();
+            for (var album : candidates.getOrDefault(CatalogName.key(artist), List.of())) {
+                if (selected.add(album.getAlbumId())) {
+                    String reason = taste.recent() ? "Você tem ouvido este artista" : "Entre os artistas que você mais ouve";
+                    result.add(new Suggestion(album.getAlbumId(), album.getTitle(), artist, album.getCover(), reason));
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     private List<String> preferredGenres(Long userId) {

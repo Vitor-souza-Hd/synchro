@@ -268,6 +268,44 @@ class RestorationFeaturesTests {
     }
 
     @Test
+    void reviewPagesFilterBeforeLimitingAndKeepTheOlderOwnReviewEditable() throws Exception {
+        try (var app = new SpringApplicationBuilder(Config.class).run("--spring.profiles.active=review-page-test",
+                "--server.port=0", "--spring.datasource.url=jdbc:h2:mem:review-pages",
+                "--spring.datasource.driver-class-name=org.h2.Driver", "--spring.datasource.username=sa",
+                "--spring.datasource.password=", "--spring.jpa.hibernate.ddl-auto=create-drop")) {
+            base = "http://localhost:" + app.getEnvironment().getProperty("local.server.port");
+            var users = app.getBean(UserRepository.class);
+            var songs = app.getBean(MusicaRepository.class);
+            var song = songs.save(new Musica("Faixa avaliada", "", null, null));
+            var other = songs.save(new Musica("Outra faixa", "", null, null));
+            var sql = app.getBean(org.springframework.jdbc.core.JdbcTemplate.class);
+            for (int i = 1; i <= 13; i++) {
+                var user = users.save(new User(null, "user" + i, i + "@example.test", "hash", null, null));
+                sql.update("insert into review (midia_id, autor_id, rating) values (?, ?, ?)",
+                        song.getId(), user.getData().getId(), 7);
+            }
+            var url = "/review?midiaId=" + song.getId();
+            var first = expect(200, "GET", url, null, null);
+            var items = json.readTree(first.body());
+            assertEquals(12, items.size());
+            var cursor = first.headers().firstValue("X-Next-Before").orElseThrow();
+            assertEquals(items.get(11).path("id").asText(), cursor);
+            var last = expect(200, "GET", url + "&before=" + cursor, null, null);
+            assertTrue(last.headers().firstValue("X-Next-Before").isEmpty());
+            var older = json.readTree(last.body());
+            assertEquals(1, older.size());
+            assertTrue(older.get(0).path("id").asLong() < Long.parseLong(cursor));
+            var mine = json.readTree(expect(200, "GET", "/review/me?midiaId=" + song.getId(), "owner", null).body());
+            assertEquals(older, mine);
+            assertEquals(0, json.readTree(expect(200, "GET", "/review?midiaId=" + other.getId(), null, null).body()).size());
+            assertEquals(12, json.readTree(expect(200, "GET", "/review", null, null).body()).size());
+            var empty = json.readTree(expect(200, "GET", "/review/midia/" + other.getId() + "/rating", null, null).body());
+            assertEquals(0, empty.path("total").asInt());
+            assertEquals(0.0, empty.path("media").asDouble());
+        }
+    }
+
+    @Test
     void favoritesReviewsAndProfilePersistAndRespectAccountBoundaries() throws Exception {
         try (var app = new SpringApplicationBuilder(Config.class).profiles("restoration-test")
                 .properties("server.port=0", "spring.datasource.url=jdbc:h2:mem:restoration;DB_CLOSE_DELAY=-1",

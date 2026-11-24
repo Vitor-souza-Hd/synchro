@@ -16,19 +16,36 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
 
     List<Album> findByArtistas(Artista artista);
 
-    @Query("""
-            SELECT album FROM Album album
-            WHERE EXISTS (SELECT artist.id FROM Album linked JOIN linked.artistas artist
-                WHERE linked.id = album.id AND artist.nomeKey = :artistKey)
-            AND NOT EXISTS (
-                SELECT review.id FROM Review review
-                WHERE review.midia.id = album.id AND review.author.user.id = :userId
-            )
-            ORDER BY coalesce(album.lastFm.listeners, 0) DESC, coalesce(album.lastFm.playcount, 0) DESC,
-                album.dataLancamento DESC NULLS LAST, album.id DESC
-            """)
-    List<Album> findUnreviewedByArtist(@Param("userId") Long userId, @Param("artistKey") String artistKey,
-                                     Pageable pageable);
+    interface ArtistAlbumCandidate {
+        String getArtistKey();
+        Long getAlbumId();
+        String getTitle();
+        String getCover();
+    }
+
+    @Query(value = """
+            SELECT ranked.artist_key AS "artistKey", ranked.album_id AS "albumId",
+                   ranked.titulo AS "title", ranked.lastfm_image_url AS "cover"
+            FROM (
+                SELECT ar.nome_key AS artist_key, a.id AS album_id, m.titulo, m.lastfm_image_url,
+                       row_number() OVER (PARTITION BY ar.nome_key
+                           ORDER BY coalesce(m.lastfm_listeners, 0) DESC, coalesce(m.lastfm_playcount, 0) DESC,
+                                    a.data_lancamento DESC NULLS LAST, a.id DESC) AS position_in_artist
+                FROM artista ar
+                JOIN album_artistas link ON link.artista_id = ar.id
+                JOIN album a ON a.id = link.album_id
+                JOIN midia m ON m.id = a.id
+                WHERE ar.nome_key IN (:artistKeys)
+                  AND NOT EXISTS (
+                      SELECT 1 FROM review r JOIN user_data u ON u.id = r.autor_id
+                      WHERE r.midia_id = a.id AND u.user_id = :userId
+                  )
+            ) ranked
+            WHERE ranked.position_in_artist <= 3
+            ORDER BY ranked.artist_key, ranked.position_in_artist
+            """, nativeQuery = true)
+    List<ArtistAlbumCandidate> findUnreviewedByArtists(@Param("userId") Long userId,
+                                                       @Param("artistKeys") List<String> artistKeys);
 
     @Query("""
             SELECT album FROM Album album

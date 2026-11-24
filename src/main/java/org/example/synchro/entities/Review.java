@@ -8,7 +8,8 @@ import lombok.Setter;
 
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"autor_id", "artista_id"}),
-        indexes = @Index(name = "ix_review_artist", columnList = "artista_id, id"))
+        indexes = {@Index(name = "ix_review_artist", columnList = "artista_id, id"),
+                   @Index(name = "ix_review_midia_id", columnList = "midia_id, id")})
 @Getter
 @Setter
 public class Review {
