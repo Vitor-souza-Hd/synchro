@@ -97,21 +97,18 @@ document.addEventListener("synchro:album", async ({detail: {id: albumId}}) => {
         list.appendChild(card);
     }
 
-    async function loadReviews() {
-        const [allReviews, mine] = await Promise.all([
-            requestJson("/review"),
-            myUsername ? requestJson("/review/me").catch(()=>[]) : Promise.resolve([])
-        ]);
+    const reloadReviews = window.createMediaReviewList({
+        list,
+        more: document.getElementById("albumReviewsMore"),
+        emptyText: "Este álbum ainda não possui avaliações.",
+        setOwn(review) {
+            myReview = review;
+        },
+        addReviewCard
+    });
 
-        const relevant = Array.isArray(allReviews) ? allReviews.filter(r => Number(r.midiaId) === Number(albumId)) : [];
-        myReview = Array.isArray(mine) ? mine.find(r => Number(r.midiaId) === Number(albumId)) || null : null;
-
-        list.replaceChildren();
-        if (!relevant.length) {
-            list.innerHTML = "<p style='color:#b3b3b3;'>Este álbum ainda não possui avaliações.</p>";
-        } else {
-            relevant.forEach(addReviewCard);
-        }
+    function loadReviews() {
+        return reloadReviews(albumId, Boolean(myUsername));
     }
 
     async function loadAverage() {

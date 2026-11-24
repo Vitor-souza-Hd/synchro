@@ -36,7 +36,8 @@ public class ReviewResource {
             @CookieValue(
                     name = "token_jwt",
                     required = false
-            ) String cookie
+            ) String cookie,
+            @RequestParam(required = false) Long midiaId
     ) {
 
         if (cookie == null || cookie.isBlank()) {
@@ -45,7 +46,7 @@ public class ReviewResource {
 
         try {
             List<ReviewDto> reviews =
-                    reviewService.listarMinhasReviews(cookie);
+                    reviewService.listarMinhasReviews(cookie, midiaId);
 
             return ResponseEntity.ok(reviews);
 
@@ -85,8 +86,12 @@ public class ReviewResource {
     }
 
     @GetMapping
-    public List<ReviewDto> listarTodas() {
-        return reviewService.listarTodas();
+    public ResponseEntity<List<ReviewDto>> listarPagina(@RequestParam(required = false) Long before,
+                                                        @RequestParam(required = false) Long midiaId) {
+        var page = reviewService.listarPagina(before == null ? Long.MAX_VALUE : before, midiaId);
+        var response = ResponseEntity.ok();
+        if (page.nextBefore() != null) response.header("X-Next-Before", page.nextBefore().toString());
+        return response.body(page.items());
     }
 
     @GetMapping("/midia/{midiaId}/rating")

@@ -3,6 +3,7 @@ package org.example.synchro.repositories;
 
 import org.example.synchro.entities.Review;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -68,19 +69,19 @@ public interface ReviewRepository
             @Param("userId") Long userId
     );
 
-    @Query("""
-            SELECT AVG(r.rating) FROM Review r
-            WHERE r.midia.id = :midiaId
-            """)
-    Double calcularMediaPorMidia(
-            @Param("midiaId") Long midiaId
-    );
+    @EntityGraph(attributePaths = {"midia", "artist", "author.user"})
+    List<Review> findByIdLessThanOrderByIdDesc(long before, Pageable pageable);
 
-    @Query("""
-            SELECT COUNT(r) FROM Review r
-            WHERE r.midia.id = :midiaId
-            """)
-    Long contarReviewsPorMidia(
-            @Param("midiaId") Long midiaId
-    );
+    @EntityGraph(attributePaths = {"midia", "artist", "author.user"})
+    List<Review> findByMidiaIdAndIdLessThanOrderByIdDesc(long midiaId, long before, Pageable pageable);
+
+    Optional<Review> findByAuthorUserIdAndMidiaId(long userId, long midiaId);
+
+    interface RatingSummary {
+        Double getAverage();
+        long getTotal();
+    }
+
+    @Query("SELECT AVG(r.rating) AS average, COUNT(r) AS total FROM Review r WHERE r.midia.id = :midiaId")
+    RatingSummary summarizeRating(@Param("midiaId") Long midiaId);
 }
