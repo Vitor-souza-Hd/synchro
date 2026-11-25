@@ -1,0 +1,195 @@
+
+    .genre-page {
+        min-width: 0;
+        padding: 25px 30px 60px;
+    }
+
+    /* CABEÇALHO DO GÊNERO */
+
+    .genre-hero {
+        position: relative;
+        overflow: hidden;
+        margin: 30px 0 45px;
+        padding: 55px 45px;
+        border: 1px solid #493344;
+        border-radius: 22px;
+        background: linear-gradient(125deg, #48283e, #19131e 75%);
+        color: white;
+    }
+
+    .genre-eyebrow {
+        color: #ff91b0;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 3px;
+    }
+
+    .genre-hero h1 {
+        margin: 14px 0;
+        font-size: clamp(38px, 6vw, 68px);
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    .genre-hero p {
+        max-width: 600px;
+        color: #d1c2cc;
+        font-size: 16px;
+        line-height: 1.7;
+    }
+
+    /* SEÇÕES */
+
+    .genre-section {
+        margin-bottom: 55px;
+    }
+
+    .genre-section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .genre-section-heading span {
+        color: #ff91b0;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+    }
+
+    .genre-section-heading h2 {
+        margin-top: 7px;
+        color: white;
+        font-size: 27px;
+    }
+
+    .genre-status {
+        min-height: 20px;
+        margin: 12px 0 20px;
+        color: #aaa;
+        font-size: 13px;
+    }
+
+    /* CARDS */
+
+    .genre-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+        gap: 22px;
+    }
+
+    .genre-media-card {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        padding: 12px;
+        border: 1px solid #39313a;
+        border-radius: 15px;
+        background: #211c25;
+        color: white;
+        text-decoration: none;
+        transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    .genre-media-card:hover {
+        transform: translateY(-5px);
+        border-color: #ff6588;
+        background: #302431;
+    }
+
+    .genre-media-card img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 10px;
+        background: #30252d;
+    }
+
+    .genre-media-info {
+        padding: 12px 3px 3px;
+    }
+
+    .genre-media-info h3 {
+        overflow: hidden;
+        color: white;
+        font-size: 16px;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .genre-media-info p {
+        margin-top: 6px;
+        overflow: hidden;
+        color: #aaa;
+        font-size: 13px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* TEMA CLARO */
+
+    html.synchro-light body.synchro-home .genre-hero {
+        border-color: #e3c3d2;
+        background: linear-gradient(125deg, #633d55, #342638 75%);
+    }
+
+    html.synchro-light body.synchro-home .genre-section-heading h2 {
+        color: #30202b;
+    }
+
+    html.synchro-light body.synchro-home .genre-status {
+        color: #715d69;
+    }
+
+    html.synchro-light body.synchro-home .genre-media-card {
+        border-color: #e6d9e0;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(55, 25, 42, .06);
+    }
+
+    html.synchro-light body.synchro-home .genre-media-card:hover {
+        border-color: #dca6bc;
+        background: #fff6fa;
+    }
+
+    html.synchro-light body.synchro-home .genre-media-info h3 {
+        color: #30202b;
+    }
+
+    html.synchro-light body.synchro-home .genre-media-info p {
+        color: #715d69;
+    }
+
+    /* RESPONSIVIDADE */
+
+    @media (max-width: 768px) {
+        .genre-page {
+            padding: 20px 16px 45px;
+        }
+
+        .genre-hero {
+            padding: 38px 25px;
+        }
+
+        .genre-grid {
+            grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+            gap: 14px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .genre-hero {
+            padding: 30px 20px;
+        }
+
+        .genre-hero p {
+            font-size: 14px;
+        }
+
+        .genre-section-heading h2 {
+            font-size: 23px;
+        }
+    }
