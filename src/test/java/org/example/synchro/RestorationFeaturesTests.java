@@ -359,7 +359,11 @@ class RestorationFeaturesTests {
             var users = app.getBean(UserRepository.class);
             users.save(new User(null, "owner", "owner@example.test", "hash", LocalDate.of(2000,1,1), null));
             users.save(new User(null, "other", "other@example.test", "hash", LocalDate.of(2000,1,1), null));
-            var song = app.getBean(MusicaRepository.class).save(new Musica("Integration track", "", null, null));
+            String reviewCover = "https://example.test/integration-track.jpg";
+            var song = new Musica("Integration track", "", null, null);
+            song.getLastFm().setImageUrl(reviewCover);
+            song.getLastFm().setArtistName("Integration artist");
+            app.getBean(MusicaRepository.class).save(song);
             for (String kind : new String[]{"artists", "albums", "tracks"}) {
                 expect(401,"GET","/favorites/" + kind,null,null);
             }
@@ -407,13 +411,17 @@ class RestorationFeaturesTests {
             var publicReviews = json.readTree(expect(200, "GET", "/review/users/1", "other", null).body());
             assertEquals(1, publicReviews.path("items").size());
             assertEquals("Updated", publicReviews.path("items").get(0).path("review").asText());
+            assertEquals(reviewCover, publicReviews.path("items").get(0).path("coverUrl").asText());
             assertEquals(0, json.readTree(expect(200, "GET", "/review/users/1?before=" + id, null, null).body())
                     .path("items").size());
 
             assertEquals(1, json.readTree(expect(200, "POST", "/follow/1", "other", null).body()).path("followers").asLong());
             assertEquals(1, json.readTree(expect(200, "GET", "/follow/2", null, null).body()).path("followingCount").asLong());
             assertEquals(0, json.readTree(expect(200, "DELETE", "/follow/1", "other", null).body()).path("followers").asLong());
-            assertEquals(1,json.readTree(expect(200,"GET","/review/me","owner",null).body()).size());
+            var privateReviews = json.readTree(expect(200, "GET", "/review/me", "owner", null).body());
+            assertEquals(1, privateReviews.size());
+            assertEquals(reviewCover, privateReviews.get(0).path("coverUrl").asText());
+            assertEquals("Integration artist", privateReviews.get(0).path("artistName").asText());
             expect(401,"PUT","/review/"+id,"other","{\"rating\":0,\"review\":\"Overwrite\"}");
             expect(401,"DELETE","/review/"+id,"other",null);
             expect(204,"DELETE","/review/"+id,"owner",null);

@@ -14,6 +14,8 @@ public class ReviewDto {
     private String midiaTitulo;
     private Long midiaId;
     private Long artistId;
+    private String artistName;
+    private String coverUrl;
 
     public ReviewDto(Review review) {
         this.id = review.getId();

@@ -188,6 +188,11 @@ async function loadCurrentUserProfile() {
                 publicLink.href = 'perfil-publico.html?' + new URLSearchParams({user: user.id});
                 publicLink.hidden = false;
             }
+            document.getElementById('editProfileLink').onclick = () => {
+                const settings = document.getElementById('profileSettings');
+                settings.open = true;
+                settings.querySelector('summary').focus({preventScroll: true});
+            };
             document.getElementById('connectLastFm').addEventListener('click', connectLastFm);
             document.getElementById('syncLastFm').addEventListener('click', syncLastFm);
             showLastFmCallbackResult();
@@ -260,6 +265,7 @@ function renderCurrentUser(user) {
     const displayName = (isPublicProfile ? handle : data.fullName?.trim() || user.username) || "Usuário";
     document.title = `SYNCHRO | ${displayName}`;
     if (!isPublicProfile) {
+        setProfileText("profileHeading", handle || displayName);
         setProfileText("profileName", displayName);
         setProfileText("profileUsername", handle);
         const genderNames = {female: "Feminino", male: "Masculino", other: "Outro"};

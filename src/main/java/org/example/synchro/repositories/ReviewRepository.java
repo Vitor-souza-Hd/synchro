@@ -61,6 +61,8 @@ public interface ReviewRepository
 
     @Query("""
             SELECT r FROM Review r
+            LEFT JOIN FETCH r.midia
+            LEFT JOIN FETCH r.artist
             WHERE r.author.user.id = :userId
             ORDER BY r.id DESC
             """)

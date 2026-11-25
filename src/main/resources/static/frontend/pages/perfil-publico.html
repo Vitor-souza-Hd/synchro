@@ -7,19 +7,19 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=shared-sidebar-1">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=imagem-primeiro-lugar">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=fotos-avaliacoes">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-usuario.css?v=20261105-compact-profile-1">
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
     <link rel="stylesheet" href="/frontend/assets/css/auth.css">
     <link rel="stylesheet" href="/frontend/assets/css/features.css">
     <script src="/frontend/assets/js/explorar/tema-global.js"></script>
     <script src="/frontend/assets/js/auth.js" defer></script>
-    <script src="/frontend/assets/js/user.js?v=username-publico" defer></script>
+    <script src="/frontend/assets/js/user.js?v=layout-perfis" defer></script>
     <script src="/frontend/assets/js/friendships.js?v=username-publico" defer></script>
     <script src="/frontend/assets/js/explorar/perfil-musical.js?v=perfil-publico" defer></script>
     <script src="/frontend/assets/js/image-visibility.js" defer></script>
     <script src="/frontend/assets/js/explorar/favorite-images.js?v=fotos-artistas-perfil-2" defer></script>
-    <script src="/frontend/assets/js/explorar/user3.js?v=imagem-primeiro-lugar" defer></script>
+    <script src="/frontend/assets/js/explorar/user3.js?v=fotos-avaliacoes" defer></script>
     <script src="/frontend/assets/js/music-profile-genres.js?v=imagem-primeiro-lugar" defer></script>
     <script src="/frontend/assets/js/explorar/generos-perfil.js?v=imagem-primeiro-lugar" defer></script>
     <script src="/frontend/assets/js/search.js?v=username-publico" defer></script>
@@ -153,16 +153,16 @@
             </div>
         </section>
 
-        <section class="music-profile" aria-labelledby="publicFavoriteArtistsTitle">
-            <h2 id="publicFavoriteArtistsTitle">Artistas salvos no Synchro</h2>
-            <p id="publicFavoriteArtistsStatus" role="status">Carregando artistas favoritos…</p>
-            <div id="publicFavoriteArtists"></div>
+        <section class="music-profile" aria-labelledby="profileFavoriteArtistsTitle">
+            <h2 id="profileFavoriteArtistsTitle">Artistas salvos no Synchro</h2>
+            <p id="profileFavoriteArtistsStatus" role="status">Carregando artistas favoritos…</p>
+            <div id="profileFavoriteArtists"></div>
         </section>
 
         <section class="music-profile" aria-labelledby="publicReviewsTitle">
             <h2 id="publicReviewsTitle">Avaliações publicadas</h2>
             <p id="publicReviewStatus" role="status"></p>
-            <div id="publicReviewList"></div>
+            <div id="publicReviewList" class="profile-review-list"></div>
             <button id="morePublicReviews" type="button" hidden>Ver mais avaliações</button>
         </section>
     </main>

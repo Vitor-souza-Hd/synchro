@@ -1148,6 +1148,7 @@ html.synchro-light :is(.music-profile-period, #musicProfileStatus, #musicProfile
     visibility: visible;
 }
 
+.profile-review-list .profile-empty,
 .artist .profile-empty,
 .review .profile-empty,
 .playlist .profile-empty,
@@ -1176,16 +1177,16 @@ html.synchro-light :is(.music-profile-period, #musicProfileStatus, #musicProfile
     object-fit: cover;
 }
 
-[data-profile="public"] .profile-biography {
+.banner-info .profile-biography {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
 
-[data-profile="public"] .music-profile-genres {
+.synchro-usuario .music-profile-genres {
     margin: 16px 0;
 }
 
-[data-profile="public"] .profile-stats,
+.synchro-usuario .profile-stats,
 .public-ranking-controls {
     flex-wrap: wrap;
 }
@@ -1215,23 +1216,8 @@ html.synchro-light :is(.music-profile-period, #musicProfileStatus, #musicProfile
     overflow-wrap: anywhere;
 }
 
-#publicFavoriteArtists:not(:empty) {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 12px;
+#profileFavoriteArtists:not(:empty) {
     margin-top: 14px;
-}
-
-#publicFavoriteArtists .artist-card {
-    width: 100%;
-    min-width: 0;
-    padding: 8px;
-    overflow-wrap: anywhere;
-}
-
-#publicFavoriteArtists .artist-card a {
-    display: block;
-    width: 100%;
 }
 
 .artist-card .profile-artist-photo {
@@ -1242,6 +1228,35 @@ html.synchro-light :is(.music-profile-period, #musicProfileStatus, #musicProfile
     margin-bottom: 8px;
 }
 
+#profileFavoriteArtists,
+.top-artists > .artist {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(6px, 1vw, 12px);
+}
+
+#profileFavoriteArtists .artist-card,
+.top-artists .artist-card {
+    width: 100%;
+    min-width: 0;
+    padding: 6px;
+    overflow-wrap: anywhere;
+}
+
+#profileFavoriteArtists .artist-card > a,
+.top-artists .artist-card > a {
+    display: block;
+    width: 100%;
+}
+
+@media (max-width: 640px) {
+    #profileFavoriteArtists,
+    .top-artists > .artist {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+#profileFavoriteArtists .profile-artist-photo,
 .top-artists .profile-artist-photo {
     max-width: 200px;
     margin-inline: auto;
@@ -1254,19 +1269,40 @@ html.synchro-light :is(.music-profile-period, #musicProfileStatus, #musicProfile
     object-fit: cover;
 }
 
-#publicReviewList:not(:empty) {
+.profile-review-list:not(:empty) {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
     gap: 12px;
     margin-block: 14px;
 }
 
-#publicReviewList .review-card {
+.profile-review-list .review-card {
     width: 100%;
     min-width: 0;
     padding: 16px;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+}
+
+.profile-review-list .review-card > div {
+    min-width: 0;
+}
+
+.profile-review-artwork {
+    flex: 0 0 clamp(48px, 6vw, 68px);
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.profile-review-list .profile-review-artwork img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .banner-background::after {
@@ -1463,7 +1499,7 @@ html.synchro-light .synchro-usuario {
     --ranking-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235e3854' stroke-width='2'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
 }
 
-.synchro-usuario #publicRankings {
+.synchro-usuario :is(#publicRankings, #privateRankings) {
     padding: 0;
     border: 0;
     background: transparent;
@@ -1522,7 +1558,7 @@ html.synchro-light .synchro-usuario {
     color: var(--ranking-text);
 }
 
-.synchro-usuario #publicRankings .weekly-report > section,
+.synchro-usuario :is(#publicRankings, #privateRankings) .weekly-report > section,
 .synchro-usuario .weekly-report .weekly-card {
     min-width: 0;
     margin: 0;

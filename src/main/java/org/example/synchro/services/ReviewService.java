@@ -116,7 +116,12 @@ public class ReviewService {
         return reviewRepository
                 .findReviewsBySynchroUserId(userId)
                 .stream()
-                .map(ReviewDto::new)
+                .map(review -> {
+                    var dto = new ReviewDto(review);
+                    dto.setArtistName(reviewArtistName(review.getMidia()));
+                    dto.setCoverUrl(reviewCover(review));
+                    return dto;
+                })
                 .toList();
     }
 
@@ -179,29 +184,46 @@ public class ReviewService {
         var author = review.getAuthor();
         var account = author.getUser();
         var targetArtist = review.getArtist();
+        String cover = reviewCover(review);
         if (targetArtist != null) {
-            String photo = targetArtist.getImgUrl();
-            if (!ArtistPhotoStore.hasUsableImage(photo)) photo = targetArtist.getLastFm().getImageUrl();
             return new RecentReviewDto(review.getId(), review.getRating(), review.getReview(), account.getId(),
                     account.getUsername(), author.getLastFmImageUrl(), targetArtist.getId(), "artist",
-                    targetArtist.getNome(), null, photo, author.getProfileImageUrl());
+                    targetArtist.getNome(), null, cover, author.getProfileImageUrl());
         }
 
         var media = review.getMidia();
-        var track = media instanceof Musica musica ? musica : null;
-        var artists = track == null ? ((Album) media).getArtistas() : track.getArtistas();
-        var metadata = media.getLastFm();
-        String artist = metadata.getArtistName();
-        if (artist == null || artist.isBlank()) {
-            artist = artists.stream().map(Artista::getNome).sorted().findFirst().orElse(null);
-        }
-        String cover = metadata.getImageUrl();
-        if ((cover == null || cover.isBlank()) && track != null && track.getAlbum() != null) {
-            cover = track.getAlbum().getLastFm().getImageUrl();
-        }
         return new RecentReviewDto(review.getId(), review.getRating(), review.getReview(), account.getId(),
-                account.getUsername(), author.getLastFmImageUrl(), media.getId(), track == null ? "album" : "track",
-                media.getTitulo(), artist, cover, author.getProfileImageUrl());
+                account.getUsername(), author.getLastFmImageUrl(), media.getId(), media instanceof Musica ? "track" : "album",
+                media.getTitulo(), reviewArtistName(media), cover, author.getProfileImageUrl());
+    }
+
+    private String reviewArtistName(Midia media) {
+        if (media == null) return null;
+        String artist = media.getLastFm().getArtistName();
+        if (artist != null && !artist.isBlank()) return artist;
+        if (media instanceof Musica track) {
+            return track.getArtistas().stream().map(Artista::getNome).sorted().findFirst().orElse(null);
+        }
+        if (media instanceof Album album) {
+            return album.getArtistas().stream().map(Artista::getNome).sorted().findFirst().orElse(null);
+        }
+        return null;
+    }
+
+    private String reviewCover(Review review) {
+        var artist = review.getArtist();
+        if (artist != null) {
+            String photo = artist.getImgUrl();
+            return ArtistPhotoStore.hasUsableImage(photo) ? photo : artist.getLastFm().getImageUrl();
+        }
+
+        var media = review.getMidia();
+        if (media == null) return null;
+        String cover = media.getLastFm().getImageUrl();
+        if ((cover == null || cover.isBlank()) && media instanceof Musica track && track.getAlbum() != null) {
+            return track.getAlbum().getLastFm().getImageUrl();
+        }
+        return cover;
     }
 
     @Transactional(readOnly = true)

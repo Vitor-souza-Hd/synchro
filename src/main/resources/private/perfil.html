@@ -7,7 +7,7 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=shared-sidebar-1">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=imagem-primeiro-lugar">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=fotos-avaliacoes">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-usuario.css?v=20261105-compact-profile-1">
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
     <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
@@ -38,6 +38,7 @@
                 <li><i class="bx bxs-volume-full" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#generos">Gêneros</a></li>
                 <li><i class="bx bxs-album" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#albuns">Álbuns</a></li>
                 <li><i class="bx bxs-microphone" aria-hidden="true"></i><a href="/frontend/pages/explorar.html#artistas">Artistas</a></li>
+                <li><i class="bx bxs-star" aria-hidden="true"></i><a href="/frontend/pages/recomendacoes.html">Recomendações</a></li>
             </ul>
         </nav>
         <nav class="menu" aria-label="Sua biblioteca">
@@ -83,47 +84,104 @@
                 </nav>
             </header>
         </div>
-        <header>
-            <section class="profile-header">
-                <div class="banner-background"></div>
-                <div class="banner-content">
-                    <div class="user" id="profileIdentity">
-                        <div class="user-card">
-                            <img id="profileImage" decoding="async" fetchpriority="high" src="../assets/images/user/userphoto.jpg" alt="Foto de perfil">
-                            <h3 id="profileName"></h3>
-                            <p id="profileUsername"></p>
-                        </div>
-                    </div>
-                    <div class="banner-info">
-                        <h1 id="profileHeading">Meu perfil</h1>
-                        <p><a id="profilePostsLink" class="profile-account-settings" hidden>Ver publicações</a></p>
-                        <p><a id="viewPublicProfile" class="profile-account-settings" hidden>Ver perfil público</a></p>
-                        <div class="profile-biography owner-only">
-                            <p id="profileBiography" style="white-space: pre-wrap;"></p>
-                        </div>
-                        <p id="profileLastFm"></p>
-                        <p id="lastFmStatus" class="lastfm-status" role="status" aria-live="polite" hidden></p>
-                        <div id="lastFmDetails" class="lastfm-details" hidden>
-                            <a id="lastFmProfileLink" target="_blank" rel="noopener noreferrer">Ver perfil no Last.fm ↗</a>
-                        </div>
-
-                        <div class="profile-stats">
-                        <div><h3 id="profileFollowers">—</h3><p>Seguidores</p></div>
-                            <div><h3 id="profileScrobbles">—</h3><p>Synchs</p></div>
-                            <div><h3 id="profileArtists">—</h3><p>Artistas</p></div>
-                            <div id="lastFmTracksStat" hidden><h3 id="profileTracks">—</h3><p>Faixas</p></div>
-                            <div id="lastFmAlbumsStat"><h3 id="profileAlbums">—</h3><p>Álbuns</p></div>
-                        </div>
-                        <span>PERFIL</span>
+        <section class="profile-header" aria-labelledby="profileHeading">
+            <div class="banner-background" aria-hidden="true"></div>
+            <div class="banner-content">
+                <div class="user" id="profileIdentity">
+                    <div class="user-card">
+                        <img id="profileImage" decoding="async" referrerpolicy="no-referrer" fetchpriority="high" src="../assets/images/user/userphoto.jpg" alt="Foto de perfil">
                     </div>
                 </div>
-            </section>
-        </header>
-        <details class="profile-settings owner-only" id="profileSettings" open>
+                <div class="banner-info">
+                    <h1 id="profileHeading">Meu perfil</h1>
+                    <p><a id="profilePostsLink" class="profile-account-settings" hidden>Ver publicações</a></p>
+                    <p><a id="viewPublicProfile" class="profile-account-settings" hidden>Ver perfil público</a>
+                        <a id="editProfileLink" class="profile-account-settings" href="#profileSettings">Editar perfil</a></p>
+                    <p id="profileBiography" class="profile-biography" hidden></p>
+                    <p id="profileLastFm"></p>
+                    <p id="lastFmStatus" class="lastfm-status" role="status" aria-live="polite" hidden></p>
+                    <div id="lastFmDetails" class="lastfm-details" hidden>
+                        <a id="lastFmProfileLink" target="_blank" rel="noopener noreferrer">Ver perfil no Last.fm ↗</a>
+                    </div>
+                    <div class="profile-stats">
+                        <div><h3 id="profileFollowers">—</h3><p>Seguidores</p></div>
+                        <div><h3 id="profileFollowing">—</h3><p>Seguindo</p></div>
+                        <div><h3 id="profileScrobbles">—</h3><p>Synchs</p></div>
+                        <div><h3 id="profileArtists">—</h3><p>Artistas</p></div>
+                        <div id="lastFmTracksStat" hidden><h3 id="profileTracks">—</h3><p>Faixas</p></div>
+                        <div id="lastFmAlbumsStat" hidden><h3 id="profileAlbums">—</h3><p>Álbuns</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="music-profile" aria-labelledby="musicProfileTitle">
+            <h2 id="musicProfileTitle">Perfil musical</h2>
+            <div class="music-profile-genres">
+                <h3>Principais gêneros</h3>
+                <ol id="musicProfileGenres"></ol>
+                <p id="musicProfileGenresStatus" role="status"></p>
+                <button id="retryMusicGenres" type="button" hidden>Tentar atualizar gêneros</button>
+            </div>
+            <p class="music-profile-period">Destaques dos últimos 7 dias</p>
+            <p id="musicProfileStatus" role="status"></p>
+            <dl id="musicProfileHighlights" class="music-profile-highlights"></dl>
+            <button id="retryMusicProfile" type="button" hidden>Tentar novamente</button>
+        </section>
+
+        <section class="top-artists" aria-labelledby="publicTopArtistsTitle">
+            <h2 id="publicTopArtistsTitle">Artistas favoritos do momento</h2>
+            <div class="artist"></div>
+        </section>
+
+        <section class="music-profile" id="privateRankings" aria-labelledby="publicRankingsTitle">
+            <h2 id="publicRankingsTitle">Relatório musical</h2>
+            <div class="public-ranking-controls">
+                <label for="rankingPeriod">Período</label>
+                <select id="rankingPeriod">
+                    <option value="7day">Últimos 7 dias</option>
+                    <option value="1month">Último mês</option>
+                    <option value="3month">Últimos 3 meses</option>
+                    <option value="6month">Últimos 6 meses</option>
+                    <option value="12month">Últimos 12 meses</option>
+                    <option value="overall">Todo o histórico</option>
+                </select>
+                <button id="retryRankings" type="button" hidden>Tentar novamente</button>
+            </div>
+            <p id="rankingStatus" role="status"></p>
+            <div class="weekly-report">
+                <section class="weekly-card"><h3>Top artistas</h3><div class="report-artists"></div></section>
+                <section class="weekly-card"><h3>Top álbuns</h3><div class="report-albums"></div></section>
+                <section class="weekly-card"><h3>Top músicas</h3><div class="report-musics"></div></section>
+                <section class="weekly-card"><h3>Top gêneros</h3><div class="report-genres"></div></section>
+            </div>
+        </section>
+
+        <section class="music-profile" aria-labelledby="profileFavoriteArtistsTitle">
+            <h2 id="profileFavoriteArtistsTitle">Artistas salvos no Synchro</h2>
+            <p id="profileFavoriteArtistsStatus" role="status">Carregando artistas favoritos…</p>
+            <div id="profileFavoriteArtists"></div>
+        </section>
+
+        <section class="music-profile" id="minhas-avaliacoes" aria-labelledby="profileReviewsTitle">
+            <h2 id="profileReviewsTitle">Avaliações publicadas</h2>
+            <div class="profile-review-list" aria-live="polite"></div>
+        </section>
+
+        <section class="music-profile user-playlist owner-only">
+            <div class="profile-playlist-heading">
+                <h2>Playlists Criadas</h2>
+                <a class="profile-playlist-manage" href="/frontend/pages/playlists.html">Gerenciar playlists</a>
+            </div>
+            <div class="playlist"></div>
+        </section>
+
+        <details class="profile-settings owner-only" id="profileSettings">
             <summary><i class="fa-solid fa-gear" aria-hidden="true"></i> Configurações do perfil</summary>
             <div class="profile-settings-content">
                 <div id="accountInfo">
                     <h2>Dados da conta</h2>
+                    <p id="profileName"></p><p id="profileUsername"></p>
                     <p id="profileEmail"></p><p id="profileBirthDay"></p><p id="profileGender"></p>
                 </div>
                 <div class="profile-biography-editor">
@@ -209,76 +267,12 @@
                 <a class="profile-account-settings" href="/frontend/pages/configuracoes.html">Mais configurações da conta</a>
             </div>
         </details>
-        <section class="music-profile owner-only" aria-labelledby="musicProfileTitle">
-            <h2 id="musicProfileTitle">Seu perfil musical</h2>
-            <p class="music-profile-period">Últimos 7 dias · <a href="https://www.last.fm/">Last.fm</a></p>
-            <p id="musicProfileStatus" role="status"></p>
-            <dl id="musicProfileHighlights" class="music-profile-highlights"></dl>
-            <button id="retryMusicProfile" type="button" hidden>Tentar carregar perfil musical</button>
-            <div class="music-profile-genres">
-                <h3>Seus principais gêneros</h3>
-                <ol id="musicProfileGenres"></ol>
-                <p id="musicProfileGenresStatus" role="status"></p>
-                <button id="retryMusicGenres" type="button" hidden>Tentar atualizar gêneros</button>
-            </div>
-        </section>
-        <section class="top-artists owner-only">
-            <h2>Seus Artistas Favoritos do Momento</h2>
-            <div class="artist"><!-- Last.fm --></div>
-        </section>
-        <section class="user-review owner-only">
-            <h2>Suas Avaliações Recentes</h2>
-            <div class="review" id="minhas-avaliacoes"><!-- Dados da conta Synchro, futuramente --></div>
-        </section>
-        <section class="user-playlist owner-only">
-            <div class="profile-playlist-heading">
-                <h2>Playlists Criadas</h2>
-                <a class="profile-playlist-manage" href="/frontend/pages/playlists.html">Gerenciar playlists</a>
-            </div>
-            <div class="playlist"></div>
-        </section>
-        <div class="ranking-controls owner-only">
-            <h2 style="margin:0;">Relatório Musical</h2>
-            <label for="rankingPeriod">Período:</label>
-            <select id="rankingPeriod" aria-label="Período dos rankings">
-                <option value="7day">Últimos 7 dias</option>
-                <option value="1month">Último mês</option>
-                <option value="3month">Últimos 3 meses</option>
-                <option value="6month">Últimos 6 meses</option>
-                <option value="12month">Últimos 12 meses</option>
-                <option value="overall">Todo o histórico</option>
-            </select>
-            <span id="rankingStatus" role="status" aria-live="polite"></span>
-            <button id="retryRankings" type="button" hidden>Tentar novamente</button>
-        </div>
-        <section class="weekly-report owner-only">
-            <div class="weekly-card">
-                <h5 class="h-artists">Top Artistas</h5>
-                <p class="p-artists">Ranking de reproduções</p>
-                <div class="report-artists"><!-- Last.fm --></div>
-            </div>
-            <div class="weekly-card">
-                <h5 class="h-albums">Top Álbuns</h5>
-                <p class="p-albums">Ranking de reproduções</p>
-                <div class="report-albums"><!-- Last.fm --></div>
-            </div>
-            <div class="weekly-card">
-                <h5 class="h-musics">Top Músicas</h5>
-                <p class="p-musics">Ranking de reproduções</p>
-                <div class="report-musics"><!-- Last.fm --></div>
-            </div>
-            <div class="weekly-card">
-                <h5 class="h-genre">Top Gêneros</h5>
-                <p class="p-genres">Estimativa por afinidade</p>
-                <div class="report-genres"><!-- Será calculado de tags --></div>
-            </div>
-        </section>
     </main>
 </div>
 
-<script src="/frontend/assets/js/user.js?v=perfil-dados-salvos"></script>
+<script src="/frontend/assets/js/user.js?v=layout-perfis"></script>
 <script src="/frontend/assets/js/explorar/perfil-musical.js?v=perfil-dados-salvos"></script>
-<script src="/frontend/assets/js/explorar/user3.js?v=imagem-primeiro-lugar"></script>
+<script src="/frontend/assets/js/explorar/user3.js?v=fotos-avaliacoes"></script>
 <script src="/frontend/assets/js/search.js?v=username-publico"></script>
 <script src="/frontend/assets/js/explorar/foto-perfil.js?v=perfil-rapido"></script>
 <script src="/frontend/assets/js/music-profile-genres.js?v=imagem-primeiro-lugar"></script>
