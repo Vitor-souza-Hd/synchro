@@ -65,6 +65,23 @@
         return typeof value === 'string' ? value : value?.name || '';
     }
 
+    function hasArtistCredit(credit, artist) {
+        const expected = key(artist);
+        return Boolean(expected) && (key(credit) === expected ||
+            key(credit).split(/\s+(?:&|and|x|feat\.?|ft\.?|with)\s+|\s*,\s*/).includes(expected));
+    }
+
+    function matchesTrack(track, title, artist) {
+        return Boolean(title) && key(track?.name) === key(title) && hasArtistCredit(artistName(track?.artist), artist);
+    }
+
+    function confirmedTrackRelease(title, artist) {
+        if (key(title) !== 'instável' || !hasArtistCredit(artist, 'kouth')) return null;
+        // Symphonic Distribution official art track: youtube.com/watch?v=z6yygkR-GpI
+        return {title: 'DIÁRIO DE UMA GAROTA SUBVERSIVA (DELUXE)', artist: 'kouth',
+            cover: 'https://i.ytimg.com/vi/z6yygkR-GpI/sddefault.jpg'};
+    }
+
     function imageUrl(value) {
         try {
             if (typeof value !== 'string' || !value.trim()) return null;
@@ -186,19 +203,16 @@
             (!artist || catalogArtists(item).some(name => key(name) === key(artist)));
     }
 
-    async function savedMedia(kind, title, artist, id, knownAlbum, request) {
-        if (kind === 'album' && knownAlbum) return matchesItem(knownAlbum, title, artist) ? knownAlbum : null;
+    async function savedAlbum(title, artist, id, knownAlbum, request) {
+        if (knownAlbum) return matchesItem(knownAlbum, title, artist) ? knownAlbum : null;
         if (id) {
-            const saved = kind === 'track' ? await request('/catalog/songs/' + id)
-                : (await request('/catalog/albums/' + id))?.album;
+            const saved = (await request('/catalog/albums/' + id))?.album;
             if (matchesItem(saved, title, artist)) return saved;
         }
         if (!artist || !title) return null;
         const catalog = await request('/catalog/artists/by-name', {name: artist});
-        const items = kind === 'track' ? catalog?.musicas : catalog?.albums;
-        return asList(items).find(item => matchesItem(item, title, artist));
+        return asList(catalog?.albums).find(item => matchesItem(item, title, artist));
     }
-
     function releaseGroup(value) {
         return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
             ? value.toLowerCase() : null;
@@ -219,12 +233,14 @@
         }
     }
 
-    async function* lastFmAlbum(title, artist, request) {
+    async function* lastFmAlbum(title, artist, request, track) {
         const result = await request('/last-fm/discovery', {
             method: 'album.getInfo', artist, album: title, preview: 'true'
         }, 'lastfm');
         const album = result?.album;
-        if (key(album?.name || album?.title) === key(title) && key(artistName(album?.artist)) === key(artist)) {
+        const tracks = album?.tracks?.track;
+        if (key(album?.name || album?.title) === key(title) && hasArtistCredit(artistName(album?.artist), artist) &&
+                (!track || (Array.isArray(tracks) ? tracks : [tracks]).some(item => matchesTrack(item, track.title, track.artist)))) {
             yield* lastFmImages(album);
         }
     }
@@ -265,31 +281,48 @@
         }
     }
 
-    async function* trackCovers(title, artist, knownGroup, item, request) {
-        const result = knownGroup ? null : await request('/musicbrainz/track/album', {artist, track: title}, 'musicbrainz');
-        const group = knownGroup || releaseGroup(result?.album?.releaseGroupId);
-        if (group) yield* archiveCovers(group, request);
+    async function* trackCovers(title, artist, albumHint, request) {
+        if (!title || !artist) return;
+        const confirmed = confirmedTrackRelease(title, artist);
+        if (confirmed) {
+            yield confirmed.cover;
+            yield* lastFmAlbum(confirmed.title, confirmed.artist, request, {title, artist});
+            return;
+        }
 
-        const info = await request('/last-fm/discovery', {method: 'track.getInfo', artist, track: title}, 'lastfm');
-        const album = info?.track?.album;
-        yield* lastFmImages(album);
-        const albumTitle = album?.title || item?.album?.titulo;
-        if (albumTitle) yield* lastFmAlbum(albumTitle, artistName(album?.artist) || artist, request);
+        if (albumHint?.title && hasArtistCredit(albumHint.artist, artist)) {
+            yield* lastFmAlbum(albumHint.title, albumHint.artist, request, {title, artist});
+        }
+
+        // This route identifies a release from a recording with matching title and artist credits.
+        const result = await request('/musicbrainz/track/album', {artist, track: title}, 'musicbrainz');
+        const group = releaseGroup(result?.album?.releaseGroupId);
+        if (result?.status === 'found' && group) yield* archiveCovers(group, request);
+
+        const info = await request('/last-fm/discovery', {
+            method: 'track.getInfo', artist, track: title, preview: 'true'
+        }, 'lastfm');
+        if (matchesTrack(info?.track, title, artist)) {
+            const album = info.track.album;
+            const credit = artistName(album?.artist);
+            if (album?.title && hasArtistCredit(credit, artist)) {
+                yield* lastFmImages(album);
+                yield* lastFmAlbum(album.title, credit, request);
+            }
+        }
+
+        // A single is valid only when its track list also confirms the requested recording.
+        yield* lastFmAlbum(title, artist, request, {title, artist});
     }
 
-    async function* covers(kind, title, artist, releaseGroupId, id, knownAlbum, request) {
-        const item = await savedMedia(kind, title, artist, id, knownAlbum, request);
+    async function* covers(title, artist, releaseGroupId, id, knownAlbum, request) {
+        const item = await savedAlbum(title, artist, id, knownAlbum, request);
         yield item?.lastFm?.imageUrl;
-        yield item?.album?.imgUrl;
         yield* asList(item?.images);
 
         artist = artist || catalogArtists(item)[0];
         title = title || item?.titulo || item?.name;
-        if (!artist || !title) return;
-
-        const knownGroup = releaseGroup(releaseGroupId);
-        if (kind === 'album') yield* albumCovers(title, artist, knownGroup, request);
-        else yield* trackCovers(title, artist, knownGroup, item, request);
+        if (artist && title) yield* albumCovers(title, artist, releaseGroup(releaseGroupId), request);
     }
 
     function readCache(cacheKey) {
@@ -327,33 +360,55 @@
         else load();
     }
 
-    async function resolveImage(container, options, active) {
-        if (!active()) return;
-        const {kind, title, artist, releaseGroupId, id, knownAlbum, preferredImages} = options;
-        const cacheKey = 'synchro:favorite-image:v2:' + JSON.stringify([kind, key(artist), key(title), releaseGroupId, artist ? null : id]);
-        const seen = new Set();
+    function photoKey(url) {
+        const clean = imageUrl(url);
+        if (!clean) return null;
+        const {hostname} = new URL(clean);
+        if (hostname === 'lastfm.freetls.fastly.net') return clean.replace(/(\/i\/u\/)[^/]+\//, '$1');
+        if (hostname === 'coverartarchive.org' || hostname.endsWith('.archive.org')) {
+            return clean.replace(/-\d{2,4}(\.jpg)(?=$|\?)/i, '$1');
+        }
+        return clean;
+    }
+
+    async function findImage(options, active, {cacheKey, excluded = [], currentUrl = () => null} = {}) {
+        if (!active()) return null;
+        const {kind, title, artist, releaseGroupId, id, knownAlbum, albumHint, preferredImages} = options;
+        const seen = new Set(excluded.map(photoKey));
         const catalogId = /^\d+$/.test(id || '') ? id : null;
         const request = (...args) => active() ? json(...args) : null;
         const sources = kind === 'artist' ? artistPhotos(artist, catalogId, request, active)
-            : covers(kind, title, artist, releaseGroupId, catalogId, knownAlbum, request);
-        for await (const candidate of candidates(cacheKey, withPreferredImages(preferredImages, sources))) {
-            if (!active()) return;
+            : kind === 'track' ? trackCovers(title, artist, albumHint, request)
+            : covers(title, artist, releaseGroupId, catalogId, knownAlbum, request);
+        const confirmed = kind === 'track' && confirmedTrackRelease(title, artist);
+        const preferred = withPreferredImages(confirmed ? [] : preferredImages, sources);
+        for await (const candidate of (cacheKey ? candidates(cacheKey, preferred) : preferred)) {
+            if (!active()) return null;
             const url = imageUrl(candidate);
-            if (!url || seen.has(url)) continue;
-            seen.add(url);
+            const identity = cacheKey ? url : photoKey(url);
+            if (!identity || seen.has(identity) || (!cacheKey && identity === photoKey(currentUrl()))) continue;
+            seen.add(identity);
             const image = await loadImage(url);
-            if (!active()) return;
-            if (!image) continue;
+            if (!active()) return null;
+            if (image && (cacheKey || identity !== photoKey(currentUrl()))) return image;
+        }
+        return null;
+    }
+
+    async function resolveImage(container, options, active) {
+        const {kind, title, artist, releaseGroupId, id} = options;
+        const cacheKey = (kind === 'track' ? 'synchro:track-cover:v3:' : 'synchro:favorite-image:v2:') + JSON.stringify([kind, key(artist), key(title), releaseGroupId, artist ? null : id]);
+        const image = await findImage(options, active, {cacheKey});
+        if (!active()) return;
+        if (image) {
             styleImage(image, options);
             container.replaceChildren(image);
             try {
-                sessionStorage.setItem(cacheKey, JSON.stringify({url, savedAt: Date.now()}));
+                sessionStorage.setItem(cacheKey, JSON.stringify({url: image.src, savedAt: Date.now()}));
             } catch {
                 // The image remains visible when storage is unavailable.
             }
-            return;
-        }
-        if (active()) {
+        } else {
             try { sessionStorage.removeItem(cacheKey); } catch { /* Optional cache. */ }
         }
     }
@@ -363,5 +418,11 @@
         yield* sources;
     }
 
-    window.SynchroFavoriteImages = {show};
+    window.SynchroFavoriteImages = {
+        show,
+        matchesTrack,
+        confirmedTrackRelease,
+        findAlternative: (options, active, excluded, currentUrl) => findImage(options, active, {excluded, currentUrl}),
+        cancel: container => activeLoads.delete(container)
+    };
 })();

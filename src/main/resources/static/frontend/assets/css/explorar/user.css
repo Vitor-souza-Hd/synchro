@@ -1443,3 +1443,173 @@ html:not(.own-profile) .owner-only { display: none !important; }
     .profile-stats h3 { font-size: 22px; overflow-wrap: anywhere; }
     .profile-stats p { font-size: 13px; }
 }
+
+/* Relatório musical nos dois perfis */
+.synchro-usuario {
+    --ranking-text: #f8f4fa;
+    --ranking-muted: #c8bdce;
+    --ranking-control: #211d27;
+    --ranking-border: #66536d;
+    --ranking-line: #453948;
+    --ranking-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23e9d8f5' stroke-width='2'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+}
+
+html.synchro-light .synchro-usuario {
+    --ranking-text: #30202b;
+    --ranking-muted: #65515e;
+    --ranking-control: #fff;
+    --ranking-border: #aa879f;
+    --ranking-line: #dcc8d5;
+    --ranking-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235e3854' stroke-width='2'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+}
+
+.synchro-usuario #publicRankings {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.synchro-usuario :is(.public-ranking-controls, .ranking-controls) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-block: 16px 24px;
+    color: var(--ranking-text);
+}
+
+.synchro-usuario #rankingPeriod {
+    appearance: none;
+    min-width: min(190px, 100%);
+    max-width: 100%;
+    padding: 11px 40px 11px 14px;
+    border: 1px solid var(--ranking-border);
+    border-radius: 11px;
+    color: var(--ranking-text);
+    background: var(--ranking-control) var(--ranking-arrow) no-repeat right 14px center / 16px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.synchro-usuario :is(#retryRankings, #rankingPeriod option) {
+    color: var(--ranking-text);
+    background-color: var(--ranking-control);
+}
+
+.synchro-usuario #retryRankings {
+    padding: 9px 12px;
+    border: 1px solid var(--ranking-border);
+    border-radius: 10px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.synchro-usuario :is(#rankingPeriod, #retryRankings):focus-visible {
+    outline: 2px solid var(--ranking-border);
+    outline-offset: 3px;
+}
+
+.synchro-usuario #rankingStatus {
+    color: var(--ranking-muted);
+}
+
+.synchro-usuario .weekly-report {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 195px), 1fr));
+    align-items: start;
+    gap: clamp(14px, 2vw, 26px);
+    overflow: visible;
+    color: var(--ranking-text);
+}
+
+.synchro-usuario #publicRankings .weekly-report > section,
+.synchro-usuario .weekly-report .weekly-card {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    backdrop-filter: none;
+    box-shadow: none;
+    overflow: visible;
+}
+
+.synchro-usuario .weekly-report > :is(section, .weekly-card) > :is(h3, h5) {
+    margin: 0 0 14px;
+    color: var(--ranking-text);
+    font-size: clamp(20px, 2vw, 29px);
+    text-align: center;
+}
+
+.synchro-usuario .weekly-report .rank-item {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
+    align-items: baseline;
+    gap: 4px 9px;
+    width: 100%;
+    height: auto;
+    min-height: 54px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--ranking-line);
+    text-align: start;
+}
+
+.synchro-usuario .weekly-report .rank-item > h3 {
+    min-width: 0;
+    margin: 0;
+    color: var(--ranking-text);
+    font-size: 1rem;
+    line-height: 1.3;
+    text-align: start;
+    overflow-wrap: anywhere;
+}
+
+.synchro-usuario .weekly-report .rank-item > h3 a {
+    color: inherit;
+}
+
+.synchro-usuario .weekly-report .rank-item > p {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    margin: 0;
+    color: var(--ranking-muted);
+    font-size: .8rem;
+    text-align: start;
+}
+
+.synchro-usuario .weekly-report .rank-item > p:last-child {
+    grid-column: 3;
+    grid-row: 1;
+    white-space: nowrap;
+}
+
+.synchro-usuario .weekly-report .report-genres .rank-item {
+    grid-template-columns: max-content minmax(0, 1fr);
+}
+
+.synchro-usuario .weekly-report .report-genres .rank-item > p:last-child {
+    grid-column: 2;
+    grid-row: 2;
+    white-space: normal;
+}
+
+.synchro-usuario .weekly-report .report-leader-artwork {
+    width: 100%;
+    aspect-ratio: 5 / 3;
+    margin-block: 0 8px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: var(--ranking-control);
+}
+
+.synchro-usuario .weekly-report .report-leader-artwork > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+}
+
+.synchro-usuario .weekly-report .report-leader-artwork > img[src$="-placeholder.svg"] {
+    object-fit: contain;
+}

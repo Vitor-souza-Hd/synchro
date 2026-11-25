@@ -21,6 +21,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch('/catalog/songs/' + registered.id, {headers: {Accept: 'application/json'}});
             if (!response.ok) throw new Error('Não foi possível carregar a música salva no catálogo.');
             song = await response.json();
+            const expectedTitle = params.get('track').trim();
+            const expectedArtist = params.get('artist').trim();
+            const credits = song.lastFm?.artistName ? [song.lastFm.artistName] : (song.artistas || []).map(artist => artist.nome);
+            if (!credits.some(artist => window.SynchroFavoriteImages.matchesTrack(
+                {name: song.titulo, artist}, expectedTitle, expectedArtist
+            ))) song = null;
         }
         document.dispatchEvent(new CustomEvent('synchro:song', {detail: {params, song}}));
     } catch (error) {

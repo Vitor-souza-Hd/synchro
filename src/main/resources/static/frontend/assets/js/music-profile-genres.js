@@ -127,6 +127,7 @@
             return data;
         }));
         const pontuacoes = new Map();
+        const destaques = new Map();
         let consultasValidas = 0;
 
         respostas.forEach((resposta, index) => {
@@ -186,8 +187,11 @@
             generosDoArtista.forEach(
                 (relevancia, genero) => {
 
-                    const peso =
-                        reproducoes * relevancia;
+                    const peso = reproducoes * relevancia;
+                    const atual = destaques.get(genero);
+                    if (!atual || peso > atual.peso) {
+                        destaques.set(genero, {artista: artistas[index], peso});
+                    }
 
                     pontuacoes.set(
                         genero,
@@ -201,7 +205,8 @@
 
         if (artistas.length && !consultasValidas) throw new Error("Tags de artistas indisponíveis.");
         const resultado = [...pontuacoes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-        return {resultado, totalArtistas: artistas.length, artistasAnalisados: consultasValidas,
+        const artistaDestaque = destaques.get(resultado[0]?.[0])?.artista;
+        return {resultado, artistaDestaque, totalArtistas: artistas.length, artistasAnalisados: consultasValidas,
             parcial: consultasValidas < artistas.length};
     }
 

@@ -26,7 +26,10 @@
         const artist = item.lastFm?.artistName || item.artistas?.[0]?.nome || params.get('artist') || '';
         const url = item.lastFm?.imageUrl || item.album?.imgUrl;
         const identity = JSON.stringify([item.id, item.titulo, artist, url]);
-        if (identity === displayedCover) return;
+        window.SynchroCatalogImage.bind({
+            kind: 'album', title: item.titulo, artist, id: item.id, knownAlbum: item, preferredImages: url ? [url] : []
+        }, () => document.getElementById('catalogImage'));
+        if (identity === displayedCover || window.SynchroCatalogImage.hasReplacement()) return;
         displayedCover = identity;
 
         const alt = `Capa de ${item.titulo}`;

@@ -174,9 +174,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const preferredImages = sameAlbum && Array.isArray(data.image)
             ? data.image.slice().reverse().map(image => image?.['#text']) : [];
 
-        window.SynchroFavoriteImages?.show(coverEl, {
-            kind: 'album', title: album, artist, preferredImages, alt: `Capa de ${album}`
-        });
+        const image = {kind: 'album', title: album, artist, preferredImages, alt: `Capa de ${album}`};
+        window.SynchroCatalogImage.bind(image, () => coverEl.querySelector('img'));
+        if (!window.SynchroCatalogImage.hasReplacement()) window.SynchroFavoriteImages?.show(coverEl, image);
     }
 
     let data;

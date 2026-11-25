@@ -78,7 +78,8 @@ public class LastFmDiscoveryResource {
                 values.put(key, value);
             }
         }
-        boolean preview = method.equals("album.getinfo") && "true".equals(params.get("preview"));
+        boolean preview = (method.equals("album.getinfo") || method.equals("track.getinfo"))
+                && "true".equals(params.get("preview"));
         var lookup = new Lookup(method, Map.copyOf(values), preview);
         return Mono.defer(() -> cached(lookup));
     }

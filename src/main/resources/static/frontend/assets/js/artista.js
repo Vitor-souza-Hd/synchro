@@ -86,9 +86,16 @@ function renderCatalogArtist(data) {
     tags.replaceChildren();
     artist.genre.slice(0, 6).forEach(name => { const tag = document.createElement('span'); tag.textContent = name; tags.append(tag); });
     const image = document.getElementById('artistImage');
-    image.alt = 'Imagem de ' + artistName;
-    image.onerror = () => { image.onerror = null; image.src = placeholder; loadCatalogArtistPhoto(true); };
-    image.src = artist.image;
+    window.SynchroCatalogImage.bind({
+        kind: 'artist', title: artist.name, artist: artist.name, id: artist.id,
+        preferredImages: [artist.image, saved.lastFm?.imageUrl]
+    }, () => document.getElementById('artistImage'));
+    const replaced = window.SynchroCatalogImage.hasReplacement();
+    if (!replaced) {
+        image.alt = 'Imagem de ' + artistName;
+        image.onerror = () => { image.onerror = null; image.src = placeholder; loadCatalogArtistPhoto(true); };
+        image.src = artist.image;
+    }
     updateLastFmLink();
     renderStatistics(saved.lastFm || {});
     renderCatalogTracks(data.musicas || []);
@@ -96,7 +103,7 @@ function renderCatalogArtist(data) {
     setArtistLoading(false);
     artistStatus.textContent = '';
     window.SynchroFeatures.bindFavorite(document.getElementById('favoriteBtn'), {kind: 'artists', artist: artistName});
-    if (!usablePhoto(artist.image)) loadCatalogArtistPhoto();
+    if (!replaced && !usablePhoto(artist.image)) loadCatalogArtistPhoto();
     if (!historyRecorded) {
         historyRecorded = true;
         document.dispatchEvent?.(new CustomEvent('synchro:artist', {detail: {id: saved.id, name: saved.nome}}));
@@ -130,7 +137,8 @@ function loadCatalogArtistPhoto(refresh = false) {
         fetch('/catalog/artists/' + encodeURIComponent(current.id) + '/photo' + (refresh ? '?refresh=true' : ''))
             .then(response => response.ok ? response.json() : null).catch(() => null));
     artistPhotoRequests.get(key).then(photo => {
-        if (artist.id !== current.id || photo?.status !== 'found' || !usablePhoto(photo.imgUrl)) return;
+        if (artist.id !== current.id || window.SynchroCatalogImage.hasReplacement() ||
+                photo?.status !== 'found' || !usablePhoto(photo.imgUrl)) return;
         artist.image = photo.imgUrl;
         const image = document.getElementById('artistImage');
         image.onerror = () => { image.onerror = null; image.src = placeholder; };

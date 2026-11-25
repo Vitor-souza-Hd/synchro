@@ -319,6 +319,8 @@ public class LastFmCatalogService {
         if (!type.equals("artist") && ref.artist().isBlank()) return true;
         try {
             var detail = client.info(type, ref.name(), ref.artist());
+            if (type.equals("track") && (!sameIdentity(detail.path("name").asText(""), ref.name())
+                    || !sameIdentity(LastFmCatalogStore.artistName(detail), ref.artist()))) return false;
             if (!detail.path("name").asText("").isBlank()) {
                 // Preserve catalog identity when Last.fm autocorrects a name.
                 var saved = detail.deepCopy();
@@ -331,6 +333,11 @@ public class LastFmCatalogService {
             return true;
         } catch (InterruptedException e) { Thread.currentThread().interrupt(); return false; }
         catch (Exception e) { return false; }
+    }
+
+    private static boolean sameIdentity(String received, String expected) {
+        return org.example.synchro.entities.CatalogName.key(expected)
+                .equals(org.example.synchro.entities.CatalogName.key(received));
     }
 
     private long save(String type, com.fasterxml.jackson.databind.JsonNode node, boolean complete) {

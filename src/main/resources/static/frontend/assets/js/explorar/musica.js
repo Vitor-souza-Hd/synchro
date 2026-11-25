@@ -14,49 +14,12 @@ document.addEventListener("synchro:song", ({detail: {params, song}}) => {
     const sourceAlbum = params.get("album")?.trim();
     const sourceAlbumArtist = params.get("albumArtist")?.trim();
     let trackInfoPromise;
-    let coverLookupPromise;
+    let coverStarted = false;
 
     function consultarFaixa() {
         return trackInfoPromise ||= consultarLastFm("track.getInfo", {
-            artist: artistName, track: trackName
+            artist: artistName, track: trackName, preview: "true"
         });
-    }
-
-    function imagensLastFm(node) {
-        const images = Array.isArray(node?.image) ? node.image : [];
-        return images.slice().reverse().map(image => image['#text']).filter(url =>
-            typeof url === 'string' && /^https?:\/\//i.test(url) &&
-            !url.includes('2a96cbd8b46e442fc41c2b86b821562f'));
-    }
-
-    async function procurarCapas() {
-        if (coverLookupPromise) return coverLookupPromise;
-        coverLookupPromise = (async () => {
-            // MusicBrainz identifica o lançamento; o Cover Art Archive fornece a capa.
-            if (await carregarAlbumMusicBrainz()) return true;
-            let album;
-            try {
-                album = (await consultarFaixa()).track?.album;
-                for (const url of imagensLastFm(album)) {
-                    if (await exibirImagem(url)) return true;
-                }
-            } catch (error) { console.warn('Capa da faixa no Last.fm:', error); }
-            const names = [...new Set([sourceAlbum, album?.title].filter(Boolean))];
-            for (const name of names) {
-                try {
-                    const data = await consultarLastFm('album.getInfo', {
-                        artist: (name === sourceAlbum ? sourceAlbumArtist :
-                            (typeof album?.artist === 'string' ? album.artist : album?.artist?.name)) || artistName,
-                        album: name
-                    });
-                    for (const url of imagensLastFm(data.album)) {
-                        if (await exibirImagem(url)) return true;
-                    }
-                } catch (error) { console.warn('Capa do álbum no Last.fm:', error); }
-            }
-            return false;
-        })();
-        return coverLookupPromise;
     }
 
     const musicNameElement =
@@ -102,16 +65,39 @@ document.addEventListener("synchro:song", ({detail: {params, song}}) => {
         return;
     }
 
+    renderTrackCover();
+
     // Dados do Last.fm e identificação do álbum
     // são carregados de maneira independente.
     carregarMusica();
-    procurarCapas();
 
     // =========================================
     // CONSULTAR LAST.FM
     // =========================================
 
+    function renderTrackCover(item) {
+        const title = item?.titulo || trackName;
+        const artist = artistName || item?.lastFm?.artistName || item?.artistas?.[0]?.nome;
+        const image = document.getElementById('musicImage');
+        const albumHint = sourceAlbum ? {title: sourceAlbum, artist: sourceAlbumArtist || artist} : null;
+        const options = {kind: 'track', id: item?.id, title, artist, albumHint, alt: 'Capa de ' + title, imageId: 'musicImage'};
+        window.SynchroCatalogImage.bind(options, () => document.getElementById('musicImage'));
+        if (!coverStarted) {
+            coverStarted = true;
+            window.SynchroFavoriteImages.show(image.parentElement, options);
+        }
+        const release = window.SynchroFavoriteImages.confirmedTrackRelease(title, artist);
+        if (release) {
+            const link = document.createElement('a');
+            link.href = 'album-explorar.html?' + new URLSearchParams({album: release.title, artist: release.artist});
+            link.textContent = release.title;
+            albumElement.replaceChildren(link);
+        }
+        return release;
+    }
+
     function renderCatalogSong(item) {
+        const confirmedRelease = renderTrackCover(item);
         musicNameElement.textContent = item.titulo;
         musicNameElement.dataset.songId = String(item.id);
         document.title = item.titulo + ' | Synchro';
@@ -119,12 +105,12 @@ document.addEventListener("synchro:song", ({detail: {params, song}}) => {
         artists.textContent = artistName || 'Artista não informado';
         if (artistName) artists.href = 'artista.html?artist=' + encodeURIComponent(artistName);
         else artists.removeAttribute('href');
-        if (item.album) {
+        if (!confirmedRelease && item.album) {
             const link = document.createElement('a');
             link.href = 'album.html?id=' + encodeURIComponent(item.album.id);
             link.textContent = item.album.titulo;
             albumElement.replaceChildren(link);
-        } else albumElement.textContent = 'Álbum não informado';
+        } else if (!confirmedRelease) albumElement.textContent = 'Álbum não informado';
         const meta = item.lastFm || {};
         document.getElementById('musicListeners').textContent = formatarNumero(meta.listeners);
         document.getElementById('musicPlaycount').textContent = formatarNumero(meta.playcount);
@@ -139,29 +125,13 @@ document.addEventListener("synchro:song", ({detail: {params, song}}) => {
     }
 
     async function atualizarCatalogo(id) {
-        let current = song;
-        let initialCover = false;
-        for (const image of [song.lastFm?.imageUrl, song.album?.imgUrl].filter(Boolean)) {
-            if (await exibirImagem(image)) { initialCover = true; break; }
-        }
         try {
             const path = '/catalog/songs/' + encodeURIComponent(id);
             if ((await fetch(path + '/refresh', {method: 'POST'})).ok) {
                 const response = await fetch(path);
-                if (response.ok) {
-                    current = await response.json();
-                    renderCatalogSong(current);
-                }
+                if (response.ok) renderCatalogSong(await response.json());
             }
         } catch { /* Os dados já apresentados continuam disponíveis. */ }
-        if (initialCover) return;
-        const images = [...new Set([
-            current.lastFm?.imageUrl, current.album?.imgUrl
-        ].filter(Boolean))];
-        for (const image of images) {
-            if (await exibirImagem(image)) return;
-        }
-        if (artistName) await procurarCapas();
     }
 
     async function consultarLastFm(method, parametros = {}) {
@@ -194,33 +164,6 @@ document.addEventListener("synchro:song", ({detail: {params, song}}) => {
     }
 
     // =========================================
-    // CONSULTAR ENDPOINT DO SYNCHRO
-    // =========================================
-
-    async function consultarSynchro(caminho, parametros = {}) {
-
-        const url = new URL(caminho, window.location.origin);
-
-        Object.entries(parametros).forEach(([chave, valor]) => {
-            url.searchParams.set(chave, valor);
-        });
-
-        const response = await fetch(url, {
-            headers: {
-                "Accept": "application/json"
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(
-                `Erro ao consultar ${caminho}: HTTP ${response.status}`
-            );
-        }
-
-        return response.json();
-    }
-
-    // =========================================
     // CARREGAR INFORMAÇÕES DO LAST.FM
     // =========================================
 
@@ -232,7 +175,7 @@ document.addEventListener("synchro:song", ({detail: {params, song}}) => {
 
             const track = data.track;
 
-            if (!track) {
+            if (!window.SynchroFavoriteImages.matchesTrack(track, trackName, artistName)) {
                 throw new Error("Música não encontrada");
             }
 
@@ -256,6 +199,10 @@ document.addEventListener("synchro:song", ({detail: {params, song}}) => {
 
             artistElement.href =
                 `/frontend/pages/artista.html?artist=${encodeURIComponent(artista)}`;
+
+            if (!window.SynchroFavoriteImages.confirmedTrackRelease(trackName, artistName) && track.album?.title) {
+                albumElement.textContent = track.album.title;
+            }
 
             // ESTATÍSTICAS
             document.getElementById("musicListeners").textContent =
@@ -297,402 +244,6 @@ document.addEventListener("synchro:song", ({detail: {params, song}}) => {
             biographyElement.textContent =
                 "Não foi possível carregar as informações da música. Verifique o nome e tente novamente.";
         }
-    }
-
-    // =========================================
-    // IDENTIFICAR ÁLBUM PELO MUSICBRAINZ
-    // =========================================
-
-
-
-    async function carregarAlbumMusicBrainz() {
-
-        albumElement.textContent = "Identificando álbum...";
-        limparImagem();
-
-        function normalize(value) {
-            return String(value || "")
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .toLowerCase()
-                .replace(/\s+/g, " ")
-                .trim();
-        }
-
-        // Identifica um album pelo nome e artista,
-        // exigindo correspondencia com o MusicBrainz.
-        async function buscarAlbumPorNome(
-            nome,
-            artista,
-            tipo = "Album"
-        ) {
-
-            if (!nome || !artista) {
-                return null;
-            }
-
-            const isSingle = tipo === "Single";
-
-            const data = await consultarSynchro(
-                isSingle
-                    ? "/musicbrainz/single/search"
-                    : "/musicbrainz/album/search",
-                isSingle
-                    ? {
-                        single: nome,
-                        artist: artista
-                    }
-                    : {
-                        album: nome,
-                        artist: artista
-                    }
-            );
-
-            const groups = data["release-groups"];
-
-            if (!Array.isArray(groups)) {
-                return null;
-            }
-
-            const match = groups.find(item => {
-                if (!item?.id) return false;
-
-                const tituloCorreto =
-                    normalize(item.title) === normalize(nome);
-
-                const albumPrincipal =
-                    item["primary-type"] === "Album";
-
-                const tipoCorreto =
-                    item["primary-type"] === tipo;
-
-                const semTipoSecundario =
-                    tipo === "Single" ||
-                    !Array.isArray(item["secondary-types"]) ||
-                    item["secondary-types"].length === 0;
-
-                const creditos = item["artist-credit"];
-
-                const artistaCorreto =
-                    !Array.isArray(creditos) ||
-                    creditos.some(credito => {
-                        const nomeCredito =
-                            credito.artist?.name ||
-                            credito.name ||
-                            "";
-
-                        return normalize(nomeCredito) ===
-                            normalize(artista);
-                    });
-
-                return tituloCorreto &&
-                    tipoCorreto &&
-                    semTipoSecundario &&
-                    artistaCorreto;
-            });
-
-            if (!match) {
-                return null;
-            }
-
-            return {
-                title: match.title,
-                releaseGroupId: match.id,
-                type: tipo
-            };
-        }
-
-        // Alternativa: o Last.fm pode informar
-        // diretamente o album associado a faixa.
-        async function buscarAlbumPeloLastFm() {
-
-            const data = await consultarFaixa();
-
-            const album = data.track?.album;
-
-            if (!album?.title) {
-                return null;
-            }
-
-            const artistaAlbum =
-                typeof album.artist === "string"
-                    ? album.artist
-                    : album.artist?.name || artistName;
-
-            return buscarAlbumPorNome(
-                album.title,
-                artistaAlbum
-            );
-        }
-
-        try {
-            let identifiedAlbum = null;
-
-            // 1. Priorizar o album de origem.
-            // Isso e importante quando a faixa pertence
-            // a diferentes lancamentos.
-
-            if (sourceAlbum) {
-                try {
-                    identifiedAlbum = await buscarAlbumPorNome(
-                        sourceAlbum,
-                        sourceAlbumArtist || artistName
-                    );
-                } catch (error) {
-                    console.warn(
-                        "[Synchro] Album de origem:",
-                        error
-                    );
-                }
-            }
-
-            // 2. Identificacao habitual pela musica.
-
-            if (!identifiedAlbum) {
-                try {
-                    const result = await consultarSynchro(
-                        "/musicbrainz/track/album",
-                        {
-                            artist: artistName,
-                            track: trackName
-                        }
-                    );
-
-                    if (
-                        result.status === "found" &&
-                        result.album?.releaseGroupId &&
-                        result.album?.title
-                    ) {
-                        identifiedAlbum = result.album;
-                    }
-                } catch (error) {
-                    console.warn(
-                        "[Synchro] Busca pela faixa:",
-                        error
-                    );
-                }
-            }
-
-            // 3. Alternativa: consultar o Last.fm
-            // e confirmar o album no MusicBrainz.
-
-            if (!identifiedAlbum) {
-                try {
-                    identifiedAlbum =
-                        await buscarAlbumPeloLastFm();
-
-                } catch (error) {
-                    console.warn(
-                        "[Synchro] Busca pelo Last.fm:",
-                        error
-                    );
-                }
-            }
-
-            // 4. Procurar um single oficial.
-            // So tenta depois das buscas por album.
-
-            if (!identifiedAlbum) {
-                try {
-                    identifiedAlbum =
-                        await buscarAlbumPorNome(
-                            trackName,
-                            artistName,
-                            "Single"
-                        );
-
-                    if (identifiedAlbum) {
-                        console.info(
-                            "[Synchro] Single identificado:",
-                            identifiedAlbum.title
-                        );
-                    }
-
-                } catch (error) {
-                    console.warn(
-                        "[Synchro] Busca pelo single:",
-                        error
-                    );
-                }
-            }
-
-            // Nenhuma fonte identificou um album valido.
-
-            if (!identifiedAlbum) {
-                albumElement.textContent =
-                    "Lançamento não identificado";
-
-                console.info(
-                    "[Synchro] Nenhum álbum confirmado para:",
-                    artistName,
-                    "-",
-                    trackName
-                );
-
-                return false;
-            }
-
-            // Exibe o album identificado.
-
-            albumElement.textContent =
-                identifiedAlbum.type === "Single"
-                    ? "Single"
-                    : `Álbum associado: ${identifiedAlbum.title}`;
-
-            // Utiliza o carregamento de capa existente.
-
-            return await carregarCapaCoverArtArchive(
-                identifiedAlbum.releaseGroupId
-            );
-
-        } catch (error) {
-
-            console.warn(
-                "[Synchro] Erro ao carregar álbum:",
-                error
-            );
-
-            albumElement.textContent =
-                "Álbum indisponível no momento";
-            return false;
-        }
-    }
-
-
-
-    // =========================================
-    // BUSCAR CAPA PELO BACKEND
-    // =========================================
-
-    async function carregarCapaCoverArtArchive(releaseGroupId) {
-
-        try {
-
-            const response = await fetch(
-                `/cover-art/release-group/${encodeURIComponent(releaseGroupId)}`,
-                {
-                    headers: {
-                        "Accept": "application/json"
-                    }
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(
-                    `Erro ao buscar capa: HTTP ${response.status}`
-                );
-            }
-
-            const resultado = await response.json();
-
-            if (
-                resultado.status === "found" &&
-                urlCapaValida(resultado.coverUrl)
-            ) {
-
-                return await exibirImagem(resultado.coverUrl);
-
-            } else {
-
-                console.info(
-                    "Capa não disponível para:",
-                    releaseGroupId
-                );
-            }
-
-        } catch (error) {
-
-            console.warn(
-                "Não foi possível carregar a capa:",
-                error
-            );
-        }
-        return false;
-    }
-
-    // =========================================
-    // VALIDAR URL DA CAPA
-    // =========================================
-
-    function urlCapaValida(url) {
-
-        if (typeof url !== "string") {
-            return false;
-        }
-
-        try {
-
-            const endereco = new URL(url);
-
-            return (
-                endereco.protocol === "https:" &&
-                (
-                    endereco.hostname === "coverartarchive.org" ||
-                    endereco.hostname === "archive.org" ||
-                    endereco.hostname.endsWith(".archive.org")
-                )
-            );
-
-        } catch {
-            return false;
-        }
-    }
-
-    // =========================================
-    // LIMPAR IMAGEM
-    // =========================================
-
-    function limparImagem() {
-
-        const img =
-            document.getElementById("musicImage");
-
-        const placeholder =
-            document.getElementById("musicPlaceholder");
-
-        img.hidden = true;
-        img.removeAttribute("src");
-
-        placeholder.hidden = false;
-    }
-
-    // =========================================
-    // EXIBIR CAPA DO ÁLBUM
-    // =========================================
-
-    function exibirImagem(url) {
-
-        if (typeof url !== 'string' || !/^https?:\/\//i.test(url) ||
-            url.includes('2a96cbd8b46e442fc41c2b86b821562f')) return Promise.resolve(false);
-        return new Promise(resolve => {
-
-        const img =
-            document.getElementById("musicImage");
-
-        const placeholder =
-            document.getElementById("musicPlaceholder");
-
-        img.onload = () => {
-
-            img.hidden = false;
-            placeholder.hidden = true;
-            resolve(true);
-        };
-
-        img.onerror = () => {
-
-            img.hidden = true;
-            placeholder.hidden = false;
-
-            console.warn(
-                "O navegador não conseguiu carregar a capa:",
-                url
-            );
-            resolve(false);
-        };
-
-        img.src = url;
-        });
     }
 
     // =========================================

@@ -107,6 +107,10 @@ class LastFmDiscoveryTests {
         resource.discover(uncached).block(Duration.ofSeconds(2));
         resource.discover(uncached).block(Duration.ofSeconds(2));
         assertEquals(3, calls.get());
+
+        var preview = Map.of("method", "track.getInfo", "track", "Preview track", "artist", "Artist", "preview", "true");
+        assertEquals(body, resource.discover(preview).block(Duration.ofSeconds(2)));
+        org.mockito.Mockito.verify(catalog, org.mockito.Mockito.times(3)).persistDiscovery("track.getinfo", body);
     }
 
     @Test

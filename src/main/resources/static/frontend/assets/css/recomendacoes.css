@@ -76,3 +76,47 @@ html.synchro-light .recommendations-page .favorite-album-card .favorite-card-lin
         font-size: 16px;
     }
 }
+
+.recommendations-page .recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+}
+
+.recommendations-page .favorite-album-cover {
+    width: 100%;
+    height: 140px;
+    aspect-ratio: auto;
+    overflow: hidden;
+}
+
+.recommendations-page .favorite-album-image {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    object-fit: cover;
+}
+
+.recommendations-page .favorite-card-info {
+    padding: 10px;
+}
+
+.recommendations-page .recommendation-grid h3 {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+/* TABLETS */
+@media (max-width: 1000px) {
+    .recommendations-page .recommendation-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* CELULARES */
+@media (max-width: 600px) {
+    .recommendations-page .recommendation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
