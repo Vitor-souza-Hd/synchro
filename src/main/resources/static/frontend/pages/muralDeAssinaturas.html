@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mural de Assinaturas | Synchro</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: "Josefin Sans", sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        a { text-decoration: none; }
+        body { background: #000; color: #fff; min-height: 100vh; overflow-x: hidden; }
+
+        @keyframes cores {
+            0% {color:#cd2727;} 10%{color:#d53b2d;} 20%{color:#e87929;} 30%{color:#fbb23e;}
+            40%{color:#5ed536;} 50%{color:#41ca91;} 60%{color:#2152f1;} 70%{color:#432fd8;}
+            80%{color:#c423c4;} 90%{color:#cd2743;} 100%{color:#cd2727;}
+        }
+
+        .topo {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 20px; padding: 20px 30px; flex-wrap: wrap;
+        }
+        .logo { display: flex; align-items: center; gap: 8px; }
+        .logo i, .logo a { font-weight: 700; color: #cd2727; animation: cores 10s infinite; }
+        .logo i { font-size: 30px; }
+        .logo a { font-size: 25px; }
+        .topo nav a { color: #fff; font-size: 18px; margin-left: 18px; transition: .3s; }
+        .topo nav a:hover { color: rgb(100, 57, 255); }
+
+        .hero { text-align: center; padding: 20px 20px 10px; }
+        .hero h1 { font-size: clamp(32px, 6vw, 64px); line-height: 1.05; }
+        .hero h1 span { animation: cores 10s infinite; }
+        .hero p { color: rgba(255,255,255,.7); margin-top: 12px; font-size: 18px; }
+
+        /* BARRA DE FERRAMENTAS (fica visível ao rolar) */
+        .ferramentas {
+            position: sticky; top: 10px; z-index: 10;
+            width: fit-content; max-width: calc(100% - 24px);
+            margin: 20px auto; padding: 10px 16px;
+            display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;
+            background: rgba(20,18,22,.85); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,.12); border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.5);
+        }
+        .cores { display: flex; gap: 8px; }
+        .cor {
+            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+            border: 2px solid rgba(255,255,255,.25); transition: transform .15s;
+        }
+        .cor:hover { transform: scale(1.15); }
+        .cor.ativa { border-color: #fff; transform: scale(1.2); box-shadow: 0 0 0 3px rgba(255,255,255,.2); }
+        .ferramentas label { font-size: 14px; color: rgba(255,255,255,.75); display: flex; align-items: center; gap: 8px; }
+        .ferramentas input[type=range] { accent-color: #ff6588; width: 110px; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+            padding: 8px 14px; border-radius: 10px; font-size: 14px; font-weight: 600;
+            color: #fff; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+            transition: .2s;
+        }
+        .btn:hover { background: rgba(255,255,255,.18); }
+        .btn.ativo { background: #ff6588; border-color: #ff6588; }
+        .btn.perigo:hover { background: #b91c32; border-color: #ef4556; }
+        .status { font-size: 12px; color: rgba(255,255,255,.55); min-width: 90px; text-align: center; }
+
+        /* O MURAL */
+        .mural-wrap {
+            width: min(100% - 24px, 1400px); margin: 0 auto 60px;
+            border-radius: 24px; overflow: hidden; position: relative;
+            border: 1px solid rgba(255,255,255,.12);
+            background:
+                    radial-gradient(circle at 20% 5%, rgba(205,39,39,.18), transparent 35%),
+                    radial-gradient(circle at 80% 30%, rgba(100,57,255,.16), transparent 40%),
+                    radial-gradient(circle at 30% 60%, rgba(65,202,145,.12), transparent 40%),
+                    radial-gradient(circle at 75% 90%, rgba(251,178,62,.14), transparent 40%),
+                    #0c0b0e;
+        }
+        .mural-wrap::before { /* pontilhado discreto, estilo caderno */
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+        canvas { display: block; width: 100%; height: auto; position: relative; cursor: crosshair; touch-action: none; }
+        canvas.rolar { touch-action: auto; cursor: default; }
+
+        .rodape { text-align: center; color: rgba(255,255,255,.4); font-size: 13px; padding-bottom: 30px; }
+    </style>
+</head>
+<body>
+
+<header class="topo">
+    <div class="logo"><i class="bx bx-pulse"></i><a href="/index.html">SYNCHRO</a></div>
+    <nav>
+        <a href="/index.html">Início</a>
+        <a href="/frontend/pages/explorar.html">Explorar</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <h1>Mural de <span>assinaturas</span></h1>
+    <p>Você que nos apoiou desde o início: assine aqui, o seu nome fica no site. ✍️</p>
+</section>
+
+<div class="ferramentas" role="toolbar" aria-label="Ferramentas de desenho">
+    <div class="cores" id="cores"></div>
+    <label>Espessura <input type="range" id="espessura" min="1" max="24" value="4"></label>
+    <button class="btn" id="borracha" type="button"><i class="bx bxs-eraser"></i> Borracha</button>
+    <button class="btn" id="rolar" type="button" title="No celular: ative para rolar a página sem desenhar"><i class="bx bx-move-vertical"></i> Rolar</button>
+    <button class="btn" id="baixar" type="button"><i class="bx bx-download"></i> Baixar PNG</button>
+    <button class="btn perigo" id="limpar" type="button"><i class="bx bx-trash"></i> Limpar tudo</button>
+    <span class="status" id="status"></span>
+</div>
+
+<div class="mural-wrap">
+    <canvas id="mural" aria-label="Mural para assinar com o mouse"></canvas>
+</div>
+
+<p class="rodape">Synchro • obrigado por fazer parte desde o começo 💜</p>
+
+<script>
+    (function () {
+        // Tamanho lógico do mural: largo e bem comprido para caber muitas assinaturas.
+        const LARGURA = 1600;
+        const ALTURA = 7000;
+
+        const canvas = document.getElementById('mural');
+        canvas.width = LARGURA;
+        canvas.height = ALTURA;
+        const ctx = canvas.getContext('2d');
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        const PALETA = ['#ffffff', '#ff6588', '#cd2727', '#e87929', '#fbb23e', '#5ed536', '#41ca91', '#2152f1', '#6439ff', '#c423c4'];
+        let cor = PALETA[0];
+        let borracha = false;
+
+        // ---------- Ferramentas ----------
+        const elCores = document.getElementById('cores');
+        PALETA.forEach((c, i) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'cor' + (i === 0 ? ' ativa' : '');
+            b.style.background = c;
+            b.setAttribute('aria-label', 'Cor ' + c);
+            b.addEventListener('click', () => {
+                cor = c;
+                setBorracha(false);
+                elCores.querySelectorAll('.cor').forEach(x => x.classList.remove('ativa'));
+                b.classList.add('ativa');
+            });
+            elCores.appendChild(b);
+        });
+
+        const elEspessura = document.getElementById('espessura');
+        const btnBorracha = document.getElementById('borracha');
+        function setBorracha(v) {
+            borracha = v;
+            btnBorracha.classList.toggle('ativo', v);
+        }
+        btnBorracha.addEventListener('click', () => setBorracha(!borracha));
+
+        const btnRolar = document.getElementById('rolar');
+        btnRolar.addEventListener('click', () => {
+            const rolando = canvas.classList.toggle('rolar');
+            btnRolar.classList.toggle('ativo', rolando);
+        });
+
+        // ---------- Desenho ----------
+        let desenhando = false;
+        let ultimo = null;
+
+        function posicao(e) {
+            const r = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - r.left) * (canvas.width / r.width),
+                y: (e.clientY - r.top) * (canvas.height / r.height)
+            };
+        }
+
+        function configurarPincel() {
+            const escala = canvas.width / canvas.getBoundingClientRect().width; // mantém a espessura visível igual em telas diferentes
+            const base = Number(elEspessura.value) * escala;
+            ctx.globalCompositeOperation = borracha ? 'destination-out' : 'source-over';
+            ctx.strokeStyle = cor;
+            ctx.fillStyle = cor;
+            ctx.lineWidth = borracha ? base * 3 : base;
+        }
+
+        canvas.addEventListener('pointerdown', e => {
+            if (canvas.classList.contains('rolar')) return;
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            desenhando = true;
+            canvas.setPointerCapture(e.pointerId);
+            configurarPincel();
+            ultimo = posicao(e);
+            // ponto simples (clique sem arrastar)
+            ctx.beginPath();
+            ctx.arc(ultimo.x, ultimo.y, ctx.lineWidth / 2, 0, Math.PI * 2);
+            ctx.fill();
+            e.preventDefault();
+        });
+
+        canvas.addEventListener('pointermove', e => {
+            if (!desenhando) return;
+            const eventos = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+            (eventos.length ? eventos : [e]).forEach(ev => {
+                const p = posicao(ev);
+                const meio = { x: (ultimo.x + p.x) / 2, y: (ultimo.y + p.y) / 2 };
+                ctx.beginPath();
+                ctx.moveTo(ultimo.x, ultimo.y);
+                ctx.quadraticCurveTo(ultimo.x, ultimo.y, meio.x, meio.y); // suaviza o traço
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+                ultimo = p;
+            });
+        });
+
+        function terminar() {
+            if (!desenhando) return;
+            desenhando = false;
+            ultimo = null;
+            agendarSalvar();
+        }
+        canvas.addEventListener('pointerup', terminar);
+        canvas.addEventListener('pointercancel', terminar);
+
+        // ---------- Persistência (IndexedDB, neste navegador) ----------
+        const status = document.getElementById('status');
+        let bd = null;
+        let temporizador = null;
+
+        function abrirBanco() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('synchro-mural', 1);
+                req.onupgradeneeded = () => req.result.createObjectStore('mural');
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        function lerBlob() {
+            return new Promise((resolve, reject) => {
+                const req = bd.transaction('mural').objectStore('mural').get('imagem');
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        function gravarBlob(blob) {
+            return new Promise((resolve, reject) => {
+                const tx = bd.transaction('mural', 'readwrite');
+                tx.objectStore('mural').put(blob, 'imagem');
+                tx.oncomplete = resolve;
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        function agendarSalvar() {
+            status.textContent = 'Salvando…';
+            clearTimeout(temporizador);
+            temporizador = setTimeout(salvar, 600);
+        }
+        function salvar() {
+            if (!bd) { status.textContent = 'Sem salvamento'; return; }
+            canvas.toBlob(async blob => {
+                try {
+                    await gravarBlob(blob);
+                    status.textContent = 'Salvo ✓';
+                } catch {
+                    status.textContent = 'Erro ao salvar';
+                }
+            }, 'image/png');
+        }
+
+        (async function iniciar() {
+            try {
+                bd = await abrirBanco();
+                const blob = await lerBlob();
+                if (blob) {
+                    const img = await createImageBitmap(blob);
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.drawImage(img, 0, 0);
+                    status.textContent = 'Mural carregado';
+                }
+            } catch {
+                status.textContent = 'Salvamento indisponível';
+            }
+        })();
+
+        window.addEventListener('beforeunload', () => { if (temporizador) salvar(); });
+
+        // ---------- Baixar e limpar ----------
+        document.getElementById('baixar').addEventListener('click', () => {
+            const fora = document.createElement('canvas');
+            fora.width = canvas.width;
+            fora.height = canvas.height;
+            const c = fora.getContext('2d');
+            c.fillStyle = '#0c0b0e';
+            c.fillRect(0, 0, fora.width, fora.height);
+            c.drawImage(canvas, 0, 0);
+            fora.toBlob(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'mural-synchro.png';
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+            }, 'image/png');
+        });
+
+        document.getElementById('limpar').addEventListener('click', () => {
+            if (!confirm('Apagar TODAS as assinaturas do mural? Isso não pode ser desfeito.')) return;
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            salvar();
+        });
+    })();
+</script>
+</body>
+</html>
