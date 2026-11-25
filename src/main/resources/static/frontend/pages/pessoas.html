@@ -6,22 +6,47 @@
     <title>Encontrar pessoas | Synchro</title>
     <script src="/frontend/assets/js/explorar/tema-global.js"></script>
     <link rel="stylesheet" href="/frontend/assets/css/people-search.css?v=amizades">
-    <script src="/frontend/assets/js/people-search.js" defer></script>
-    <script src="/frontend/assets/js/friendships.js" defer></script>
+    <script src="/frontend/assets/js/people-search.js?v=username-publico" defer></script>
+    <script src="/frontend/assets/js/friendships.js?v=username-publico" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/auth.css">
+    <link rel="stylesheet" href="/frontend/assets/css/site-header.css?v=sino-e-sair">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <script src="/frontend/assets/js/search.js?v=username-publico" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css?v=sino-cabecalho">
+    <script src="/frontend/assets/js/auth.js" defer></script>
+    <script src="/frontend/assets/js/post-notifications.js?v=username-publico" defer></script>
+    <script src="/frontend/assets/js/site-header.js?v=barra-e-menu" defer></script>
 </head>
 <body>
-    <header class="people-header">
-        <nav aria-label="Navegação principal">
-            <a href="/frontend/pages/explorar.html" class="people-brand">SYNCHRO</a>
-            <a href="/frontend/pages/perfil.html">Meu perfil</a>
-        </nav>
-    </header>
+    <div id="header-container">
+            <header class="top-header">
+                <div class="search-box">
+                    <i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></i>
+                    <input class="search" type="search" placeholder="Buscar música ou pessoas" aria-label="Buscar música ou pessoas" autocomplete="off">
+                </div>
+                <nav class="nav-links" aria-label="Navegação principal">
+                    <a href="/frontend/pages/explorar.html">Início</a>
+                    <a href="/frontend/pages/pessoas.html" class="active" aria-current="page">Pessoas</a>
+                    <a href="/frontend/pages/explorar.html#pesquisa">Músicas</a>
+                    <a href="/frontend/pages/explorar.html#artistas">Artistas</a>
+                    <a href="/frontend/pages/configuracoes.html" aria-label="Configurações" title="Configurações"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M9.5 3h5l.6 2.5 2 .9 2.3-1 2.5 4.3-1.9 1.7v2.2l1.9 1.7-2.5 4.3-2.3-1-2 .9-.6 2.5h-5l-.6-2.5-2-.9-2.3 1-2.5-4.3L4 13.6v-2.2L2.1 9.7l2.5-4.3 2.3 1 2-.9z"/></svg></a>
+                    <div class="profile-header-actions">
+                        <div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div>
+                    <a class="profile-notifications-link" href="/frontend/pages/notificacoes.html" data-post-notifications-link aria-label="Notificações" title="Notificações">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+                    <span class="post-notifications-count" data-post-notifications-badge hidden></span>
+                    </a>
+                    <a href="/frontend/pages/perfil.html" aria-label="Meu perfil"> <img class="personal-profile-icon" src="/frontend/assets/images/personal-profile-icon.png" width="28" height="28" alt=""> </a>
+                    </div>
+                </nav>
+            </header>
+        </div>
     <main>
         <h1>Encontrar pessoas</h1>
         <form id="peopleSearch" role="search" aria-label="Busca de usuários">
-            <label for="peopleQuery">Nome ou @usuário</label>
+            <label for="peopleQuery">@usuário</label>
             <div class="people-input">
-                <input id="peopleQuery" name="q" type="search" maxlength="200" required autocomplete="off" placeholder="Nome ou @usuário">
+                <input id="peopleQuery" name="q" type="search" maxlength="200" required autocomplete="off" placeholder="@usuário">
                 <button type="submit">Buscar</button>
             </div>
         </form>

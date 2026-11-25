@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.example.synchro.dto.UserDto;
 import org.example.synchro.dto.lastFmDtos.LastFmSessionDto;
 import org.example.synchro.dto.lastFmDtos.UserInfo;
+import org.example.synchro.entities.LastFmProfileRanking;
 import org.example.synchro.entities.LastFmSession;
 import org.example.synchro.entities.User;
 import org.example.synchro.entities.UserData;
+import org.example.synchro.repositories.LastFmProfileRankingRepository;
 import org.example.synchro.repositories.LastFmSessionRepository;
 import org.example.synchro.repositories.UserRepository;
 import org.example.synchro.services.exception.ResourceConflictException;
@@ -18,17 +20,21 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class LastFmAccountStore {
     private final UserRepository users;
     private final LastFmSessionRepository sessions;
+    private final LastFmProfileRankingRepository rankings;
 
     @Transactional
     public void connect(Long userId, LastFmSessionDto.Session authorized) {
-        User user = findUser(userId);
-        if (!authorized.getName().equalsIgnoreCase(user.getLastFmUsername()) && user.getData() != null) {
+        User user = lockUser(userId);
+        boolean changed = !authorized.getName().equalsIgnoreCase(user.getLastFmUsername());
+        if (changed) rankings.deleteByUserId(userId);
+        if (changed && user.getData() != null) {
             // Never display the previous account's data if importing the new account fails.
             UserData data = user.getData();
             data.setScrobbles(null);
@@ -64,7 +70,7 @@ public class LastFmAccountStore {
 
     @Transactional
     public UserDto saveProfile(Long userId, String expectedUsername, UserInfo info) {
-        User user = findUser(userId);
+        User user = lockUser(userId);
         if (!user.hasLastFmConnection() || !expectedUsername.equalsIgnoreCase(user.getLastFmUsername())
                 || !expectedUsername.equalsIgnoreCase(info.getName())) {
             throw new ResourceConflictException("A conta Last.fm mudou. Atualize o perfil novamente.");
@@ -84,6 +90,33 @@ public class LastFmAccountStore {
         data.setLastFmImageUrl(profileImage(info));
         data.setLastFmUpdatedAt(Instant.now());
         return new UserDto(users.save(user));
+    }
+
+    public record SavedRanking(String payload, Instant updatedAt) {}
+
+    @Transactional(readOnly = true)
+    public Optional<SavedRanking> findRanking(Long userId, String type, String period) {
+        var username = connectedUsername(userId);
+        return rankings.findByUserIdAndTypeAndPeriod(userId, type, period)
+                .filter(ranking -> username.equalsIgnoreCase(ranking.getLastFmUsername()))
+                .map(ranking -> new SavedRanking(ranking.getPayload(), ranking.getUpdatedAt()));
+    }
+
+    @Transactional
+    public String saveRanking(Long userId, String username, String type, String period, String payload) {
+        var user = lockUser(userId);
+        if (!user.hasLastFmConnection() || !username.equalsIgnoreCase(user.getLastFmUsername())) {
+            throw new ResourceConflictException("A conta Last.fm mudou. Atualize o perfil novamente.");
+        }
+        var ranking = rankings.findByUserIdAndTypeAndPeriod(userId, type, period)
+                .orElseGet(() -> new LastFmProfileRanking(user, type, period));
+        ranking.update(username, payload, Instant.now());
+        rankings.save(ranking);
+        return payload;
+    }
+
+    private User lockUser(Long id) {
+        return users.findByIdForUpdate(id).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
     private User findUser(Long id) {

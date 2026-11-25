@@ -97,7 +97,7 @@
         const links = [['Início','/index.html'],['Explorar',base+'explorar.html'],['Meu perfil',base+'perfil.html'],['Favoritos',base+'favoritos.html'],['Recentes',base+'recentes.html'],['Playlists',base+'playlists.html'],['Configurações',base+'configuracoes.html']];
         const nav = document.createElement('nav'); nav.className='feature-nav'; nav.setAttribute('aria-label','Biblioteca Synchro');
         for(const [label,href] of links){const a=document.createElement('a');a.textContent=label;a.href=href;if(location.pathname===href)a.setAttribute('aria-current','page');nav.append(a);}
-        document.body.prepend(nav);
+        if (!document.querySelector(".feature-header .feature-nav, #header-container .top-header")) document.body.prepend(nav);
         const destinations = new Map([['explorar',base+'explorar.html'],['recentes',base+'recentes.html'],['favoritos',base+'favoritos.html'],['avaliações',base+'perfil.html#minhas-avaliacoes'],['suas playlists',base+'playlists.html'],['criar uma nova',base+'playlists.html']]);
         document.querySelectorAll('.sidebar a').forEach(a=>{if(a.hasAttribute('data-create-playlist'))return;const href=destinations.get(a.textContent.trim().toLowerCase());if(href)a.href=href;});
         document.addEventListener('synchro:own-profile', () => {
@@ -190,7 +190,9 @@
             }
 
             document.addEventListener('playlist-saved', loadPlaylists);
-            loadPlaylists();
+            whenProfileSectionNear(grid.closest('.user-playlist'), () => {
+                if (!activeRequest) loadPlaylists();
+            });
         }, { once: true });
     });
 })();

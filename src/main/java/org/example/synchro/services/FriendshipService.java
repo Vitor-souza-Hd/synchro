@@ -31,8 +31,7 @@ public class FriendshipService {
         ensureViewer(viewerId);
         return friendships.findForUser(viewerId).stream().map(friendship -> {
             var other = friendship.otherUser(viewerId);
-            var data = other.getData();
-            var profile = new UserSearchResult(other.getId(), other.getUsername(), data == null ? null : data.getFullName());
+            var profile = new UserSearchResult(other.getId(), other.getUsername());
             return new Connection(profile, state(friendship, viewerId));
         }).sorted(Comparator.comparing(item -> item.user().username(), String.CASE_INSENSITIVE_ORDER)).toList();
     }

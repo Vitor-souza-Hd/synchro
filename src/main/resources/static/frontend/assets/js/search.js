@@ -86,8 +86,7 @@
 
             function render(data, term) {
                 const groups = [
-                    ['Usuários', data.users, item => item.fullName?.trim() || '@' + item.username,
-                        item => item.fullName?.trim() ? '@' + item.username : '', 'perfil-publico'],
+                    ['Usuários', data.users, item => '@' + item.username, () => '', 'perfil-publico'],
                     ['Músicas', data.songs, item => item.titulo,
                         item => [item.lastFm?.artistName || item.artistas?.map(artist => artist.nome).join(', '), item.album?.titulo].filter(Boolean).join(' · '), 'musica'],
                     ['Artistas', data.artists, item => item.nome, () => 'Artista', 'artista'],

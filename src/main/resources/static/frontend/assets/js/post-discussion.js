@@ -27,7 +27,7 @@
     }
 
     function authorName(author) {
-        return author.fullName?.trim() || '@' + author.username;
+        return '@' + author.username;
     }
 
     function timestamp(value) {
@@ -87,6 +87,8 @@
         article.append(panel);
 
         const shown = new Map();
+        const received = new Map();
+        const pending = new Map();
         let nextBefore = null;
         let reply = null;
         let editing = null;
@@ -137,7 +139,7 @@
             try {
                 await request(commentUrl(comment.id), {method: 'DELETE'});
                 if (editing?.id === comment.id || reply?.id === comment.id) setReply(null);
-                render({...comment, own: false, deleted: true, body: ''}, false, true).focus();
+                render({...comment, author: null, own: false, deleted: true, body: ''}, true).focus();
                 writeStatus.textContent = 'Comentário excluído.';
             } catch (error) {
                 if (error.status === 401) login.hidden = false;
@@ -147,17 +149,36 @@
             }
         }
 
-        function render(comment, prepend = false, replace = false) {
+        function showComment(id) {
+            const key = String(id);
+            if (shown.has(key)) return Promise.resolve(shown.get(key));
+            if (!pending.has(key)) {
+                const data = received.has(key)
+                    ? Promise.resolve(received.get(key))
+                    : request(commentUrl(key));
+                pending.set(key, data.then(async comment => {
+                    if (comment.parentId != null) await showComment(comment.parentId);
+                    return render(comment);
+                }).finally(() => pending.delete(key)));
+            }
+            return pending.get(key);
+        }
+
+        function render(comment, replace = false) {
             const id = String(comment.id);
             const previous = shown.get(id);
             if (previous && !replace) return previous;
-            const item = element('li', comment.parentId == null ? 'post-comment' : 'post-comment post-comment-nested');
+            const item = element('li', 'post-comment');
+            item.dataset.commentId = id;
             item.id = 'post-comment-' + id;
             item.tabIndex = -1;
             const header = element('div', 'post-comment-header');
-            const author = element('a', 'post-comment-author', authorName(comment.author));
-            author.href = '/frontend/pages/perfil-publico.html?' + new URLSearchParams({user: comment.author.id});
-            header.append(author, timestamp(comment.createdAt));
+            if (comment.author) {
+                const author = element('a', 'post-comment-author', authorName(comment.author));
+                author.href = '/frontend/pages/perfil-publico.html?' + new URLSearchParams({user: comment.author.id});
+                header.append(author);
+            }
+            header.append(timestamp(comment.createdAt));
             if (comment.editedAt && !comment.deleted) header.append(element('span', 'post-discussion-meta', 'Editado'));
             item.append(header);
             if (comment.parentId != null) {
@@ -183,12 +204,19 @@
                 }
                 item.append(tools);
             }
+            const replies = previous?.lastElementChild || element('ol', 'post-comment-list post-comment-children');
+            item.append(replies);
             shown.set(id, item);
             if (previous) {
                 if (previous.classList.contains('post-comment-target')) item.classList.add('post-comment-target');
                 previous.replaceWith(item);
-            } else if (prepend) list.prepend(item);
-            else list.append(item);
+            } else {
+                const siblings = comment.parentId == null
+                    ? list
+                    : shown.get(String(comment.parentId)).lastElementChild;
+                const next = [...siblings.children].find(sibling => Number(sibling.dataset.commentId) < comment.id);
+                siblings.insertBefore(item, next || null);
+            }
             return item;
         }
 
@@ -197,8 +225,13 @@
             more.disabled = true;
             loadStatus.textContent = 'Carregando comentários…';
             const params = nextBefore == null ? '' : '?' + new URLSearchParams({before: nextBefore});
-            loading = request(path + params).then(page => {
-                page.items.forEach(comment => render(comment));
+            loading = request(path + params).then(async page => {
+                for (const comment of page.items) received.set(String(comment.id), comment);
+                try {
+                    await Promise.all(page.items.map(comment => showComment(comment.id)));
+                } finally {
+                    received.clear();
+                }
                 loaded = true;
                 nextBefore = page.nextBefore;
                 more.hidden = nextBefore == null;
@@ -238,7 +271,7 @@
                 });
                 if (!focused) text.value = '';
                 setReply(null);
-                render(comment, !focused, Boolean(focused));
+                render(comment, Boolean(focused));
                 if (loaded) loadStatus.textContent = '';
                 writeStatus.textContent = focused ? 'Comentário atualizado.' :
                     parentId == null ? 'Comentário publicado.' : 'Resposta publicada.';
@@ -259,8 +292,7 @@
             panel.open = true;
             load().then(async () => {
                 try {
-                    const target = shown.get(focusId) ||
-                        render(await request(commentUrl(focusId)), true);
+                    const target = await showComment(focusId);
                     target.classList.add('post-comment-target');
                     target.focus();
                 } catch {

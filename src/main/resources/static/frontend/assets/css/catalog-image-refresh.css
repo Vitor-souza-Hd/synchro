@@ -1,0 +1,36 @@
+
+.catalog-image-tools:not([hidden]) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-block: 12px;
+}
+
+.catalog-image-tools button {
+    padding: 8px 12px;
+    border: 1px solid currentColor;
+    border-radius: 9px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.catalog-image-tools button:disabled {
+    opacity: .7;
+    cursor: wait;
+}
+
+.catalog-image-tools button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+.catalog-image-tools [role="status"] {
+    font-size: .875rem;
+}
+
+.catalog-image-tools [role="status"]:empty {
+    display: none;
+}

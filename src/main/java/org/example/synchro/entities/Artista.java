@@ -3,6 +3,7 @@ package org.example.synchro.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -11,6 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
+@BatchSize(size = 32)
 @Getter
 @Setter
 public class Artista implements Serializable {

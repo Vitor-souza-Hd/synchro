@@ -17,21 +17,12 @@
         const avatar = document.createElement('span');
         avatar.className = 'person-initials';
         avatar.setAttribute('aria-hidden', 'true');
-        const name = (person.fullName || '').trim();
-        const initials = (name || person.username).split(/\s+/).slice(0, 2).map(part => Array.from(part)[0]).join('');
+        const initials = person.username.split(/\s+/).slice(0, 2).map(part => Array.from(part)[0]).join('');
         avatar.textContent = initials.toLocaleUpperCase('pt-BR');
 
-        const details = document.createElement('span');
-        if (name && name !== person.username) {
-            const displayName = document.createElement('strong');
-            displayName.textContent = name;
-            details.append(displayName);
-        }
-        const handle = document.createElement('span');
-        handle.className = 'person-handle';
+        const handle = document.createElement('strong');
         handle.textContent = '@' + person.username;
-        details.append(handle);
-        link.append(avatar, details);
+        link.append(avatar, handle);
 
         const row = document.createElement('li');
         row.append(link);
@@ -51,7 +42,7 @@
         results.replaceChildren();
         pagination.hidden = true;
         if (!currentTerm || currentTerm === '@') {
-            status.textContent = 'Digite um nome ou @usuário para buscar.';
+            status.textContent = 'Digite um @usuário para buscar.';
             return;
         }
 

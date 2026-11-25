@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ public class Album extends Midia{
     private Set<Musica> musicas = new HashSet<Musica>();
 
     @ManyToMany(fetch = FetchType.LAZY)
+    @BatchSize(size = 32)
     @JoinTable( name = "album_artistas",
             joinColumns = @JoinColumn(name = "album_id"),
             inverseJoinColumns = @JoinColumn(name = "artista_id")

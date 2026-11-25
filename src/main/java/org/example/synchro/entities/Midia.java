@@ -3,10 +3,12 @@ package org.example.synchro.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.*;
 
 @Entity
+@BatchSize(size = 32)
 @Getter
 @Setter
 @Inheritance(strategy = InheritanceType.JOINED)

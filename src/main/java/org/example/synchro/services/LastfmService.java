@@ -2,6 +2,7 @@ package org.example.synchro.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.config.LastFmConfig;
 import org.example.synchro.dto.UserDto;
@@ -21,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,9 +32,21 @@ public class LastfmService {
     private final WebClient webClient;
     private final LastFmConfig config;
     private final LastFmAccountStore accounts;
+    private final BoundedLookupCache<RankingKey, String> rankingRefreshes =
+            new BoundedLookupCache<>(256, ignored -> Duration.ofMinutes(1));
+
+    private record RankingKey(Long userId, String username, String type, String period) {}
 
     public Mono<String> getUserInfo(String username) {
         return requestUserInfo(username).map(JsonNode::toString);
+    }
+
+    public Mono<String> getPublicUserInfo(String username) {
+        return requestUserInfo(username).map(profile -> {
+            var user = (ObjectNode) profile.path("user");
+            user.remove("realname");
+            return profile.toString();
+        });
     }
 
     private Mono<JsonNode> requestUserInfo(String username) {
@@ -281,6 +295,26 @@ public class LastfmService {
 
 
     public Mono<String> getTopBySynchroId(Long userId, String type, String period) {
+        return Mono.fromCallable(() -> accounts.connectedUsername(userId))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(username -> requestRanking(username, type, period));
+    }
+
+    public Mono<Optional<LastFmAccountStore.SavedRanking>> findSavedRanking(Long userId, String type, String period) {
+        return Mono.fromCallable(() -> accounts.findRanking(userId, type, period))
+                .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    public Mono<String> refreshSavedRanking(Long userId, String type, String period) {
+        return Mono.fromCallable(() -> accounts.connectedUsername(userId))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(username -> rankingRefreshes.get(new RankingKey(userId, username, type, period), () ->
+                        requestRanking(username, type, period).flatMap(payload ->
+                                Mono.fromCallable(() -> accounts.saveRanking(userId, username, type, period, payload))
+                                        .subscribeOn(Schedulers.boundedElastic()))));
+    }
+
+    private Mono<String> requestRanking(String username, String type, String period) {
         String method = switch (type) {
             case "artists" -> "user.gettopartists";
             case "albums" -> "user.gettopalbums";
@@ -290,12 +324,13 @@ public class LastfmService {
         if (!java.util.Set.of("overall", "7day", "1month", "3month", "6month", "12month").contains(period)) {
             return Mono.error(new IllegalArgumentException("Periodo invalido"));
         }
-        return Mono.fromCallable(() -> accounts.connectedUsername(userId))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(username -> webClient.get().uri(builder -> builder
+        return webClient.get().uri(builder -> builder
                         .queryParam("method", method).queryParam("user", "{username}")
                         .queryParam("api_key", config.getApiKey()).queryParam("period", period)
                         .queryParam("limit", 10).queryParam("format", "json").build(username))
-                        .exchangeToMono(this::readResponse).timeout(TIMEOUT).map(JsonNode::toString));
+                .exchangeToMono(this::readResponse).timeout(TIMEOUT)
+                .filter(data -> data.path("top" + type).isObject())
+                .switchIfEmpty(Mono.error(new IllegalStateException("Ranking do Last.fm indisponível.")))
+                .map(JsonNode::toString);
     }
 }

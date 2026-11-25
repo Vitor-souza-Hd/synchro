@@ -20,7 +20,7 @@
     form.insertBefore(pollEditor.element, form.querySelector('.post-actions'));
     window.SynchroPostMentions?.initialize(text);
     const postCards = new Map();
-    const dateFormat = new Intl.DateTimeFormat('pt-BR', {dateStyle: 'short', timeStyle: 'short'});
+    const {authorName, postAttachments} = window.SynchroPostCard;
     let posts = [];
     let nextBefore = null;
     let editing = null;
@@ -74,35 +74,13 @@
         pollEditor.element.hidden = true;
         editing = post;
         text.value = post.body;
-        attachments.select(post.attachment);
+        attachments.select(postAttachments(post));
         label.textContent = 'Editar publicação';
         save.textContent = 'Salvar alterações';
         cancel.hidden = false;
         actionStatus.textContent = '';
         updateCount();
         text.focus();
-    }
-
-    function authorName(user) {
-        return user.fullName?.trim() || '@' + user.username;
-    }
-
-    function setAvatar(image, sources) {
-        const available = [];
-        for (const value of sources) {
-            try {
-                const url = new URL(value);
-                if (url.protocol === 'https:' && !url.username && !url.password && !available.includes(url.href)) {
-                    available.push(url.href);
-                }
-            } catch { /* Use the next image when a profile has no valid URL. */ }
-        }
-        function next() {
-            const source = available.shift();
-            image.onerror = source ? next : null;
-            image.src = source || '/frontend/assets/images/user/userphoto.jpg';
-        }
-        next();
     }
 
     function button(label, click) {
@@ -113,91 +91,24 @@
         return element;
     }
 
-    function reactions(post) {
-        const row = document.createElement('div');
-        row.className = 'post-reactions';
-        let state = post.interaction || {likes: 0, liked: false, saved: false};
-        if (!signedIn) {
-            row.textContent = state.likes + (state.likes === 1 ? ' curtida' : ' curtidas');
-            return row;
-        }
-        const like = button('', () => change('like'));
-        const bookmark = button('', () => change('bookmark'));
-        function display() {
-            like.textContent = (state.liked ? 'Descurtir' : 'Curtir') + ' · ' + state.likes;
-            bookmark.textContent = state.saved ? 'Remover das salvas' : 'Salvar';
-            like.setAttribute('aria-pressed', String(state.liked));
-            bookmark.setAttribute('aria-pressed', String(state.saved));
-        }
-
-        async function change(action) {
-            if (like.disabled || writing) return;
-            const active = action === 'like' ? state.liked : state.saved;
-            like.disabled = bookmark.disabled = true;
-            reacting++;
-            syncFilters();
-            actionStatus.textContent = '';
-            try {
-                state = await request('/posts/' + encodeURIComponent(post.id) + '/' + action,
-                    {method: active ? 'DELETE' : 'PUT'});
-                post.interaction = state;
-                display();
-                if (action === 'bookmark') {
-                    actionStatus.textContent = state.saved ? 'Publicação salva.' : 'Publicação removida das salvas.';
-                    if (scope === 'SAVED' && !state.saved) {
-                        posts = posts.filter(item => item.id !== post.id);
-                        renderPosts();
-                    }
-                }
-            } catch (error) {
-                if (error.status === 401) login.hidden = false;
-                actionStatus.textContent = 'Não foi possível atualizar a publicação.';
-            } finally {
-                like.disabled = bookmark.disabled = false;
-                reacting--;
-                syncFilters();
-            }
-        }
-
-        display();
-        row.append(like, bookmark);
-        return row;
-    }
-
     function card(post) {
         const existing = postCards.get(post.id);
         if (existing?.post === post && existing.signedIn === signedIn) return existing.article;
-        const article = document.createElement('article');
-        article.className = 'post-panel';
-        article.id = 'post-' + post.id;
-
-        const author = document.createElement('a');
-        author.className = 'post-author';
-        author.href = '/frontend/pages/perfil-publico.html?' + new URLSearchParams({user: post.author.id});
-        const image = document.createElement('img');
-        image.alt = '';
-        image.width = image.height = 40;
-        image.loading = 'lazy';
-        image.referrerPolicy = 'no-referrer';
-        setAvatar(image, [post.profileImageUrl, post.lastFmImageUrl]);
-        author.append(image, authorName(post.author));
-
-        const meta = document.createElement('p');
-        meta.className = 'post-meta';
-        const time = document.createElement('time');
-        time.dateTime = post.createdAt;
-        time.textContent = dateFormat.format(new Date(post.createdAt));
-        meta.append(time);
-        if (post.editedAt) meta.append(' · Editada');
-
-        const body = document.createElement('p');
-        body.className = 'post-body';
-        body.textContent = post.body;
-        article.append(author, meta);
-        if (post.body) article.append(body);
-        if (post.attachment) article.append(window.SynchroPostAttachments.card(post.attachment));
+        const article = window.SynchroPostCard.render(post);
         window.SynchroPostPolls.attach(article, post, signedIn);
-        article.append(reactions(post));
+        article.append(window.SynchroPostReactions.render(post, signedIn, {
+            canChange: () => !writing,
+            onPendingChange(delta) {
+                reacting += delta;
+                syncFilters();
+            },
+            onUnsave() {
+                if (scope !== 'SAVED') return;
+                posts = posts.filter(item => item.id !== post.id);
+                renderPosts();
+                actionStatus.textContent = 'Publicação removida das salvas.';
+            }
+        }));
 
         if (post.own) {
             const actions = document.createElement('div');
@@ -338,7 +249,7 @@
         try {
             const post = await request(current ? '/posts/' + encodeURIComponent(current.id) : '/posts', {
                 method: current ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: body, attachment: attachments.value(), poll})
+                body: JSON.stringify({text: body, attachments: attachments.value(), poll})
             });
             if (current) {
                 posts = posts.map(item => item.id === post.id ? post : item);

@@ -3,6 +3,7 @@ package org.example.synchro.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -28,6 +29,7 @@ public class Musica extends Midia implements Serializable {
     private java.time.Instant generoConsultadoEm;
 
     @ManyToMany(fetch = FetchType.LAZY)
+    @BatchSize(size = 32)
     @JoinTable(
             name = "musica_artista",
             joinColumns = @JoinColumn(name = "musica_id"),

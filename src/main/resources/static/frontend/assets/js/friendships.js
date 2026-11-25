@@ -121,13 +121,7 @@
                     const controls = document.createElement('div');
                     controls.className = 'friendship-actions';
                     link.href = '/frontend/pages/perfil-publico.html?' + new URLSearchParams({user: user.id});
-                    link.textContent = user.fullName?.trim() || '@' + user.username;
-                    if (user.fullName?.trim()) {
-                        const username = document.createElement('span');
-                        username.className = 'person-handle';
-                        username.textContent = '@' + user.username;
-                        link.append(username);
-                    }
+                    link.textContent = '@' + user.username;
                     buttons(controls, state, user.id, {status, name: user.username, reload: load, update(next) {
                         if (next === 'NONE') connections = connections.filter(item => item !== connection);
                         else connection.state = next;

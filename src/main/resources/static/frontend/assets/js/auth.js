@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const profileIcons = [...document.querySelectorAll(".personal-profile-icon")]
         .map(image => ({image, fallback: image.getAttribute("src")}));
     let sessionRefresh = 0;
+    const privateProfile = document.body.dataset.profile === "private";
 
     if (window.location.protocol === "file:") return;
 
@@ -31,6 +32,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function renderUserPhoto(user) {
+        const photos = [user?.data?.profileImageUrl, user?.lastFmConnected ? user.data?.lastFmImageUrl : null]
+            .map(safeAvatar).filter(Boolean);
+        renderProfileIcons([...new Set(photos)]);
+    }
+
+    function renderSession(loggedIn) {
+        if (authActions) authActions.hidden = loggedIn;
+        if (sessionActions) sessionActions.hidden = !loggedIn;
+    }
+
     async function loadProfileIcons(refresh) {
         try {
             const response = await fetch("/users/me", {
@@ -40,9 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             const user = response.ok ? await response.json() : null;
             if (refresh !== sessionRefresh) return;
-            const photos = [user?.data?.profileImageUrl, user?.lastFmConnected ? user.data?.lastFmImageUrl : null]
-                .map(safeAvatar).filter(Boolean);
-            renderProfileIcons([...new Set(photos)]);
+            renderUserPhoto(user);
         } catch {
             if (refresh === sessionRefresh) renderProfileIcons();
         }
@@ -58,14 +68,12 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             const loggedIn = response.ok && (await response.text()).trim() === "ok";
             if (refresh !== sessionRefresh) return;
-            if (authActions) authActions.hidden = loggedIn;
-            if (sessionActions) sessionActions.hidden = !loggedIn;
+            renderSession(loggedIn);
             if (loggedIn && profileIcons.length) await loadProfileIcons(refresh);
             else renderProfileIcons();
         } catch {
             if (refresh !== sessionRefresh) return;
-            if (authActions) authActions.hidden = false;
-            if (sessionActions) sessionActions.hidden = true;
+            renderSession(false);
             renderProfileIcons();
         }
     }
@@ -92,6 +100,14 @@ document.addEventListener("DOMContentLoaded", () => {
             logoutButton.textContent = "Sair";
         }
     });
+
+    if (privateProfile) {
+        document.addEventListener("synchro:own-profile", ({detail: user}) => {
+            renderSession(true);
+            renderUserPhoto(user);
+        });
+        return; // The private profile revalidates its own session on browser restores.
+    }
 
     updateSession();
     // Recheck the session when the browser restores a page from its back/forward cache.

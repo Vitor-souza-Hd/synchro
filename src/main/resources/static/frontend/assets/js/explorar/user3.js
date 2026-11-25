@@ -1,3 +1,32 @@
+function profileRankingArtist(item) {
+    return typeof item.artist === 'string' ? item.artist : item.artist?.name || '';
+}
+
+function profileRankingImages(item) {
+    const images = Array.isArray(item?.image) ? item.image : [item?.image];
+    return images.map(image => typeof image === 'string' ? image : image?.['#text']).filter(Boolean).reverse();
+}
+
+function appendProfileRankingLeader(container, item, kind, genre) {
+    if (!container || !item?.name) return;
+    const artist = kind === 'artist' ? item.name : profileRankingArtist(item);
+    const artwork = document.createElement('div');
+    artwork.className = 'report-leader-artwork';
+    container.append(artwork);
+    const alt = genre ? 'Foto de ' + artist + ', artista em destaque em ' + genre
+        : kind === 'artist' ? 'Foto de ' + item.name : 'Capa de ' + item.name;
+    const preferredImages = [...profileRankingImages(item.album), ...profileRankingImages(item)];
+    if (window.SynchroFavoriteImages) {
+        window.SynchroFavoriteImages.show(artwork, {kind, title: item.name, artist, preferredImages, alt});
+    } else {
+        const image = document.createElement('img');
+        image.src = kind === 'artist' ? '/frontend/assets/images/artist-placeholder.svg'
+            : '/frontend/assets/images/catalog-placeholder.svg';
+        image.alt = alt;
+        artwork.append(image);
+    }
+}
+
 document.addEventListener('synchro:own-profile', renderProfileSections);
 document.addEventListener('synchro:public-profile', renderProfileSections);
 
@@ -130,7 +159,7 @@ async function renderProfileSections({detail: user, type: eventType}) {
         document.getElementById('publicRankings').hidden = !lastFmUser;
         if (!lastFmUser) return;
     } else {
-        carregarMinhasAvaliacoes();
+        whenProfileSectionNear(reviewGrid?.closest('section'), carregarMinhasAvaliacoes);
     }
 
 
@@ -208,9 +237,7 @@ async function renderProfileSections({detail: user, type: eventType}) {
             return [];
         }
 
-        return Array.isArray(result)
-            ? result
-            : [result];
+        return (Array.isArray(result) ? result : [result]).filter(item => item?.name);
     }
 
     function renderArtists(items) {
@@ -230,6 +257,8 @@ async function renderProfileSections({detail: user, type: eventType}) {
 
             return;
         }
+
+        appendProfileRankingLeader(reportArtistGrid, items[0], 'artist');
 
         items.forEach((item, index) => {
             if (!item?.name) {
@@ -272,9 +301,7 @@ async function renderProfileSections({detail: user, type: eventType}) {
             link.append(artwork, info);
             card.append(link);
             artistGrid.append(card);
-            const preferredImages = Array.isArray(item.image)
-                ? item.image.map(image => image?.['#text']).reverse()
-                : [];
+            const preferredImages = profileRankingImages(item);
             window.SynchroFavoriteImages.show(artwork, {
                 kind: 'artist', artist: item.name, title: item.name, preferredImages, alt: ''
             });
@@ -293,15 +320,14 @@ async function renderProfileSections({detail: user, type: eventType}) {
             return;
         }
 
+        appendProfileRankingLeader(reportAlbumGrid, items[0], 'album');
+
         items.forEach((item, index) => {
             if (!item?.name) {
                 return;
             }
 
-            const artist =
-                typeof item.artist === 'string'
-                    ? item.artist
-                    : item.artist?.name || '';
+            const artist = profileRankingArtist(item);
 
             reportAlbumGrid?.appendChild(
                 makeRankItem(
@@ -327,15 +353,14 @@ async function renderProfileSections({detail: user, type: eventType}) {
             return;
         }
 
+        appendProfileRankingLeader(reportMusicGrid, items[0], 'track');
+
         items.forEach((item, index) => {
             if (!item?.name) {
                 return;
             }
 
-            const artist =
-                typeof item.artist === 'string'
-                    ? item.artist
-                    : item.artist?.name || '';
+            const artist = profileRankingArtist(item);
 
             reportMusicGrid?.appendChild(
                 makeRankItem(
@@ -355,7 +380,7 @@ async function renderProfileSections({detail: user, type: eventType}) {
     const retryButton = document.getElementById('retryRankings');
     retryButton.addEventListener('click', carregarRankings);
 
-    async function carregarRankings() {
+    async function carregarRankings(announce = true) {
         const period = periodSelect?.value || '7day';
 
         if (!lastFmUser) {
@@ -387,13 +412,12 @@ async function renderProfileSections({detail: user, type: eventType}) {
             return;
         }
 
-        if (rankingStatus) {
-            rankingStatus.textContent =
-                'Carregando rankings...';
+        if (announce) {
+            rankingStatus.textContent = 'Carregando rankings...';
+            retryButton.hidden = true;
         }
 
         const requestNumber = ++latestRankingRequest;
-        retryButton.hidden = true;
         let unavailable = false;
         let timedOut = false;
         async function load(type, itemName, render, containers) {
@@ -486,10 +510,22 @@ async function renderProfileSections({detail: user, type: eventType}) {
         carregarRankings
     );
 
-    await Promise.all([
-        carregarRankings(),
-        carregarTotaisMusicais()
-    ]);
+    if (isPublic) {
+        await Promise.all([carregarRankings(), carregarTotaisMusicais()]);
+    } else if (lastFmUser) {
+        document.addEventListener('synchro:profile-ranking-updated', ({detail}) => {
+            if (latestRankingRequest && detail.period === (periodSelect?.value || '7day')) carregarRankings(false);
+            if (detail.period === 'overall') carregarTotaisMusicais();
+        });
+        const loadRankings = () => {
+            if (!latestRankingRequest) carregarRankings();
+        };
+        whenProfileSectionNear(artistGrid?.closest('section'), loadRankings);
+        whenProfileSectionNear(reportArtistGrid?.closest('section'), loadRankings);
+        whenProfileSectionNear(document.getElementById('profileArtists'), carregarTotaisMusicais);
+    } else {
+        carregarRankings();
+    }
 
 }
 
@@ -588,7 +624,7 @@ function loadPublicReviews(userId) {
 // BIOGRAFIA EDITAVEL DO SYNCHRO
 // =========================================================
 
-document.addEventListener("synchro:own-profile", () => {
+document.addEventListener("synchro:own-profile", ({detail: user}) => {
 
     const biography =
         document.getElementById("profileBiography");
@@ -623,43 +659,8 @@ document.addEventListener("synchro:own-profile", () => {
         return;
     }
 
-    let savedBiography = "";
-
-    async function carregarBiografia() {
-        try {
-            const response = await fetch(
-                "/users/me/profile",
-                {
-                    credentials: "same-origin",
-                    headers: {
-                        Accept: "application/json"
-                    }
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(
-                    `Erro HTTP ${response.status}`
-                );
-            }
-
-            const data = await response.json();
-
-            savedBiography = data.biography || "";
-            biography.textContent = savedBiography;
-
-        } catch (error) {
-            console.error(
-                "Erro ao carregar biografia:",
-                error
-            );
-
-            biography.textContent = "";
-
-            feedback.textContent =
-                "Não foi possível carregar sua biografia.";
-        }
-    }
+    let savedBiography = user.data?.biography || "";
+    biography.textContent = savedBiography;
 
     editButton.addEventListener("click", () => {
         input.value = savedBiography;
@@ -727,5 +728,4 @@ document.addEventListener("synchro:own-profile", () => {
         }
     });
 
-    carregarBiografia();
 });

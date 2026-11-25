@@ -267,7 +267,7 @@ public class LastFmCatalogStore {
     private void addPeople(String term, SearchResultDTO result) {
         var people = users.searchPeople(term, SEARCH_PAGE);
         result.setUsers(people.stream()
-                .map(user -> new SearchUserDTO(user.id(), user.username(), user.fullName())).toList());
+                .map(user -> new SearchUserDTO(user.id(), user.username())).toList());
         result.setHasMoreUsers(people.hasNext());
     }
 }

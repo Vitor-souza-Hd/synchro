@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mural de Assinaturas | Synchro</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: "Josefin Sans", sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        a { text-decoration: none; }
+        body { background: #000; color: #fff; min-height: 100vh; overflow-x: hidden; }
+
+        @keyframes cores {
+            0% {color:#cd2727;} 10%{color:#d53b2d;} 20%{color:#e87929;} 30%{color:#fbb23e;}
+            40%{color:#5ed536;} 50%{color:#41ca91;} 60%{color:#2152f1;} 70%{color:#432fd8;}
+            80%{color:#c423c4;} 90%{color:#cd2743;} 100%{color:#cd2727;}
+        }
+
+        .topo {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 20px; padding: 20px 30px; flex-wrap: wrap;
+        }
+        .logo { display: flex; align-items: center; gap: 8px; }
+        .logo i, .logo a { font-weight: 700; color: #cd2727; animation: cores 10s infinite; }
+        .logo i { font-size: 30px; }
+        .logo a { font-size: 25px; }
+        .topo nav a { color: #fff; font-size: 18px; margin-left: 18px; transition: .3s; }
+        .topo nav a:hover { color: rgb(100, 57, 255); }
+
+        .hero { text-align: center; padding: 20px 20px 10px; }
+        .hero h1 { font-size: clamp(32px, 6vw, 64px); line-height: 1.05; }
+        .hero h1 span { animation: cores 10s infinite; }
+        .hero p { color: rgba(255,255,255,.7); margin-top: 12px; font-size: 18px; }
+
+        /* BARRA DE FERRAMENTAS (fica visível ao rolar) */
+        .ferramentas {
+            position: sticky; top: 10px; z-index: 10;
+            width: fit-content; max-width: calc(100% - 24px);
+            margin: 20px auto; padding: 10px 16px;
+            display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;
+            background: rgba(20,18,22,.85); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,.12); border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.5);
+        }
+        .cores { display: flex; gap: 8px; }
+        .cor {
+            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+            border: 2px solid rgba(255,255,255,.25); transition: transform .15s;
+        }
+        .cor:hover { transform: scale(1.15); }
+        .cor.ativa { border-color: #fff; transform: scale(1.2); box-shadow: 0 0 0 3px rgba(255,255,255,.2); }
+        .ferramentas label { font-size: 14px; color: rgba(255,255,255,.75); display: flex; align-items: center; gap: 8px; }
+        .ferramentas input[type=range] { accent-color: #ff6588; width: 110px; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+            padding: 8px 14px; border-radius: 10px; font-size: 14px; font-weight: 600;
+            color: #fff; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+            transition: .2s;
+        }
+        .btn:hover { background: rgba(255,255,255,.18); }
+        .btn.ativo { background: #ff6588; border-color: #ff6588; }
+        .btn.perigo:hover { background: #b91c32; border-color: #ef4556; }
+        .status { font-size: 12px; color: rgba(255,255,255,.55); min-width: 90px; text-align: center; }
+
+        /* O MURAL */
+        .mural-wrap {
+            width: 100%; margin: 0 0 12px;
+            border-radius: 24px; overflow: hidden; position: relative;
+            border: 1px solid rgba(255,255,255,.12);
+            background:
+                    radial-gradient(circle at 20% 5%, rgba(205,39,39,.18), transparent 35%),
+                    radial-gradient(circle at 80% 30%, rgba(100,57,255,.16), transparent 40%),
+                    radial-gradient(circle at 30% 60%, rgba(65,202,145,.12), transparent 40%),
+                    radial-gradient(circle at 75% 90%, rgba(251,178,62,.14), transparent 40%),
+                    #0c0b0e;
+        }
+        .mural-wrap::before { /* pontilhado discreto, estilo caderno */
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+        canvas { display: block; width: 100%; height: auto; position: relative; cursor: crosshair; touch-action: none; }
+        canvas.rolar { touch-action: auto; cursor: default; }
+
+        .rodape { text-align: center; color: rgba(255,255,255,.4); font-size: 13px; padding-bottom: 30px; }
+
+        .mural-editor, .mural-galeria { width: calc(100% - clamp(24px, 4vw, 64px)); margin: 28px auto; }
+        .mural-editor .status { text-align: start; margin-top: 10px; font-size: 14px; }
+        #muralLogin a { color: #ff98b2; text-decoration: underline; }
+        .ferramentas { position: static; margin: 12px 0; max-width: 100%; }
+        .cores, .mural-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        #assinaturas { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 14px; margin: 16px 0; }
+        #assinaturas li { padding: 10px; border: 1px solid #33283b; border-radius: 12px; background: #17121c; overflow-wrap: anywhere; }
+        #assinaturas img { display: block; width: 100%; height: auto; margin-bottom: 8px; background: #0c0b0e; border-radius: 8px; }
+        [hidden] { display: none !important; }
+        @media (prefers-reduced-motion: reduce) {
+            .logo i, .logo a, .hero h1 span { animation: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topo">
+    <div class="logo"><i class="bx bx-pulse"></i><a href="/index.html">SYNCHRO</a></div>
+    <nav>
+        <a href="/index.html">Início</a>
+        <a href="/frontend/pages/explorar.html">Explorar</a>
+    </nav>
+</header>
+
+
+<main>
+    <section class="hero">
+        <h1>Mural de <span>assinaturas</span></h1>
+        <p>Deixe sua assinatura e veja quem já passou por aqui.</p>
+    </section>
+
+    <section class="mural-editor" aria-labelledby="tituloEditor">
+        <h2 id="tituloEditor">Sua assinatura</h2>
+        <p id="muralLogin" hidden><a href="/frontend/pages/login.html">Entre na sua conta para assinar.</a></p>
+        <p class="status" id="muralStatus" role="status">Carregando sua assinatura…</p>
+        <div id="muralEditor" hidden>
+            <div class="ferramentas" role="group" aria-label="Ferramentas de desenho">
+                <div class="cores" id="cores"></div>
+                <label>Espessura <input type="range" id="espessura" min="1" max="24" value="4"></label>
+                <button class="btn" id="borracha" type="button" aria-pressed="false">Borracha</button>
+                <button class="btn" id="rolar" type="button" aria-pressed="false">Rolar</button>
+                <button class="btn" id="limpar" type="button">Limpar desenho</button>
+            </div>
+            <div class="mural-wrap">
+                <canvas id="mural" width="720" height="300" aria-label="Área para desenhar sua assinatura com mouse ou toque"></canvas>
+            </div>
+            <div class="mural-actions">
+                <button class="btn" id="salvar" type="button">Publicar assinatura</button>
+                <button class="btn" id="baixar" type="button">Baixar PNG</button>
+                <button class="btn perigo" id="excluir" type="button" hidden>Excluir minha assinatura</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="mural-galeria" aria-labelledby="tituloGaleria">
+        <h2 id="tituloGaleria">Assinaturas da comunidade</h2>
+        <p id="galeriaStatus" role="status"></p>
+        <ul id="assinaturas"></ul>
+        <button class="btn" id="maisAssinaturas" type="button" hidden>Ver mais assinaturas</button>
+    </section>
+</main>
+<script src="/frontend/assets/js/mural-assinaturas.js" defer></script>
+</body>
+</html>

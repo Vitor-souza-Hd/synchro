@@ -1,5 +1,5 @@
 
-document.addEventListener("synchro:own-profile", () => {
+document.addEventListener("synchro:own-profile", ({detail: user}) => {
 
     const banner = document.querySelector(".banner-background");
     const edit = document.getElementById("editBannerButton");
@@ -120,24 +120,5 @@ document.addEventListener("synchro:own-profile", () => {
         }
     });
 
-    async function load() {
-        try {
-            const response = await fetch("/users/me/banner", {
-                credentials: "same-origin"
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
-            render(data.bannerImageUrl);
-        } catch (error) {
-            console.error("Erro ao carregar banner:", error);
-            render("");
-        }
-    }
-
-    render("");
-    load();
+    render(user.data?.bannerImageUrl);
 });

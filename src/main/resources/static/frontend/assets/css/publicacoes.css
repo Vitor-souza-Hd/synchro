@@ -160,6 +160,11 @@ html.synchro-light .posts-main {
     font-size: .9rem;
 }
 
+.post-reaction-status {
+    flex-basis: 100%;
+    margin: 0;
+}
+
 .post-filters button[aria-pressed="true"],
 .post-reactions button[aria-pressed="true"] {
     color: var(--post-accent);
@@ -182,16 +187,34 @@ html.synchro-light .posts-main {
 }
 
 .post-attachment-search,
-.post-attachment-selected {
+.post-attachment-selected li {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
 .post-attachment-selected {
+    display: grid;
+    gap: 6px;
+    padding: 0;
+    list-style: none;
+    color: var(--post-muted);
+}
+
+.post-attachment-selected li {
     justify-content: space-between;
     flex-wrap: wrap;
-    color: var(--post-muted);
+    overflow-wrap: anywhere;
+}
+
+.post-attachments-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.post-attachments-list .post-attachment {
+    margin-top: 0;
 }
 
 .post-attachment-search input {

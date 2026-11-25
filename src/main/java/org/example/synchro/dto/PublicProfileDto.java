@@ -23,13 +23,12 @@ public record PublicProfileDto(Long id, String username, String lastFmUsername, 
     private static PublicProfileDto create(User user, Appearance appearance) {
         var data = user.getData();
         return new PublicProfileDto(user.getId(), user.getUsername(), user.getLastFmUsername(),
-                user.hasLastFmConnection(), data == null ? null : new Data(data.getFullName(),
-                data.getScrobbles(), data.getArtistas(), data.getLastFmImageUrl(),
+                user.hasLastFmConnection(), data == null ? null : new Data(data.getScrobbles(), data.getArtistas(), data.getLastFmImageUrl(),
                 data.getLastFmTracks(), data.getLastFmAlbums()), appearance);
     }
 
     public record Appearance(String profileImageUrl, String bannerImageUrl, String biography, List<String> genres) {}
 
-    public record Data(String fullName, Integer scrobbles, Integer artistas, String lastFmImageUrl,
+    public record Data(Integer scrobbles, Integer artistas, String lastFmImageUrl,
                        Integer lastFmTracks, Integer lastFmAlbums) {}
 }

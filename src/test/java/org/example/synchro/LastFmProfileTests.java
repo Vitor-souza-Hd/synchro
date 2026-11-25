@@ -74,7 +74,9 @@ class LastFmProfileTests {
                         : "{\"session\":{\"name\":\"lastfm-listener\",\"key\":\"private-session-key\",\"subscriber\":0}}";
                 if (sessionError.get() > 0) httpStatus = 403;
             } else if ("user.gettopartists".equals(params.get("method"))) {
-                if ("lastfm-listener".equals(params.get("user")) && ("7day".equals(params.get("period")) || "1month".equals(params.get("period")))
+                if (offline.get()) {
+                    response = "{\"error\":11,\"message\":\"Offline\"}";
+                } else if ("lastfm-listener".equals(params.get("user")) && ("7day".equals(params.get("period")) || "1month".equals(params.get("period")))
                         && "10".equals(params.get("limit"))) {
                     response = """
                             {"topartists":{"artist":[{"name":"Artista da Alice","playcount":"12"}]}}
@@ -176,10 +178,19 @@ class LastFmProfileTests {
             assertEquals("https://example.test/alice-photo.jpg", appearance.path("profileImageUrl").asText());
             assertEquals("https://example.test/alice-banner.jpg", appearance.path("bannerImageUrl").asText());
             assertEquals(genres.path("genres"), appearance.path("genres"));
+            var accountWithGenres = profile(browser, base, aliceCookie).path("data");
+            assertEquals(genres.path("genres"), accountWithGenres.path("topMusicGenres"));
+            assertEquals(genres.path("updatedAt"), accountWithGenres.path("musicProfileUpdatedAt"));
             assertFalse(publicProfile.has("email"));
             assertFalse(publicProfile.has("birthDay"));
             assertFalse(publicProfile.path("data").has("lastFmRealName"));
+            assertFalse(publicProfile.path("data").has("fullName"));
             assertFalse(publicResponse.body().contains("private-session-key"));
+            var publicLastFm = request(browser, base + "/last-fm/user/lastfm-listener", null, "GET");
+            assertEquals(200, publicLastFm.statusCode(), publicLastFm.body());
+            var listener = JSON.readTree(publicLastFm.body()).path("user");
+            assertEquals("lastfm-listener", listener.path("name").asText());
+            assertFalse(listener.has("realname"));
             var highlights = request(browser, base + "/last-fm/profiles/" + alice.getId() + "/top/artists", bobCookie, "GET");
             assertEquals(200, highlights.statusCode(), highlights.body());
             assertEquals("Artista da Alice", JSON.readTree(highlights.body())
@@ -193,6 +204,29 @@ class LastFmProfileTests {
             assertFalse(profile(browser, base, bobCookie).path("lastFmConnected").asBoolean());
             assertRedirect(request(browser, callback + "&token=" + TOKEN, aliceCookie, "GET"), "invalid_state");
             assertEquals(1, sessionCalls.get());
+
+            String ranking = base + "/last-fm/me/rankings/artists?period=7day";
+            assertEquals(401, request(browser, ranking, null, "GET").statusCode());
+            assertEquals(409, request(browser, ranking, bobCookie, "GET").statusCode());
+            assertEquals(204, request(browser, ranking, aliceCookie, "GET").statusCode());
+            var fetchedRanking = request(browser, ranking + "&refresh=true", aliceCookie, "GET");
+            assertEquals(200, fetchedRanking.statusCode(), fetchedRanking.body());
+            var rankingStore = context.getBean(org.example.synchro.repositories.LastFmProfileRankingRepository.class);
+            var storedRanking = rankingStore.findByUserIdAndTypeAndPeriod(alice.getId(), "artists", "7day").orElseThrow();
+            assertEquals(JSON.readTree(fetchedRanking.body()), JSON.readTree(storedRanking.getPayload()));
+            var cachedRanking = request(browser, ranking, aliceCookie, "GET");
+            assertEquals("false", cachedRanking.headers().firstValue("X-Synchro-Ranking-Stale").orElseThrow());
+            storedRanking.update(storedRanking.getLastFmUsername(), storedRanking.getPayload(),
+                    java.time.Instant.now().minus(java.time.Duration.ofMinutes(31)));
+            rankingStore.save(storedRanking);
+            offline.set(true);
+            var staleRanking = request(browser, ranking, aliceCookie, "GET");
+            assertEquals(200, staleRanking.statusCode(), staleRanking.body());
+            assertEquals("true", staleRanking.headers().firstValue("X-Synchro-Ranking-Stale").orElseThrow());
+            assertEquals(JSON.readTree(fetchedRanking.body()), JSON.readTree(staleRanking.body()));
+            String uncachedRefresh = base + "/last-fm/me/rankings/artists?period=1month&refresh=true";
+            assertEquals(502, request(browser, uncachedRefresh, aliceCookie, "GET").statusCode());
+            offline.set(false);
 
             plays.set(4000);
             assertEquals(200, request(browser, base + "/last-fm/sync", aliceCookie, "POST").statusCode());
@@ -218,6 +252,7 @@ class LastFmProfileTests {
                     new org.example.synchro.dto.lastFmDtos.LastFmSessionDto.Session("another-account", "new-private-key", 0));
             JsonNode changed = profile(browser, base, aliceCookie);
             assertEquals("another-account", changed.path("lastFmUsername").asText());
+            assertEquals(204, request(browser, ranking, aliceCookie, "GET").statusCode());
             assertTrue(changed.path("data").path("scrobbles").isNull());
             assertTrue(changed.path("data").path("lastFmImageUrl").isNull());
             assertEquals("Synchro Name", changed.path("data").path("fullName").asText());

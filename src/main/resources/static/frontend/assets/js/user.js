@@ -1,4 +1,7 @@
-document.addEventListener("DOMContentLoaded", loadCurrentUserProfile);
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("retryProfile")?.addEventListener("click", loadCurrentUserProfile);
+    loadCurrentUserProfile();
+});
 document.addEventListener("DOMContentLoaded", initializeProfileMenu);
 
 function initializeProfileMenu() {
@@ -50,33 +53,61 @@ function initializeProfileMenu() {
 }
 
 const isPublicProfile = document.body.dataset.profile === 'public';
-// Cada aba do perfil compartilha a resposta entre rankings, gêneros e contadores.
+// Os destaques e o relatório usam a mesma consulta para cada ranking.
 const profileRankings = new Map();
-function fetchProfileRanking(type, period, publicProfileId) {
+function fetchProfileRanking(type, period, publicProfileId, latest = false) {
     const key = (publicProfileId ?? 'me') + ':' + type + ':' + period;
-    const cached = profileRankings.get(key);
-    if (cached && Date.now() < cached.expires) return cached.request;
-    const entry = {expires: Infinity};
-    const endpoint = publicProfileId == null ? '/last-fm/me/top/' + type
-        : '/last-fm/profiles/' + encodeURIComponent(publicProfileId) + '/top/' + type;
-    entry.request = fetch(endpoint + '?' + new URLSearchParams({period}), {
+    let entry = profileRankings.get(key);
+    if (!entry || Date.now() >= entry.expires) {
+        entry = {expires: Infinity};
+        const privateRanking = publicProfileId == null;
+        const path = privateRanking ? '/last-fm/me/rankings/' + type
+            : '/last-fm/profiles/' + encodeURIComponent(publicProfileId) + '/top/' + type;
+        entry.request = readRanking(path, {period}).then(async response => {
+            if (response.status === 204) {
+                if (!privateRanking) return {['top' + type]: {}};
+                return (await readRanking(path, {period, refresh: 'true'})).json();
+            }
+            const saved = await response.json();
+            if (privateRanking && response.headers.get('X-Synchro-Ranking-Stale') === 'true') {
+                entry.refresh = readRanking(path, {period, refresh: 'true'}).then(response => response.json()).then(data => {
+                    if (profileRankings.get(key) === entry) {
+                        entry.request = Promise.resolve(data);
+                        entry.expires = Date.now() + 60000;
+                        document.dispatchEvent(new CustomEvent('synchro:profile-ranking-updated', {detail: {type, period}}));
+                    }
+                    return data;
+                }).catch(error => {
+                    entry.expires = 0;
+                    throw error;
+                });
+                // Exibir o ranking salvo continua possível se a atualização falhar.
+                entry.refresh.catch(() => {});
+            }
+            return saved;
+        }).then(value => {
+            entry.expires = Date.now() + 60000;
+            return value;
+        }).catch(error => {
+            if (profileRankings.get(key) === entry) profileRankings.delete(key);
+            throw error;
+        });
+        profileRankings.set(key, entry);
+    }
+    return latest ? entry.request.then(data => entry.refresh ?? data) : entry.request;
+}
+
+async function readRanking(path, params) {
+    const response = await fetch(path + '?' + new URLSearchParams(params), {
         credentials: 'same-origin', cache: 'no-store', headers: {Accept: 'application/json'},
         signal: AbortSignal.timeout(18000)
-    }).then(async response => {
-        if (!response.ok) {
-            const error = new Error('Ranking indisponível.');
-            error.status = response.status;
-            throw error;
-        }
-        const data = response.status === 204 ? {['top' + type]: {}} : await response.json();
-        entry.expires = Date.now() + 60000;
-        return data;
-    }).catch(error => {
-        profileRankings.delete(key);
-        throw error;
     });
-    profileRankings.set(key, entry);
-    return entry.request;
+    if (!response.ok) {
+        const error = new Error('Ranking indisponível.');
+        error.status = response.status;
+        throw error;
+    }
+    return response;
 }
 window.addEventListener('pagehide', event => {
     if (!isPublicProfile && event.persisted) document.getElementById('profilePage').hidden = true;
@@ -95,11 +126,29 @@ window.addEventListener('pageshow', event => {
     }
 });
 
+function whenProfileSectionNear(section, load) {
+    if (!section || typeof IntersectionObserver !== 'function') {
+        setTimeout(load, 0);
+        return;
+    }
+    const observer = new IntersectionObserver(entries => {
+        if (!entries.some(entry => entry.isIntersecting)) return;
+        observer.disconnect();
+        load();
+    }, {rootMargin: '240px'});
+    observer.observe(section);
+}
+
 async function loadCurrentUserProfile() {
     if (window.location.protocol === "file:") {
         showProfileError("Abra o Synchro pelo servidor em http://localhost:8080 para acessar seu perfil.");
         return;
     }
+
+    document.getElementById("profileStatus").hidden = false;
+    document.getElementById("profileError").hidden = true;
+    const retry = document.getElementById("retryProfile");
+    if (retry) retry.hidden = true;
 
     try {
         const publicUser = new URLSearchParams(window.location.search).get('user');
@@ -108,7 +157,8 @@ async function loadCurrentUserProfile() {
         const response = await fetch(endpoint, {
             credentials: "same-origin",
             cache: "no-store",
-            headers: { Accept: "application/json" }
+            headers: { Accept: "application/json" },
+            signal: AbortSignal.timeout(10000)
         });
 
         if (!isPublicProfile && [401, 403, 404].includes(response.status)) {
@@ -143,9 +193,15 @@ async function loadCurrentUserProfile() {
             showLastFmCallbackResult();
             document.documentElement.classList.add("own-profile");
             document.dispatchEvent(new CustomEvent("synchro:own-profile", {detail: user}));
+            const lastUpdate = Date.parse(user.data?.lastFmUpdatedAt);
+            if (user.lastFmConnected && !(Date.now() - lastUpdate < 30 * 60 * 1000)) {
+                setTimeout(() => refreshLastFmSummary().catch(() => {}), 0);
+            }
         }
     } catch (error) {
-        showProfileError(error.message || "Não foi possível carregar seu perfil.");
+        const timedOut = error.name === 'TimeoutError';
+        showProfileError(timedOut ? "O perfil demorou para responder." : error.message || "Não foi possível carregar seu perfil.");
+        if (retry) retry.hidden = false;
     }
 }
 
@@ -200,11 +256,12 @@ async function initializeFollowProfile(profileId) {
 
 function renderCurrentUser(user) {
     const data = user.data || {};
-    const displayName = data.fullName?.trim() || user.username || "Usuário";
+    const handle = user.username ? `@${user.username}` : "";
+    const displayName = (isPublicProfile ? handle : data.fullName?.trim() || user.username) || "Usuário";
     document.title = `SYNCHRO | ${displayName}`;
-    if (!isPublicProfile) setProfileText("profileName", displayName);
-    setProfileText("profileUsername", user.username ? `@${user.username}` : "");
     if (!isPublicProfile) {
+        setProfileText("profileName", displayName);
+        setProfileText("profileUsername", handle);
         const genderNames = {female: "Feminino", male: "Masculino", other: "Outro"};
         setProfileText("profileEmail", user.email ? `E-mail: ${user.email}` : "E-mail não informado");
         setProfileText("profileBirthDay", `Nascimento: ${formatBirthDay(user.birthDay)}`);
@@ -218,6 +275,7 @@ function renderCurrentUser(user) {
     const image = document.getElementById("profileImage");
     image.alt = `Foto de perfil de ${displayName}`;
     if (isPublicProfile) renderPublicAppearance(user.appearance || {}, displayName, image);
+    else image.dataset.customPhoto = publicImageUrl(data.profileImageUrl);
     renderLastFm(user);
 }
 
@@ -359,6 +417,19 @@ async function connectLastFm() {
     }
 }
 
+let lastFmSync;
+function refreshLastFmSummary() {
+    if (!lastFmSync) {
+        lastFmSync = lastFmRequest('/last-fm/sync', {method: 'POST', signal: AbortSignal.timeout(18000)})
+            .then(user => {
+                setProfileText("profileScrobbles", formatCount(user.data?.scrobbles));
+                setProfileText("profileArtists", formatCount(user.data?.artistas));
+                renderLastFm(user);
+            }).finally(() => { lastFmSync = null; });
+    }
+    return lastFmSync;
+}
+
 async function syncLastFm() {
     const button = document.getElementById('syncLastFm');
     if (button.disabled) return;
@@ -366,7 +437,7 @@ async function syncLastFm() {
     button.textContent = 'Atualizando…';
     setLastFmStatus('Buscando seus dados no Last.fm…');
     try {
-        renderCurrentUser(await lastFmRequest('/last-fm/sync', { method: 'POST' }));
+        await refreshLastFmSummary();
         setLastFmStatus('Dados do Last.fm atualizados!');
     } catch (error) {
         setLastFmStatus(error.message || 'Não foi possível atualizar. Seus dados salvos continuam disponíveis.', true);

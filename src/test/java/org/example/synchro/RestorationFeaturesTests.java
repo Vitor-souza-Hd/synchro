@@ -30,8 +30,9 @@ class RestorationFeaturesTests {
             FavoriteArtistService.class, FavoriteArtistResource.class,
             FavoriteAlbumService.class, FavoriteAlbumResource.class,
             FavoriteTrackService.class, FavoriteTrackResource.class, ResourceExceptionHandler.class,
-            LastFmCatalogService.class, LastFmCatalogStore.class, CatalogResource.class, FollowResource.class, FriendshipResource.class, FriendshipService.class,
+            LastFmCatalogService.class, LastFmCatalogStore.class, CatalogResource.class, SearchResource.class, UserSearchResource.class, FollowResource.class, FriendshipResource.class, FriendshipService.class,
             CommunityPostResource.class, CommunityPostService.class,
+            MuralSignatureResource.class, MuralSignatureService.class,
             PostInteractionResource.class, PostInteractionService.class, PostInteractionNotifications.class,
             CommunityPollResource.class, CommunityPollService.class})
     static class Config {
@@ -74,7 +75,9 @@ class RestorationFeaturesTests {
                         "spring.datasource.password=", "spring.jpa.hibernate.ddl-auto=create-drop").run()) {
             base = "http://localhost:" + app.getEnvironment().getProperty("local.server.port");
             var users = app.getBean(UserRepository.class);
-            var owner = users.save(new User(null, "owner", "owner@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            var account = new User(null, "owner", "owner@example.test", "hash", LocalDate.of(2000, 1, 1), null);
+            account.getData().setFullName("Nome Particular do Autor");
+            var owner = users.save(account);
             users.save(new User(null, "other", "other@example.test", "hash", LocalDate.of(2000, 1, 1), null));
 
             expect(401, "POST", "/posts", null, "{\"text\":\"Sem conta\"}");
@@ -86,6 +89,20 @@ class RestorationFeaturesTests {
             assertTrue(post.path("own").asBoolean());
             assertTrue(post.path("createdAt").isTextual());
             assertFalse(post.path("author").has("email"));
+            assertEquals("owner", post.path("author").path("username").asText());
+            assertFalse(post.path("author").has("fullName"));
+            var names = json.readTree(expect(200, "GET", "/search/users?q=%40owner", null, null).body());
+            assertEquals("owner", names.path("items").get(0).path("username").asText());
+            assertFalse(names.path("items").get(0).has("fullName"));
+            var integrated = json.readTree(expect(200, "GET", "/search?q=%40owner", null, null).body());
+            assertEquals("owner", integrated.path("users").get(0).path("username").asText());
+            assertFalse(integrated.path("users").get(0).has("fullName"));
+            var byRealName = json.readTree(expect(200, "GET", "/search/users?q=Particular", null, null).body());
+            assertTrue(byRealName.path("items").isEmpty());
+            var publicProfiles = expect(200, "GET", "/users", null, null).body();
+            assertFalse(publicProfiles.contains("Nome Particular do Autor"));
+            var privateOwner = json.readTree(expect(200, "GET", "/users/me", "owner", null).body());
+            assertEquals("Nome Particular do Autor", privateOwner.path("data").path("fullName").asText());
             assertTrue(post.path("attachment").isNull());
             var artist = app.getBean(ArtistaRepository.class).save(new Artista("Artista compartilhado", "", null));
             var song = app.getBean(MusicaRepository.class).save(new Musica("Faixa compartilhada", "", null, null));
@@ -109,6 +126,34 @@ class RestorationFeaturesTests {
                 assertEquals(item.getValue().longValue(), attached.path("attachment").path("id").asLong());
             }
             expect(400, "PUT", "/posts/" + artistPostId, "owner", "{\"text\":\"Link inválido\",\"attachment\":{\"type\":\"track\",\"id\":99999}}");
+            assertEquals(1, artistPost.path("attachments").size());
+            var attachments = java.util.List.of(
+                    java.util.Map.of("type", "artist", "id", artist.getId()),
+                    java.util.Map.of("type", "track", "id", song.getId()),
+                    java.util.Map.of("type", "album", "id", album.getId()));
+            var payload = json.writeValueAsString(java.util.Map.of("text", "Três itens", "attachments", attachments));
+            var multiple = json.readTree(expect(201, "POST", "/posts", "owner", payload).body());
+            long multipleId = multiple.path("id").asLong();
+            var persisted = json.readTree(expect(200, "GET", "/posts/" + multipleId, null, null).body())
+                    .path("post").path("attachments");
+            assertEquals(3, persisted.size());
+            assertEquals("artist", persisted.get(0).path("type").asText());
+            assertEquals("track", persisted.get(1).path("type").asText());
+            assertEquals("album", persisted.get(2).path("type").asText());
+            var trimmed = json.writeValueAsString(java.util.Map.of("text", "Dois itens",
+                    "attachments", attachments.subList(1, 3)));
+            var editedItems = json.readTree(expect(200, "PUT", "/posts/" + multipleId, "owner", trimmed).body())
+                    .path("attachments");
+            assertEquals(2, editedItems.size());
+            assertEquals("track", editedItems.get(0).path("type").asText());
+            assertEquals("album", editedItems.get(1).path("type").asText());
+            var duplicate = json.writeValueAsString(java.util.Map.of("text", "Duplicado",
+                    "attachments", java.util.List.of(attachments.get(0), attachments.get(0))));
+            expect(400, "POST", "/posts", "owner", duplicate);
+            var oversized = json.writeValueAsString(java.util.Map.of("text", "Quatro itens",
+                    "attachments", java.util.List.of(attachments.get(0), attachments.get(1), attachments.get(2), attachments.get(0))));
+            expect(400, "POST", "/posts", "owner", oversized);
+            expect(204, "DELETE", "/posts/" + multipleId, "owner", null);
             var without = json.readTree(expect(200, "PUT", "/posts/" + artistPostId, "owner", "{\"text\":\"Sem anexo\"}").body());
             assertTrue(without.path("attachment").isNull());
             expect(204, "DELETE", "/posts/" + artistPostId, "owner", null);
@@ -118,6 +163,7 @@ class RestorationFeaturesTests {
             assertFalse(visitor.path("canPublish").asBoolean());
             assertFalse(visitor.path("items").get(0).path("own").asBoolean());
             assertEquals(id, visitor.path("items").get(0).path("id").asLong());
+            assertFalse(visitor.path("items").get(0).path("author").has("fullName"));
             assertTrue(json.readTree(expect(200, "GET", "/posts?user=1", "owner", null).body()).path("canPublish").asBoolean());
             assertFalse(json.readTree(expect(200, "GET", "/posts?user=1", "other", null).body()).path("canPublish").asBoolean());
             assertEquals(0, json.readTree(expect(200, "GET", "/posts?user=2", null, null).body()).path("items").size());
@@ -128,10 +174,46 @@ class RestorationFeaturesTests {
             assertEquals("Texto editado", edited.path("body").asText());
             assertTrue(edited.path("editedAt").isTextual());
             var repository = app.getBean(CommunityPostRepository.class);
-            for (int i = 1; i <= 12; i++) repository.save(new CommunityPost(owner, "Post " + i));
-            var page = json.readTree(expect(200, "GET", "/posts", null, null).body());
+            var albumRepository = app.getBean(AlbumRepository.class);
+            var songRepository = app.getBean(MusicaRepository.class);
+            String albumCover = "https://example.test/album-cover.jpg";
+            String trackCover = "https://example.test/track-cover.jpg";
+            for (int i = 1; i <= 12; i++) {
+                var backup = new Album("Álbum do post " + i, "", null);
+                backup.getLastFm().setImageUrl(albumCover);
+                var track = new Musica("Faixa do post " + i, "", null, null);
+                track.setAlbum(albumRepository.save(backup));
+                if (i != 12) track.getLastFm().setImageUrl(trackCover);
+                repository.save(new CommunityPost(owner, "Post " + i,
+                        java.util.List.of(new PostCatalogAttachment(null, songRepository.save(track)))));
+            }
+            var statistics = app.getBean(jakarta.persistence.EntityManagerFactory.class)
+                    .unwrap(org.hibernate.SessionFactory.class).getStatistics();
+            var statisticsWereEnabled = statistics.isStatisticsEnabled();
+            com.fasterxml.jackson.databind.JsonNode page;
+            statistics.setStatisticsEnabled(true);
+            long initialStatements = statistics.getPrepareStatementCount();
+            try {
+                page = json.readTree(expect(200, "GET", "/posts", null, null).body());
+                long statements = statistics.getPrepareStatementCount() - initialStatements;
+                assertTrue(statements <= 10, "Consultas para 12 posts com faixas: " + statements);
+            } finally {
+                statistics.setStatisticsEnabled(statisticsWereEnabled);
+            }
+            assertEquals(albumCover, page.path("items").get(0).path("attachment").path("coverUrl").asText());
+            assertEquals(trackCover, page.path("items").get(1).path("attachment").path("coverUrl").asText());
             assertEquals(12, page.path("items").size());
             assertEquals("Post 12", page.path("items").get(0).path("body").asText());
+            var preview = json.readTree(expect(200, "GET", "/posts?limit=3", "owner", null).body());
+            assertTrue(preview.path("signedIn").asBoolean());
+            assertEquals(3, preview.path("items").size());
+            assertEquals("Post 12", preview.path("items").get(0).path("body").asText());
+            assertEquals("Post 10", preview.path("items").get(2).path("body").asText());
+            var nextPreview = json.readTree(expect(200, "GET",
+                    "/posts?limit=3&before=" + preview.path("nextBefore").asLong(), "owner", null).body());
+            assertEquals("Post 9", nextPreview.path("items").get(0).path("body").asText());
+            expect(400, "GET", "/posts?limit=0", null, null);
+            expect(400, "GET", "/posts?limit=13", null, null);
             var next = json.readTree(expect(200, "GET", "/posts?before=" + page.path("nextBefore").asLong(), null, null).body());
             assertEquals(1, next.path("items").size());
             assertEquals(id, next.path("items").get(0).path("id").asLong());
@@ -382,4 +464,69 @@ class RestorationFeaturesTests {
             assertEquals("renamed",json.readTree(expect(200,"GET","/users/me","owner",null).body()).path("username").asText());
         }
     }
+    @Test
+    void muralShowsSavedSignaturesPubliclyAndOnlyChangesTheSignedInAuthorsDrawing() throws Exception {
+        try (var app = new SpringApplicationBuilder(Config.class).profiles("restoration-test")
+                .properties("server.port=0", "spring.datasource.url=jdbc:h2:mem:mural",
+                        "spring.datasource.driver-class-name=org.h2.Driver", "spring.datasource.username=sa",
+                        "spring.datasource.password=", "spring.jpa.hibernate.ddl-auto=create-drop").run()) {
+            base = "http://localhost:" + app.getEnvironment().getProperty("local.server.port");
+            var users = app.getBean(UserRepository.class);
+            users.save(new User(null, "owner", "owner@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            users.save(new User(null, "other", "other@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            String mural = "/api/mural-assinaturas";
+            String mine = mural + "/minha";
+            expect(401, "GET", mine, null, null);
+            expect(204, "GET", mine, "owner", null);
+            assertEquals(401, uploadSignature(mine, null, signaturePng(720, 300, true)).statusCode());
+            assertEquals(400, uploadSignature(mine, "owner", signaturePng(1, 1, true)).statusCode());
+            assertEquals(400, uploadSignature(mine, "owner", signaturePng(720, 300, false)).statusCode());
+            assertEquals(400, uploadSignature(mine, "owner", new byte[]{1, 2, 3}).statusCode());
+
+            var created = uploadSignature(mine, "owner", signaturePng(720, 300, true));
+            assertEquals(200, created.statusCode(), created.body());
+            long id = json.readTree(created.body()).path("id").asLong();
+            var publicList = json.readTree(expect(200, "GET", mural, null, null).body()).path("items");
+            assertEquals("owner", publicList.get(0).path("username").asText());
+            assertFalse(publicList.get(0).has("image"));
+            assertEquals(id, json.readTree(expect(200, "GET", mine, "owner", null).body()).path("id").asLong());
+            var response = client.send(HttpRequest.newBuilder(URI.create(base + mural + "/" + id + "/imagem")).build(),
+                    HttpResponse.BodyHandlers.ofByteArray());
+            assertEquals(200, response.statusCode());
+            assertEquals("image/png", response.headers().firstValue("Content-Type").orElseThrow());
+            assertEquals(0xffef3344, javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(response.body())).getRGB(0, 0));
+
+            var updated = uploadSignature(mine, "owner", signaturePng(720, 300, true));
+            assertEquals(200, updated.statusCode(), updated.body());
+            assertEquals(id, json.readTree(updated.body()).path("id").asLong());
+            expect(204, "GET", mine, "other", null);
+            expect(204, "DELETE", mine, "other", null);
+            assertEquals(1, app.getBean(MuralSignatureRepository.class).count());
+            expect(204, "DELETE", mine, "owner", null);
+            expect(404, "GET", mural + "/" + id + "/imagem", null, null);
+        }
+    }
+
+    private static byte[] signaturePng(int width, int height, boolean ink) throws Exception {
+        var image = new java.awt.image.BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        if (ink) image.setRGB(0, 0, 0xffef3344);
+        var output = new java.io.ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(image, "png", output);
+        return output.toByteArray();
+    }
+
+    private HttpResponse<String> uploadSignature(String path, String session, byte[] png) throws Exception {
+        String boundary = "synchro-mural-test";
+        var payload = new java.io.ByteArrayOutputStream();
+        payload.write(("--" + boundary + "\r\nContent-Disposition: form-data; name=\"imagem\"; filename=\"assinatura.png\""
+                + "\r\nContent-Type: image/png\r\n\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        payload.write(png);
+        payload.write(("\r\n--" + boundary + "--\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        var request = HttpRequest.newBuilder(URI.create(base + path))
+                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                .PUT(HttpRequest.BodyPublishers.ofByteArray(payload.toByteArray()));
+        if (session != null) request.header("Cookie", "token_jwt=" + session);
+        return client.send(request.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
 }

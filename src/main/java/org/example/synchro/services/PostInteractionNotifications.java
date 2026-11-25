@@ -193,8 +193,7 @@ public class PostInteractionNotifications {
     }
 
     static UserSearchResult publicUser(User user) {
-        var data = user.getData();
-        return new UserSearchResult(user.getId(), user.getUsername(), data == null ? null : data.getFullName());
+        return new UserSearchResult(user.getId(), user.getUsername());
     }
 
     private static ResourceNotFoundException missingNotification() {

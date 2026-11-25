@@ -51,38 +51,60 @@
         const results = document.getElementById('postAttachmentResults');
         const status = document.getElementById('postAttachmentStatus');
         const selected = document.getElementById('postAttachmentSelected');
-        const name = document.getElementById('postAttachmentName');
-        const clear = document.getElementById('clearPostAttachment');
-        let item = null;
+        const count = document.getElementById('postAttachmentCount');
+        let selection = [];
+        let matches = [];
         let activeSearch;
         let blocked = false;
 
-        function select(value) {
+        const itemKey = item => item.type + ':' + item.id;
+
+        function select(items) {
             activeSearch?.abort();
             activeSearch = null;
             search.disabled = blocked;
-            item = value;
+            selection = items ? [...items] : [];
+            matches = [];
             details.open = false;
             query.value = '';
             status.textContent = '';
-            results.replaceChildren();
-            selected.hidden = !item;
-            name.textContent = item ? item.title + ' · ' + description(item) : '';
+            render();
         }
 
-        function selectResult(item) {
-            if (blocked) return;
-            select(item);
-            clear.focus();
-        }
-
-        function render(results, items) {
-            results.replaceChildren(...items.map(match => {
+        function render() {
+            count.textContent = '(' + selection.length + '/3)';
+            selected.hidden = selection.length === 0;
+            selected.replaceChildren(...selection.map(item => {
+                const row = document.createElement('li');
+                const label = document.createElement('span');
+                label.textContent = item.title + ' · ' + description(item);
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.textContent = 'Remover';
+                remove.disabled = blocked;
+                remove.setAttribute('aria-label', 'Remover ' + item.title);
+                remove.addEventListener('click', () => {
+                    selection = selection.filter(selectedItem => itemKey(selectedItem) !== itemKey(item));
+                    render();
+                    details.querySelector('summary').focus();
+                });
+                row.append(label, remove);
+                return row;
+            }));
+            const keys = new Set(selection.map(itemKey));
+            results.replaceChildren(...matches.map(item => {
                 const row = document.createElement('li');
                 const option = document.createElement('button');
+                const chosen = keys.has(itemKey(item));
                 option.type = 'button';
-                option.textContent = match.title + ' · ' + description(match);
-                option.addEventListener('click', () => selectResult(match));
+                option.textContent = item.title + ' · ' + description(item) + (chosen ? ' · Anexado' : '');
+                option.disabled = blocked || chosen || selection.length === 3;
+                option.addEventListener('click', () => {
+                    if (option.disabled) return;
+                    selection.push(item);
+                    render();
+                    query.focus();
+                });
                 row.append(option);
                 return row;
             }));
@@ -96,7 +118,8 @@
             activeSearch = controller;
             const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(12000)]);
             search.disabled = true;
-            results.replaceChildren();
+            matches = [];
+            render();
             status.textContent = 'Buscando no catálogo…';
             try {
                 const params = new URLSearchParams({q: term});
@@ -105,10 +128,10 @@
                     if (!response.ok) throw new Error('Busca indisponível.');
                     const data = await response.json();
                     if (activeSearch !== controller) return;
-                    const items = catalogueItems(data);
-                    render(results, items);
+                    matches = catalogueItems(data);
+                    render();
                     if (!data.refreshing || attempt === 3) {
-                        status.textContent = items.length ? '' : 'Nenhum item encontrado para anexar.';
+                        status.textContent = matches.length ? '' : 'Nenhum item encontrado para anexar.';
                         return;
                     }
                     status.textContent = 'Buscando mais resultados…';
@@ -131,18 +154,15 @@
                 find();
             }
         });
-        clear.addEventListener('click', () => {
-            select(null);
-            details.querySelector('summary').focus();
-        });
-
         function disable(disabled) {
             blocked = disabled;
             search.disabled = disabled || Boolean(activeSearch);
-            query.disabled = clear.disabled = disabled;
+            query.disabled = disabled;
+            render();
         }
 
-        return {select, disable, selected: () => item, value: () => item ? {type: item.type, id: item.id} : null};
+        return {select, disable, selected: () => [...selection],
+            value: () => selection.map(({type, id}) => ({type, id}))};
     }
 
     window.SynchroPostAttachments = {card, createPicker};

@@ -157,16 +157,20 @@
 
 <link rel="stylesheet" href="/frontend/assets/css/auth.css">
 <link rel="stylesheet" href="/frontend/assets/css/features.css?v=foto-da-conta">
-<script src="/frontend/assets/js/features.js?v=20261105-catalog-interactions-1" defer></script>
+<script src="/frontend/assets/js/features.js?v=cabecalho-estatico" defer></script>
 <script src="/frontend/assets/js/auth.js?v=foto-da-conta" defer></script>
 <script src="/frontend/assets/js/explorar/tema-global.js"></script>
 <link rel="stylesheet" href="/frontend/assets/css/search.css">
-    <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css?v=notificacoes-menu">
-    <script src="/frontend/assets/js/post-notifications.js" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css?v=sino-cabecalho">
+    <script src="/frontend/assets/js/post-notifications.js?v=username-publico" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/site-header.css?v=sino-e-sair">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <script src="/frontend/assets/js/site-header.js?v=barra-e-menu" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/catalog-image-refresh.css">
 </head>
 
 <body>
-<div class="feature-session"><div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div><div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div></div>
+<div class="feature-session"><div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div></div>
 <div class="container">
 
 
@@ -201,7 +205,6 @@
                     <a href="#">Artistas</a>
                 </li>
                 <li><i class="bx bxs-star" aria-hidden="true"></i><a href="/frontend/pages/recomendacoes.html">Recomendações</a></li>
-                <li><i class="bx bx-bell" aria-hidden="true"></i><a href="/frontend/pages/notificacoes.html" data-post-notifications-link>Notificações <span class="post-notifications-count" data-post-notifications-badge hidden></span></a></li>
             </ul>
         </div>
 
@@ -261,45 +264,30 @@
 
         <!-- CABECALHO - MESMA ESTRUTURA DA PAGINA INICIAL -->
 
-        <header class="search-bar">
-
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass"></i>
-
-                <input
-                        class="search"
-                        type="text"
-                        placeholder="O que você quer ouvir?"
-                        aria-label="Buscar música"
-                        autocomplete="off"
-                >
-            </div>
-
-            <div class="nav-links">
-
-                <button
-                        class="menu-toggle"
-                        type="button"
-                        aria-label="Abrir ou fechar menu"
-                >
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-
-                <a href="/frontend/pages/explorar.html">Início</a>
-                <a href="#">Músicas</a>
-                <a href="#">Artistas</a>
-
-            </div>
-
-            <a
-                    href="/frontend/pages/perfil.html"
-                    class="user"
-                    aria-label="Meu perfil"
-            >
-                <img class="personal-profile-icon" src="/frontend/assets/images/personal-profile-icon.png" width="28" height="28" alt="">
-            </a>
-
-        </header>
+        <div id="header-container">
+            <header class="top-header">
+                <button class="menu-toggle" type="button" aria-label="Abrir ou fechar menu" ><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                <div class="search-box">
+                    <i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></i>
+                    <input class="search" type="search" placeholder="Buscar música ou pessoas" aria-label="Buscar música ou pessoas" autocomplete="off">
+                </div>
+                <nav class="nav-links" aria-label="Navegação principal">
+                    <a href="/frontend/pages/explorar.html">Início</a>
+                    <a href="/frontend/pages/pessoas.html">Pessoas</a>
+                    <a href="/frontend/pages/explorar.html#pesquisa">Músicas</a>
+                    <a href="/frontend/pages/explorar.html#artistas">Artistas</a>
+                    <a href="/frontend/pages/configuracoes.html" aria-label="Configurações" title="Configurações"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M9.5 3h5l.6 2.5 2 .9 2.3-1 2.5 4.3-1.9 1.7v2.2l1.9 1.7-2.5 4.3-2.3-1-2 .9-.6 2.5h-5l-.6-2.5-2-.9-2.3 1-2.5-4.3L4 13.6v-2.2L2.1 9.7l2.5-4.3 2.3 1 2-.9z"/></svg></a>
+                    <div class="profile-header-actions">
+                        <div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div>
+                        <a class="profile-notifications-link" href="/frontend/pages/notificacoes.html" data-post-notifications-link aria-label="Notificações" title="Notificações">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+                        <span class="post-notifications-count" data-post-notifications-badge hidden></span>
+                        </a>
+                        <a href="/frontend/pages/perfil.html" aria-label="Meu perfil"><img class="personal-profile-icon" src="/frontend/assets/images/personal-profile-icon.png" width="28" height="28" alt=""></a>
+                    </div>
+                </nav>
+            </header>
+        </div>
 
 
 
@@ -327,6 +315,10 @@
                 </a>
 
                 <p id="albumExploreDetails"></p>
+                <div class="catalog-image-tools" id="catalogImageTools" hidden>
+                    <button id="refreshCatalogImage" type="button">Buscar nova imagem</button>
+                    <span id="catalogImageStatus" role="status"></span>
+                </div>
 
                 <!-- FAVORITOS DO ALBUM -->
                 <div id="albumExploreFavoriteArea" hidden>
@@ -372,9 +364,10 @@
 </div>
 
 
-<script src="/frontend/assets/js/explorar/favorite-images.js?v=capas-alternativas"></script>
-<script src="/frontend/assets/js/explorar/album-explorar.js?v=capas-alternativas"></script>
-<script src="/frontend/assets/js/search.js?v=busca-eficiente"></script>
+<script src="/frontend/assets/js/explorar/favorite-images.js?v=buscar-outra"></script>
+<script src="/frontend/assets/js/catalog-image-refresh.js"></script>
+<script src="/frontend/assets/js/explorar/album-explorar.js?v=buscar-outra"></script>
+<script src="/frontend/assets/js/search.js?v=username-publico"></script>
 <script src="/frontend/assets/js/explorar/favoritos-album-explorar.js"></script>
 <script src="/frontend/assets/js/explorar/navegacao-global.js"></script>
 <script src="/frontend/assets/js/explorar/recentes.js?v=20261105-unified-artist-1"></script>

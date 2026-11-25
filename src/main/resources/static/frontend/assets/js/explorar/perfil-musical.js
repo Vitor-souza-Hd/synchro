@@ -48,9 +48,13 @@ function renderMusicProfile({detail: user, type: eventType}) {
         highlights.append(card);
     }
 
-    async function load() {
-        retry.hidden = true;
-        status.textContent = 'Carregando destaques musicais…';
+    let currentLoad = 0;
+    async function load(announce = true) {
+        const request = ++currentLoad;
+        if (announce) {
+            retry.hidden = true;
+            status.textContent = 'Carregando destaques musicais…';
+        }
         const results = await Promise.allSettled(rankings.map(async ({type, item}) => {
             const data = await fetchProfileRanking(type, '7day', isPublic ? user.id : undefined);
             const ranking = data?.['top' + type];
@@ -61,6 +65,7 @@ function renderMusicProfile({detail: user, type: eventType}) {
                 Number.isFinite(Number(entry.playcount)) && Number(entry.playcount) > 0);
         }));
 
+        if (request !== currentLoad) return;
         highlights.replaceChildren();
         let failed = 0;
         results.forEach((result, index) => {
@@ -74,5 +79,11 @@ function renderMusicProfile({detail: user, type: eventType}) {
     }
 
     retry.addEventListener('click', load);
-    load();
+    if (isPublic) load();
+    else {
+        document.addEventListener('synchro:profile-ranking-updated', ({detail}) => {
+            if (currentLoad && detail.period === '7day') load(false);
+        });
+        whenProfileSectionNear(highlights.closest('.music-profile'), load);
+    }
 }

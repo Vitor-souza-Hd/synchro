@@ -34,14 +34,17 @@ function initializeProfileGenres({detail: profile, type}) {
 
     const profileId = isPublic ? profile.id : undefined;
     const calcularGeneros = periodo => window.SynchroMusicGenres.calculate(periodo,
-        (type, period) => fetchProfileRanking(type, period, profileId));
+        (type, period) => fetchProfileRanking(type, period, profileId, !isPublic));
 
     const api = "/users/me/music-profile";
     const weeklyStatus = document.getElementById("musicProfileGenresStatus");
     const weeklyList = document.getElementById("musicProfileGenres");
     const weeklyRetry = document.getElementById("retryMusicGenres");
     let weeklyRequest;
-    let savedProfile = isPublic ? {genres: profile.appearance?.genres || []} : null;
+    let savedProfile = isPublic ? {genres: profile.appearance?.genres || []} : {
+        genres: profile.data?.topMusicGenres || [],
+        updatedAt: profile.data?.musicProfileUpdatedAt
+    };
 
     async function requestSavedProfile(options = {}) {
         const response = await fetch(api, {
@@ -71,16 +74,8 @@ function initializeProfileGenres({detail: profile, type}) {
 
         const computation = Promise.resolve().then(() => calcularGeneros("7day"));
         weeklyRequest = computation;
-        const savedRequest = savedProfile
-            ? Promise.resolve(savedProfile)
-            : requestSavedProfile().catch(() => null);
-        savedRequest.then(saved => {
-            savedProfile = saved;
-            if (saved?.genres?.length) renderWeekly(saved.genres);
-        });
-
-        Promise.allSettled([computation, savedRequest]).then(async ([calculated, previous]) => {
-            const saved = previous.value;
+        const saved = savedProfile;
+        Promise.allSettled([computation]).then(async ([calculated]) => {
             const genres = calculated.status === "fulfilled"
                 ? calculated.value.resultado.map(([genre]) => genre) : [];
             if (calculated.status === "rejected" || calculated.value.parcial) {
@@ -134,7 +129,7 @@ function initializeProfileGenres({detail: profile, type}) {
                 return;
             }
             const periodo = periodSelect?.value || "7day";
-            const {resultado, artistasAnalisados, parcial} = await (periodo === "7day" ? loadWeek() : calcularGeneros(periodo));
+            const {resultado, artistaDestaque, artistasAnalisados, parcial} = await (periodo === "7day" ? loadWeek() : calcularGeneros(periodo));
             if (consultaAtual !== ultimaConsulta) return;
             if (!resultado.length) {
                 mostrarMensagem(
@@ -145,6 +140,7 @@ function initializeProfileGenres({detail: profile, type}) {
 
             container.replaceChildren();
 
+            appendProfileRankingLeader(container, artistaDestaque, "artist", resultado[0][0]);
             const maiorPontuacao = resultado[0][1];
 
             resultado.forEach(([genero, pontuacao], index) => {
@@ -215,7 +211,23 @@ function initializeProfileGenres({detail: profile, type}) {
         if (periodSelect?.value === "7day") carregarGeneros();
         else loadWeek();
     });
-    if (profile.lastFmConnected) loadWeek();
-    else weeklyStatus.textContent = "Conecte seu Last.fm para ver seus gêneros.";
-    carregarGeneros();
+    if (isPublic) {
+        loadWeek();
+        carregarGeneros();
+        return;
+    }
+
+    if (savedProfile.genres.length) {
+        renderWeekly(savedProfile.genres);
+        weeklyStatus.textContent = "Gêneros da última análise salva.";
+    }
+    if (!profile.lastFmConnected) {
+        weeklyStatus.textContent = "Conecte seu Last.fm para ver seus gêneros.";
+        carregarGeneros();
+        return;
+    }
+    if (!savedProfile.genres.length || !(Date.now() - Date.parse(savedProfile.updatedAt) < 3600000)) {
+        whenProfileSectionNear(weeklyList.closest('.music-profile-genres'), loadWeek);
+    }
+    whenProfileSectionNear(container.closest('.weekly-report'), carregarGeneros);
 }

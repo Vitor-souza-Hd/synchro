@@ -7,20 +7,30 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=fotos-reviews">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-home.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-home.css?v=home-sobre-cartoes">
+    <link rel="stylesheet" href="/frontend/assets/css/publicacoes.css?v=interacoes">
+    <link rel="stylesheet" href="/frontend/assets/css/post-polls.css">
     <script src="/frontend/assets/js/explorar/tema-global.js"></script>
 <link rel="stylesheet" href="/frontend/assets/css/auth.css">
 <link rel="stylesheet" href="/frontend/assets/css/features.css?v=mais-recomendacoes">
 <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
 <script src="/frontend/assets/js/playlists.js?v=20261101-4" defer></script>
-<script src="/frontend/assets/js/features.js?v=20261105-catalog-interactions-1" defer></script>
+<script src="/frontend/assets/js/features.js?v=cabecalho-estatico" defer></script>
 <script src="/frontend/assets/js/auth.js?v=foto-da-conta" defer></script>
 <link rel="stylesheet" href="/frontend/assets/css/search.css">
-    <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css?v=notificacoes-menu">
-    <script src="/frontend/assets/js/post-notifications.js" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css?v=respostas-agrupadas">
+    <script src="/frontend/assets/js/post-notifications.js?v=username-publico" defer></script>
+    <script src="/frontend/assets/js/post-attachments.js?v=tres-itens" defer></script>
+    <script src="/frontend/assets/js/post-card.js?v=username-publico" defer></script>
+    <script src="/frontend/assets/js/post-polls.js?v=polls-1" defer></script>
+    <script src="/frontend/assets/js/post-reactions.js" defer></script>
+    <script src="/frontend/assets/js/post-mentions.js" defer></script>
+    <script src="/frontend/assets/js/post-discussion.js?v=username-publico" defer></script>
+    <script src="/frontend/assets/js/explorar/home-activity.js?v=carregamento-antecipado" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/site-header.css?v=sino-e-sair">
+    <script src="/frontend/assets/js/site-header.js?v=barra-e-menu" defer></script>
 </head>
 <body class="synchro-home">
-<div class="feature-session"><div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div><div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div></div>
     <div class="container">
         <!--BACKGROUND VIDEO-->
         <video autoplay loop muted playsinline class="background-video">
@@ -59,7 +69,7 @@
                     </li>
                     <li><i class="bx bxs-star" aria-hidden="true"></i><a href="/frontend/pages/recomendacoes.html">Recomendações</a></li>
                     <li><i class="bx bxs-chat" aria-hidden="true"></i><a href="/frontend/pages/publicacoes.html">Publicações</a></li>
-                    <li><i class="bx bx-bell" aria-hidden="true"></i><a href="/frontend/pages/notificacoes.html" data-post-notifications-link>Notificações <span class="post-notifications-count" data-post-notifications-badge hidden></span></a></li>
+                    <li><i class="bx bxs-edit-alt" aria-hidden="true"></i><a href="/frontend/pages/muralDeAssinaturas.html">Mural de assinaturas</a></li>
                 </ul>
             </div>
 
@@ -125,46 +135,72 @@
                 <i class="fa-solid fa-globe"></i>
                 Português do Brasil
             </button>
-            
+
         </aside>
-        
+
         <!-- HEADER -->
         <main>
-        <header class="search-bar">
-            <div class="search-box">
-        <i class="fa-solid fa-magnifying-glass"></i>
+        <header class="feature-header search-bar">
+            <div class="header-main-row">
+                <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
 
                 <input
-                        id="pesquisa"
-                        class="search"
-                        type="text"
-                        placeholder="O que você quer ouvir?"
-                        aria-label="Buscar música"
+                id="pesquisa"
+                class="search"
+                type="text"
+                placeholder="O que você quer ouvir?"
+                aria-label="Buscar música"
                 >
-            </div>
-            <div class="nav-links">
-                
-                <button class="menu-toggle">
-                    <i class="fa-solid fa-bars"></i>
+                </div>
+                <div class="nav-links">
+
+                <button class="menu-toggle" type="button" aria-label="Abrir menu">
+                <i class="fa-solid fa-bars"></i>
                 </button>
                 <a href="/frontend/pages/pessoas.html" aria-label="Encontrar pessoas" title="Encontrar pessoas">
-                    <i class="fa-solid fa-users" aria-hidden="true"></i>
+                <i class="fa-solid fa-users" aria-hidden="true"></i>
                 </a>
                 <a href="/frontend/pages/configuracoes.html"
-                   class="settings-shortcut"
-                   aria-label="Abrir configurações"
-                   title="Configurações">
-                    <i class="fa-solid fa-gear"></i>
+                class="settings-shortcut"
+                aria-label="Abrir configurações"
+                title="Configurações">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M9.5 3h5l.6 2.5 2 .9 2.3-1 2.5 4.3-1.9 1.7v2.2l1.9 1.7-2.5 4.3-2.3-1-2 .9-.6 2.5h-5l-.6-2.5-2-.9-2.3 1-2.5-4.3L4 13.6v-2.2L2.1 9.7l2.5-4.3 2.3 1 2-.9z"/></svg>
                 </a>
                 <a href="#pesquisa">Músicas</a>
                 <a href="#artistas">Artistas</a>
                 <a href="#revisoes">Revisões</a>
-            </div>       
+                </div>
+                <div class="header-account">
+                    <div class="feature-session"><div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div><div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div></div>
+                    <div class="profile-header-actions">
+                    <a class="profile-notifications-link" href="/frontend/pages/notificacoes.html" data-post-notifications-link aria-label="Notificações" title="Notificações">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+                    <span class="post-notifications-count" data-post-notifications-badge hidden></span>
+                    </a>
+                    <a href="/frontend/pages/perfil.html" class="user" aria-label="Meu perfil"> <img class="personal-profile-icon" src="/frontend/assets/images/personal-profile-icon.png" width="28" height="28" alt=""> </a>
+                    </div>
+                </div>
+            </div>
+            <nav aria-label="Biblioteca Synchro" class="feature-nav">
 
-                        <a href="/frontend/pages/perfil.html" class="user" aria-label="Meu perfil">
-                            <img class="personal-profile-icon" src="/frontend/assets/images/personal-profile-icon.png" width="28" height="28" alt="">
-                        </a>
-                      
+            <a href="/index.html">Início</a>
+
+            <a href="/frontend/pages/explorar.html" aria-current="page">
+            Explorar
+            </a>
+
+            <a href="/frontend/pages/perfil.html">Meu perfil</a>
+
+            <a href="/frontend/pages/favoritos.html">Favoritos</a>
+
+            <a href="/frontend/pages/recentes.html">Recentes</a>
+
+            <a href="/frontend/pages/playlists.html">Playlists</a>
+
+            <a href="/frontend/pages/configuracoes.html">Configurações</a>
+
+            </nav>
         </header>
         <!--PRINCIPAL-->
         <section class="content">
@@ -172,64 +208,119 @@
                 <h2 id="artistas">Artistas Populares</h2>
             </div>
             <p id="artistRecommendationStatus" role="status"></p>
-            <div class="artists">
+            <div class="artists home-card-list">
                 <!--Inserir dados com JS-->
             </div>
             <h2 id="albuns">Álbuns Populares</h2>
             <p id="albumRecommendationStatus" role="status"></p>
-            <div class="albums">
+            <div class="albums home-card-list">
                 <!--Inserir dados com JS-->
             </div>
             <section aria-labelledby="recomendados">
                 <h2 id="recomendados">Sugestões para você</h2>
                 <p id="topArtistRecommendationStatus" role="status">Carregando sugestões…</p>
-                <div class="albums" id="topArtistRecommendations"></div>
+                <div class="albums home-card-list" id="topArtistRecommendations"></div>
                 <a class="feature-detail-link recommendation-more" href="/frontend/pages/recomendacoes.html" aria-label="Ver mais recomendações" title="Ver mais recomendações"><span aria-hidden="true">+</span></a>
             </section>
             <h2 id="generos">Gêneros Populares</h2>
             <div class="genres"></div>
-            <h2 id="revisoes">Reviews Recentes dos Usuários</h2>
-            <p id="recentReviewsStatus" role="status">Carregando avaliações…</p>
-            <div class="reviews" aria-labelledby="revisoes"></div>
+            <section class="home-activity posts-main" id="revisoes" aria-label="Atividade recente">
+                <div class="home-activity-switch posts-column post-filters" role="group" aria-label="Tipo de atividade">
+                    <button type="button" aria-controls="recentReviewsPanel" aria-pressed="true">Reviews</button>
+                    <button type="button" aria-controls="recentPostsPanel" aria-pressed="false">Publicações</button>
+                </div>
+                <div id="recentReviewsPanel">
+                    <h2 id="recentReviewsTitle">Reviews Recentes dos Usuários</h2>
+                    <p id="recentReviewsStatus" role="status">Carregando avaliações…</p>
+                    <div class="reviews" aria-labelledby="recentReviewsTitle"></div>
+                </div>
+                <div id="recentPostsPanel" hidden>
+                    <h2 id="recentPostsTitle">Publicações recentes</h2>
+                    <div class="posts-column home-posts">
+                        <p id="homePostsStatus" role="status"></p>
+                        <div id="homePostsFeed" class="posts-feed" aria-labelledby="recentPostsTitle"></div>
+                        <button id="retryHomePosts" type="button" hidden>Tentar novamente</button>
+                        <a class="home-posts-more" href="/frontend/pages/publicacoes.html">Ver todas as publicações</a>
+                    </div>
+                </div>
+            </section>
         </section>
 
-            <section
-                    id="sobre"
-                    style="
-        margin: 60px 0 30px;
-        padding: 28px;
-        border: 1px solid #444;
-        border-radius: 16px;
-        background: rgba(30, 25, 35, 0.85);
-        color: white;
-    "
-            >
-                <h2>Sobre o Synchro</h2>
+            <section id="sobre" class="about-synchro" aria-labelledby="aboutTitle">
 
-                <p style="margin-top: 16px; line-height: 1.7;">
-                    O Synchro é uma rede social musical criada
-                    para conectar pessoas por meio de seus
-                    gostos musicais.
-                </p>
+                <h2 class="about-title" id="aboutTitle">Sobre o Synchro</h2>
 
-                <p style="margin-top: 12px; line-height: 1.7;">
-                    Aqui você pode descobrir artistas, músicas
-                    e álbuns, organizar seus favoritos,
-                    compartilhar opiniões e explorar
-                    novas experiências musicais.
-                </p>
+                <div class="about-panel">
+                    <div class="about-content">
+                        <h3>Conheça o Synchro</h3>
+
+                        <p>
+                            O Synchro é uma rede social musical criada
+                            para conectar pessoas por meio de seus
+                            gostos musicais.
+                        </p>
+
+                        <p>
+                            Aqui você pode descobrir artistas, músicas
+                            e álbuns, organizar seus favoritos,
+                            compartilhar opiniões e explorar
+                            novas experiências musicais.
+                        </p>
+                    </div>
+                    <div class="about-animation">
+                        <img
+                            src="/frontend/assets/images/ziggy-flutuante.gif" width="800" height="600"
+                            loading="lazy"
+                            decoding="async"
+                            alt="Mascote animado do Synchro"
+                        >
+                    </div>
+                    <div class="about-instagram">
+
+                        <div class="instagram-info">
+
+                            <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+
+                            <div>
+                                <h3>SIGA O SYNCHRO</h3>
+                                <p>@websynchro</p>
+                            </div>
+
+                        </div>
+
+                        <p class="instagram-description">
+                            Acompanhe o Synchro nas redes sociais!
+                            Fique por dentro das novidades, atualizações
+                            e tudo que acontece no nosso universo musical.
+                        </p>
+
+                        <a
+                            href="https://www.instagram.com/websynchro/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="instagram-button"
+                        >
+                            <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+                            Conheça nosso Instagram
+                            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </a>
+
+                    </div>
+
+                </div>
+
             </section>
 
         </main>
     </div>
-           
-    
+
+
 
     <script src="/frontend/assets/js/image-visibility.js"></script>
     <script src="/frontend/assets/js/explorar/favorite-images.js?v=capas-alternativas"></script>
     <script src="/frontend/assets/js/music-profile-genres.js?v=tags-compartilhadas"></script>
-    <script src="/frontend/assets/js/explorar/script2.js?v=avaliacoes-artistas"></script>
-    <script src="/frontend/assets/js/search.js?v=busca-eficiente"></script>
+    <script src="/frontend/assets/js/explorar/script2.js?v=pagina-genero"></script>
+    <script src="/frontend/assets/js/search.js?v=username-publico"></script>
     <script src="/frontend/assets/js/explorar/navegacao.js"></script>
     <script src="/frontend/assets/js/explorar/navegacao-global.js"></script>
 </body>

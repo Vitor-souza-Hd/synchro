@@ -38,7 +38,10 @@
         for (const badge of document.querySelectorAll('[data-post-notifications-badge]')) {
             badge.hidden = !unread;
             badge.textContent = unread > 99 ? '99+' : String(unread || '');
-            badge.setAttribute('aria-label', unread === 1 ? '1 notificação não lida' : unread + ' notificações não lidas');
+            const summary = unread === 1 ? '1 notificação não lida' : unread + ' notificações não lidas';
+            badge.setAttribute('aria-label', summary);
+            badge.closest('.profile-notifications-link')?.setAttribute('aria-label',
+                unread ? 'Notificações, ' + summary : 'Notificações');
         }
     }
 
@@ -76,7 +79,7 @@
             readAll.hidden = unread === 0;
             list.replaceChildren(...items.map(item => {
                 const row = element('li', 'post-notification');
-                const name = item.actor.fullName?.trim() || '@' + item.actor.username;
+                const name = '@' + item.actor.username;
                 const link = element('a', 'post-notification-link', name + (types[item.type] || ' interagiu com uma publicação.'));
                 const parameters = new URLSearchParams({post: item.postId});
                 if (item.commentId != null) parameters.set('comment', item.commentId);

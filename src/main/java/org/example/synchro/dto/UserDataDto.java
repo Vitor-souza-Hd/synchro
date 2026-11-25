@@ -9,6 +9,7 @@ import org.example.synchro.entities.UserData;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -38,6 +39,8 @@ public class UserDataDto implements Serializable {
     private String biography;
     private String profileImageUrl;
     private String bannerImageUrl;
+    private List<String> topMusicGenres = List.of();
+    private Instant musicProfileUpdatedAt;
 
     public UserDataDto(){}
 
@@ -56,5 +59,7 @@ public class UserDataDto implements Serializable {
         this.biography = data.getBiography();
         this.profileImageUrl = data.getProfileImageUrl();
         this.bannerImageUrl = data.getBannerImageUrl();
+        if (data.getTopMusicGenres() != null) this.topMusicGenres = data.getTopMusicGenres().lines().toList();
+        this.musicProfileUpdatedAt = data.getMusicProfileUpdatedAt();
     }
 }

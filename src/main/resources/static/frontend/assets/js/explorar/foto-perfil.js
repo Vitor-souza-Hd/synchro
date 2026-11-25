@@ -1,5 +1,5 @@
 
-document.addEventListener("synchro:own-profile", () => {
+document.addEventListener("synchro:own-profile", ({detail: user}) => {
 
     const editButton = document.getElementById("editPhotoButton");
     const editor = document.getElementById("photoEditor");
@@ -47,42 +47,6 @@ document.addEventListener("synchro:own-profile", () => {
     function aplicarFotografia() {
         profileImage.dataset.customPhoto = customImageUrl || "";
         showProfilePhoto(profileImage);
-    }
-
-    async function carregarFotografia() {
-        try {
-            const response = await fetch("/users/me/profile", {
-                credentials: "same-origin",
-                headers: {
-                    Accept: "application/json"
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            const url = data.profileImageUrl;
-
-            customImageUrl =
-                typeof url === "string" && validarUrl(url)
-                    ? url
-                    : null;
-
-            input.value = customImageUrl || "";
-            aplicarFotografia();
-            atualizarBotoes();
-
-        } catch (error) {
-            console.error(
-                "Erro ao carregar fotografia do perfil:",
-                error
-            );
-
-            mensagem("Nao foi possivel consultar sua fotografia.");
-        }
     }
 
     editButton.addEventListener("click", () => {
@@ -186,6 +150,8 @@ document.addEventListener("synchro:own-profile", () => {
         }
     });
 
+    const url = user.data?.profileImageUrl;
+    customImageUrl = validarUrl(url) ? url : null;
+    input.value = customImageUrl || "";
     atualizarBotoes();
-    carregarFotografia();
 });

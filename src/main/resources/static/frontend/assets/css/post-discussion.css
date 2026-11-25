@@ -26,6 +26,70 @@
     align-items: center;
 }
 
+.profile-header-actions {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-header-actions > .user {
+    align-self: auto;
+    margin: 0;
+}
+
+.profile-header-actions .profile-notifications-link {
+    position: relative;
+    display: inline-grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: 50%;
+    color: inherit;
+    text-decoration: none;
+}
+
+.profile-notifications-link i {
+    color: inherit;
+    font-size: 1.35rem;
+}
+
+.profile-notifications-link .post-notifications-count {
+    position: absolute;
+    inset-block-start: -2px;
+    inset-inline-end: -3px;
+    margin: 0;
+    padding: 1px 4px;
+    font-size: .65rem;
+    line-height: 1rem;
+}
+
+.profile-notifications-link:hover,
+.profile-notifications-link[aria-current="page"] {
+    background: rgba(180, 110, 140, .18);
+}
+
+.profile-notifications-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+    .top-header .nav-links:has(.profile-header-actions) {
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .favorites-topbar:has(.profile-header-actions) {
+        gap: 8px;
+    }
+
+    .favorites-topbar:has(.profile-header-actions) .favorites-search-box {
+        min-width: 0;
+        margin-inline: 0;
+    }
+}
+
 .post-notifications-count[hidden],
 .post-mention-choices[hidden] {
     display: none;
@@ -110,17 +174,32 @@
 .post-notification {
     min-width: 0;
     padding: 10px 12px;
-    border: 1px solid var(--post-line);
-    border-radius: 10px;
     overflow-wrap: anywhere;
 }
 
-.post-comment-nested {
-    margin-inline-start: 12px;
+.post-notification {
+    border: 1px solid var(--post-line);
+    border-radius: 10px;
+}
+
+.post-comment-list.post-comment-children {
+    margin-block: 8px 0;
+    margin-inline-start: 16px;
+}
+
+.post-comment-children .post-comment {
+    padding-inline: 0;
+}
+
+.post-comment-children .post-comment-children .post-comment-children {
+    margin-inline-start: 0;
+}
+
+.post-comment-children:empty {
+    display: none;
 }
 
 .post-comment-target {
-    border-color: var(--post-accent);
     outline: 2px solid var(--post-accent);
     outline-offset: 2px;
 }

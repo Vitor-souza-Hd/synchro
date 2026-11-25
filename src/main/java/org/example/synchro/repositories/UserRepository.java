@@ -39,24 +39,21 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     default Slice<UserSearchResult> searchPeople(String query, Pageable pageable) {
         String term = query.strip();
-        boolean usernameOnly = term.startsWith("@");
-        if (usernameOnly) term = term.substring(1).strip();
+        if (term.startsWith("@")) term = term.substring(1).strip();
         if (term.isEmpty()) return new SliceImpl<>(List.of(), pageable, false);
-        return findPeople(term, usernameOnly, pageable);
+        return findPeople(term, pageable);
     }
 
     @Query("""
-            SELECT new org.example.synchro.dto.UserSearchResult(account.id, account.username, details.fullName)
-            FROM User account LEFT JOIN account.data details
+            SELECT new org.example.synchro.dto.UserSearchResult(account.id, account.username)
+            FROM User account
             WHERE LOCATE(LOWER(:term), LOWER(account.username)) > 0
-               OR (:usernameOnly = false AND LOCATE(LOWER(:term), LOWER(details.fullName)) > 0)
             ORDER BY CASE
                 WHEN LOWER(account.username) = LOWER(:term) THEN 0
                 WHEN LOCATE(LOWER(:term), LOWER(account.username)) = 1 THEN 1
                 ELSE 2 END, LOWER(account.username), account.id
             """)
-    Slice<UserSearchResult> findPeople(@Param("term") String term, @Param("usernameOnly") boolean usernameOnly,
-                                       Pageable pageable);
+    Slice<UserSearchResult> findPeople(@Param("term") String term, Pageable pageable);
 
 
 }

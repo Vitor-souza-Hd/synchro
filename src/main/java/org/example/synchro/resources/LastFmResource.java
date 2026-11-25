@@ -15,6 +15,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class LastFmResource {
 
     @GetMapping(value = "/user/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<String> getUserInfo(@PathVariable String username) {
-        return lastfmService.getUserInfo(username);
+        return lastfmService.getPublicUserInfo(username);
     }
 
     @GetMapping("/auth/login")
@@ -135,6 +136,42 @@ public class LastFmResource {
                 .onErrorResume(org.example.synchro.services.exception.ResourceConflictException.class,
                         error -> Mono.just(ResponseEntity.noContent().build()))
                 .onErrorResume(error -> Mono.just(ResponseEntity.status(502).build()));
+    }
+
+    @GetMapping(value = "/me/rankings/{type}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<?>> getPrivateRanking(
+            @CookieValue(name = "token_jwt", required = false) String cookie,
+            @PathVariable String type,
+            @RequestParam(defaultValue = "7day") String period,
+            @RequestParam(defaultValue = "false") boolean refresh) {
+        if (!cookieService.checkCookie(cookie)) return Mono.just(unauthorized());
+        if (!validRanking(type, period)) return Mono.just(ResponseEntity.badRequest().build());
+
+        Long userId = cookieService.getId(cookie);
+        if (refresh) {
+            return lastfmService.refreshSavedRanking(userId, type, period)
+                    .<ResponseEntity<?>>map(json -> ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                            .contentType(MediaType.APPLICATION_JSON).body(json))
+                    .onErrorResume(this::privateRankingFailure);
+        }
+
+        return lastfmService.findSavedRanking(userId, type, period)
+                .<ResponseEntity<?>>map(saved -> {
+                    if (saved.isEmpty()) return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
+                    var ranking = saved.get();
+                    boolean stale = ranking.updatedAt().plus(Duration.ofMinutes(30)).isBefore(Instant.now());
+                    return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                            .header("X-Synchro-Ranking-Stale", Boolean.toString(stale))
+                            .contentType(MediaType.APPLICATION_JSON).body(ranking.payload());
+                }).onErrorResume(this::privateRankingFailure);
+    }
+
+    private Mono<ResponseEntity<?>> privateRankingFailure(Throwable error) {
+        int status = 502;
+        if (error instanceof org.example.synchro.services.exception.ResourceConflictException) status = 409;
+        else if (error instanceof org.example.synchro.services.exception.ResourceNotFoundException) status = 404;
+        else if (error instanceof java.util.concurrent.TimeoutException) status = 504;
+        return Mono.just(ResponseEntity.status(status).cacheControl(CacheControl.noStore()).build());
     }
 
     @GetMapping(

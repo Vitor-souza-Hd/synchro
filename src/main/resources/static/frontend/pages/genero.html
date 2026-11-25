@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gênero musical - Synchro</title>
+
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-home.css">
+    <link rel="stylesheet" href="/frontend/assets/css/genero.css">
+
+    <link rel="stylesheet" href="/frontend/assets/css/auth.css">
+    <link rel="stylesheet" href="/frontend/assets/css/search.css">
+
+    <script src="/frontend/assets/js/explorar/tema-global.js"></script>
+    <script src="/frontend/assets/js/auth.js" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/features.css">
+    <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css?v=sino-cabecalho">
+    <link rel="stylesheet" href="/frontend/assets/css/site-header.css?v=sino-e-sair">
+    <script src="/frontend/assets/js/site-header.js?v=barra-e-menu" defer></script>
+    <script src="/frontend/assets/js/post-notifications.js?v=username-publico" defer></script>
+</head>
+
+<body class="synchro-home">
+
+<div class="feature-session">
+    <div id="authActions">
+        <a href="/frontend/pages/login.html">Entrar</a>
+        <a href="/frontend/pages/formulario.html">Criar conta</a>
+    </div>
+
+</div>
+
+<div class="container">
+
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="bx bx-pulse"></i>
+            <a href="/frontend/pages/explorar.html">SYNCHRO</a>
+        </div>
+
+        <div class="menu">
+            <h5>Menu</h5>
+            <ul>
+                <li>
+                    <i class="bx bxs-bolt-circle"></i>
+                    <a href="/frontend/pages/explorar.html">Explorar</a>
+                </li>
+                <li>
+                    <i class="bx bxs-volume-full"></i>
+                    <a href="/frontend/pages/explorar.html#generos">Gêneros</a>
+                </li>
+                <li>
+                    <i class="bx bxs-album"></i>
+                    <a href="/frontend/pages/explorar.html#albuns">Álbuns</a>
+                </li>
+                <li>
+                    <i class="bx bxs-microphone"></i>
+                    <a href="/frontend/pages/explorar.html#artistas">Artistas</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu">
+            <h5>Sua Biblioteca</h5>
+            <ul>
+                <li>
+                    <i class="bx bx-undo"></i>
+                    <a href="/frontend/pages/recentes.html">Recentes</a>
+                </li>
+                <li>
+                    <i class="bx bxs-heart"></i>
+                    <a href="/frontend/pages/favoritos.html">Favoritos</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu">
+            <h5>Playlist</h5>
+            <ul>
+                <li>
+                    <i class="bx bxs-caret-right-circle"></i>
+                    <a href="/frontend/pages/playlists.html">Suas Playlists</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="nav-footer">
+            <a href="/frontend/pages/explorar.html">Sobre o Synchro</a>
+        </div>
+    </aside>
+
+    <main class="genre-page">
+
+        <div id="header-container">
+            <header class="top-header">
+                <button class="menu-toggle" type="button" aria-expanded="false" aria-label="Abrir menu" data-site-menu-toggle><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                <div class="search-box">
+                    <i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></i>
+                    <input class="search" type="search" placeholder="Buscar música ou pessoas" aria-label="Buscar música ou pessoas" autocomplete="off">
+                </div>
+                <nav class="nav-links" aria-label="Navegação principal">
+                    <a href="/frontend/pages/explorar.html">Início</a>
+                    <a href="/frontend/pages/pessoas.html">Pessoas</a>
+                    <a href="/frontend/pages/explorar.html#pesquisa">Músicas</a>
+                    <a href="/frontend/pages/explorar.html#artistas">Artistas</a>
+                    <a href="/frontend/pages/configuracoes.html" aria-label="Configurações" title="Configurações"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M9.5 3h5l.6 2.5 2 .9 2.3-1 2.5 4.3-1.9 1.7v2.2l1.9 1.7-2.5 4.3-2.3-1-2 .9-.6 2.5h-5l-.6-2.5-2-.9-2.3 1-2.5-4.3L4 13.6v-2.2L2.1 9.7l2.5-4.3 2.3 1 2-.9z"/></svg></a>
+                    <div class="profile-header-actions">
+                        <div class="session-actions" hidden><button class="logout-button" type="button">Sair</button><p class="session-error" role="alert" hidden></p></div>
+                        <a class="profile-notifications-link" href="/frontend/pages/notificacoes.html" data-post-notifications-link aria-label="Notificações" title="Notificações">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+                        <span class="post-notifications-count" data-post-notifications-badge hidden></span>
+                        </a>
+                        <a href="/frontend/pages/perfil.html" aria-label="Meu perfil"><img class="personal-profile-icon" src="/frontend/assets/images/personal-profile-icon.png" width="28" height="28" alt=""></a>
+                    </div>
+                </nav>
+            </header>
+        </div>
+
+        <section class="genre-hero">
+
+            <h1 id="genreName">Carregando...</h1>
+
+            <p>
+                Descubra artistas, álbuns e novas sonoridades
+                relacionadas a este gênero musical.
+            </p>
+        </section>
+
+        <section class="genre-section">
+            <div class="genre-section-heading">
+                <div>
+                    <h2>Artistas em destaque</h2>
+                </div>
+            </div>
+
+            <p id="artistsStatus" class="genre-status" role="status">
+                Buscando artistas...
+            </p>
+
+            <div id="genreArtists" class="genre-grid"></div>
+        </section>
+
+        <section class="genre-section">
+            <div class="genre-section-heading">
+                <div>
+                    <h2>Álbuns em destaque</h2>
+                </div>
+            </div>
+
+            <p id="albumsStatus" class="genre-status" role="status">
+                Buscando álbuns...
+            </p>
+
+            <div id="genreAlbums" class="genre-grid"></div>
+        </section>
+
+    </main>
+</div>
+
+<script src="/frontend/assets/js/image-visibility.js"></script>
+<script src="/frontend/assets/js/explorar/favorite-images.js?v=capas-alternativas"></script>
+<script src="/frontend/assets/js/explorar/genero.js"></script>
+<script src="/frontend/assets/js/search.js?v=username-publico"></script>
+<script src="/frontend/assets/js/explorar/navegacao-global.js"></script>
+
+</body>
+</html>
