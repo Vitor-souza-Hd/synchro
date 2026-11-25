@@ -73,7 +73,7 @@ public class PostDiscussionService {
     @Transactional
     public CommentView editComment(String token, long postId, long commentId, String text) {
         long viewer = requireViewerId(token);
-        var comment = ownedComment(postId, commentId, viewer);
+        var comment = commentForChange(postId, commentId, viewer, false);
         if (comment.getDeletedAt() != null) {
             throw new ResourceNotFoundException("Este comentário foi excluído.");
         }
@@ -84,7 +84,7 @@ public class PostDiscussionService {
 
     @Transactional
     public void deleteComment(String token, long postId, long commentId) {
-        ownedComment(postId, commentId, requireViewerId(token)).delete();
+        commentForChange(postId, commentId, requireViewerId(token), true).delete();
     }
 
     public PostInteractionNotifications.NotificationsPage listNotifications(String token, String before) {
@@ -103,10 +103,10 @@ public class PostDiscussionService {
         interactionNotifications.markAllRead(requireViewerId(token));
     }
 
-    private PostComment ownedComment(long postId, long commentId, long viewer) {
+    private PostComment commentForChange(long postId, long commentId, long viewer, boolean allowModeration) {
         posts.findByIdForUpdate(postId).orElseThrow(PostDiscussionService::missingPost);
         var comment = findComment(postId, commentId);
-        if (!comment.getAuthor().getId().equals(viewer)) {
+        if (!comment.getAuthor().getId().equals(viewer) && !(allowModeration && users.canModerate(viewer))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o autor pode alterar este comentário.");
         }
         return comment;

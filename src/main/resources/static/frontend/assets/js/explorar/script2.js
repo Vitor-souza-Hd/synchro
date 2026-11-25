@@ -660,10 +660,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const profile = document.createElement('a');
             profile.href = '/frontend/pages/perfil-publico.html?' + new URLSearchParams({user: item.authorId});
             profile.append(avatar, '@' + item.username);
+            window.SynchroModeration?.appendReviewBadge(profile, item.authorVvip);
             author.append(profile);
 
             card.append(header, comment, author);
             reviewsGrid.append(card);
+            window.SynchroModeration?.addDelete(card, {
+                url: '/review/' + encodeURIComponent(item.id),
+                label: 'Excluir avaliação', status: feedback, onDelete: () => showRecentReviews()
+            });
 
             const cover = safeReviewImage(item.coverUrl);
             if (window.SynchroFavoriteImages) {

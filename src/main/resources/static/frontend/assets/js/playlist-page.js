@@ -1,15 +1,19 @@
 (() => {
-    const id = new URLSearchParams(location.search).get('id');
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    const share = params.get('share');
     const library = document.getElementById('playlistLibrary');
     const detail = document.getElementById('playlistDetail');
     const grid = document.getElementById('playlistLibraryGrid');
     const status = document.getElementById('playlistPageStatus');
     const login = document.getElementById('playlistPageLogin');
     const retry = document.getElementById('playlistPageRetry');
+    const edit = document.getElementById('playlistEdit');
+    const detailActions = document.getElementById('playlistDetailActions');
     const placeholder = '../assets/images/catalog-placeholder.svg';
     let current;
     let controller;
-    library.hidden = Boolean(id);
+    library.hidden = Boolean(id || share);
 
     document.querySelector('.menu-toggle').addEventListener('click', () => {
         document.querySelector('.sidebar').classList.toggle('active');
@@ -53,6 +57,8 @@
     }
 
     function card(playlist) {
+        const entry = document.createElement('article');
+        entry.className = 'playlist-library-entry';
         const link = document.createElement('a');
         link.className = 'playlist-library-card';
         link.href = `playlists.html?id=${encodeURIComponent(playlist.id)}`;
@@ -76,14 +82,62 @@
         const meta = document.createElement('p');
         meta.textContent = `${playlist.totalMusicas ?? 0} música(s) · ${playlist.criador?.username || 'Usuário'}`;
         link.append(artwork, title, meta);
-        return link;
+        entry.append(link);
+        entry.append(playlistMenu(playlist));
+        return entry;
     }
+
+    function playlistMenu(playlist) {
+        const options = document.createElement('details');
+        options.className = 'playlist-menu';
+        options.name = 'playlist-actions';
+        const trigger = document.createElement('summary');
+        trigger.textContent = '⋯';
+        trigger.setAttribute('aria-label', 'Opções da playlist “' + playlist.titulo + '”');
+        const actions = document.createElement('div');
+        actions.className = 'playlist-menu-actions';
+        options.append(trigger, actions);
+
+        function addAction(label, action, className) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = label;
+            if (className) button.classList.add(className);
+            button.addEventListener('click', () => {
+                options.open = false;
+                trigger.focus();
+                action();
+            });
+            actions.append(button);
+        }
+        addAction('Convidar colaborador', () => openInvite(playlist));
+        addAction('Compartilhar', () => openShare(playlist));
+        if (playlist.podeExcluir === true) {
+            addAction('Excluir playlist', () => deletePlaylist(playlist, trigger), 'playlist-delete');
+        }
+        options.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && options.open) {
+                options.open = false;
+                trigger.focus();
+            }
+        });
+        return options;
+    }
+
+    document.addEventListener('click', event => {
+        document.querySelectorAll('.playlist-menu[open]').forEach(menu => {
+            if (!menu.contains(event.target)) menu.open = false;
+        });
+    });
 
     function renderDetail(playlist) {
         current = playlist;
         const colaborador = playlist.colaborador === true;
-        document.getElementById('playlistEdit').hidden = !colaborador;
-        document.getElementById('playlistParticipation').textContent = colaborador
+        edit.hidden = !colaborador || Boolean(share);
+        detailActions.replaceChildren();
+        if (colaborador && !share) detailActions.append(playlistMenu(playlist));
+        document.querySelector('.playlist-people').hidden = Boolean(share);
+        document.getElementById('playlistParticipation').textContent = share ? 'Playlist compartilhada' : colaborador
             ? 'Você participa desta playlist e pode editá-la.'
             : 'Você não é colaborador desta playlist.';
         document.title = `SYNCHRO | ${playlist.titulo}`;
@@ -116,7 +170,9 @@
             row.append(number, title, duration);
             tracks.append(row);
         });
-        document.getElementById('playlistTracksEmpty').hidden = songs.length > 0;
+        const emptyTracks = document.getElementById('playlistTracksEmpty');
+        emptyTracks.hidden = songs.length > 0;
+        if (share) emptyTracks.textContent = 'Esta playlist ainda não tem músicas.';
         const people = document.getElementById('playlistCollaborators');
         people.replaceChildren();
         const users = new Map();
@@ -132,17 +188,19 @@
         const request = new AbortController();
         controller = request;
         current = null;
-        document.getElementById('playlistEdit').hidden = true;
+        edit.hidden = true;
+        detailActions.replaceChildren();
         status.textContent = 'Carregando suas playlists…';
         login.hidden = true;
         retry.hidden = true;
-        if (id && !/^\d+$/.test(id)) {
+        if (!share && id && !/^\d+$/.test(id)) {
             library.hidden = true;
             status.textContent = 'Playlist não encontrada. Abra uma playlist pela sua biblioteca.';
             return;
         }
         try {
-            const endpoint = id ? '/playlists/me/' + encodeURIComponent(id) : '/playlists/me/summary';
+            const endpoint = share ? '/playlists/shared/' + encodeURIComponent(share)
+                : id ? '/playlists/me/' + encodeURIComponent(id) : '/playlists/me/summary';
             const response = await fetch(endpoint, {
                 credentials: 'same-origin', cache: 'no-store',
                 headers: { Accept: 'application/json' }, signal: request.signal
@@ -152,16 +210,17 @@
                 login.hidden = false;
                 throw new Error('Entre na sua conta para ver suas playlists.');
             }
-            if (id && response.status === 404) {
+            if ((id || share) && [400, 404].includes(response.status)) {
                 detail.hidden = true;
-                status.textContent = 'Playlist não encontrada ou você não participa dela.';
+                status.textContent = share ? 'Este link de compartilhamento está indisponível.'
+                    : 'Playlist não encontrada ou você não participa dela.';
                 return;
             }
             if (!response.ok) throw new Error('Não foi possível carregar suas playlists. Tente novamente.');
             const data = await response.json();
             if (request.signal.aborted) return;
             grid.replaceChildren();
-            if (id) {
+            if (id || share) {
                 renderDetail(data);
                 status.textContent = '';
                 return;
@@ -179,11 +238,185 @@
         }
     }
 
-    document.getElementById('playlistEdit').addEventListener('click', () => {
+    edit.addEventListener('click', () => {
         if (current?.colaborador === true) {
             document.dispatchEvent(new CustomEvent('playlist-edit', { detail: current }));
         }
     });
+    const inviteDialog = document.getElementById('playlistInviteDialog');
+    const inviteForm = document.getElementById('playlistInviteForm');
+    const inviteInput = document.getElementById('playlistInviteUsername');
+    const inviteStatus = document.getElementById('playlistInviteStatus');
+    const shareDialog = document.getElementById('playlistShareDialog');
+    const shareStatus = document.getElementById('playlistShareStatus');
+    const shareField = document.getElementById('playlistShareField');
+    const shareUrl = document.getElementById('playlistShareUrl');
+    const generateLink = document.getElementById('playlistShareGenerate');
+    const copyLink = document.getElementById('playlistShareCopy');
+    const profileVisibility = document.getElementById('playlistProfileVisibility');
+    let inviteTarget;
+    let shareTarget;
+
+    document.querySelectorAll('[data-close-playlist-dialog]').forEach(button => {
+        button.addEventListener('click', () => button.closest('dialog').close());
+    });
+
+    function openInvite(playlist) {
+        inviteTarget = playlist;
+        inviteForm.reset();
+        inviteStatus.textContent = '';
+        inviteDialog.showModal();
+        inviteInput.focus();
+    }
+
+    inviteForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        const playlist = inviteTarget;
+        const username = inviteInput.value.trim().replace(/^@/, '').trim();
+        if (!username || !playlist) return;
+        const button = inviteForm.querySelector('button[type=submit]');
+        button.disabled = true;
+        inviteStatus.textContent = 'Procurando usuário…';
+        try {
+            const search = await fetch('/search/users?' + new URLSearchParams({q: username}));
+            if (!search.ok) throw new Error('Não foi possível buscar o usuário.');
+            const data = await search.json();
+            const exact = (data.items || []).filter(user => user.username.toLowerCase() === username.toLowerCase());
+            if (exact.length !== 1) throw new Error('Confira o @usuário da conta que quer adicionar.');
+            if (!inviteDialog.open || inviteTarget !== playlist) return;
+            const response = await fetch('/playlists/update-playlist/' + encodeURIComponent(playlist.id)
+                + '/add-user/' + encodeURIComponent(exact[0].id), {method: 'PUT', credentials: 'same-origin'});
+            if (response.status === 409) throw new Error('Essa pessoa já participa da playlist.');
+            if (!response.ok) throw new Error('Não foi possível adicionar o colaborador.');
+            if (inviteDialog.open && inviteTarget === playlist) {
+                inviteStatus.textContent = '@' + exact[0].username + ' agora participa da playlist.';
+                inviteInput.value = '';
+            }
+            if (id) load();
+        } catch (error) {
+            if (inviteDialog.open && inviteTarget === playlist) inviteStatus.textContent = error.message;
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+    function showShareLink(name, value) {
+        const url = new URL("playlists.html", location.href);
+        url.searchParams.set(name, value);
+        shareUrl.value = url.href;
+        shareField.hidden = false;
+        copyLink.hidden = false;
+        generateLink.hidden = true;
+    }
+
+    function openShare(playlist) {
+        shareTarget = playlist;
+        const owner = playlist.podeExcluir === true;
+        document.getElementById('playlistShareDescription').textContent = owner
+            ? 'Qualquer pessoa com o link poderá ver as músicas da playlist.'
+            : 'Este link pode ser aberto por quem já participa da playlist.';
+        shareStatus.textContent = '';
+        shareField.hidden = true;
+        copyLink.hidden = true;
+        generateLink.hidden = !owner;
+        profileVisibility.hidden = !owner;
+        if (owner) renderProfileVisibility(playlist);
+        if (!owner) showShareLink('id', playlist.id);
+        shareDialog.showModal();
+    }
+
+    generateLink.addEventListener('click', async () => {
+        const playlist = shareTarget;
+        generateLink.disabled = true;
+        shareStatus.textContent = 'Gerando link…';
+        try {
+            const response = await fetch('/playlists/me/' + encodeURIComponent(playlist.id) + '/share', {
+                method: 'POST', credentials: 'same-origin'
+            });
+            if (!response.ok) throw new Error();
+            const {token} = await response.json();
+            if (shareTarget !== playlist || !shareDialog.open) return;
+            showShareLink('share', token);
+            shareStatus.textContent = '';
+            copyLink.focus();
+        } catch {
+            shareStatus.textContent = 'Não foi possível gerar o link da playlist.';
+        } finally {
+            generateLink.disabled = false;
+        }
+    });
+
+    function renderProfileVisibility(playlist) {
+        profileVisibility.textContent = playlist.exibirNoPerfil ? 'Remover do perfil público' : 'Mostrar no perfil público';
+    }
+
+    profileVisibility.addEventListener('click', async () => {
+        const playlist = shareTarget;
+        if (playlist?.podeExcluir !== true) return;
+        const visible = !playlist.exibirNoPerfil;
+        profileVisibility.disabled = true;
+        shareStatus.textContent = 'Salvando…';
+        try {
+            const response = await fetch('/playlists/me/' + encodeURIComponent(playlist.id) + '/profile-visibility', {
+                method: 'PUT', credentials: 'same-origin', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({visible}),
+            });
+            if (!response.ok) throw new Error();
+            playlist.exibirNoPerfil = visible;
+            if (shareTarget !== playlist || !shareDialog.open) return;
+            renderProfileVisibility(playlist);
+            shareStatus.textContent = visible ? 'Playlist adicionada ao perfil público.'
+                : 'Playlist removida do perfil público. Links compartilhados continuam funcionando.';
+        } catch {
+            if (shareTarget === playlist && shareDialog.open) {
+                shareStatus.textContent = 'Não foi possível atualizar a visibilidade no perfil.';
+            }
+        } finally {
+            profileVisibility.disabled = false;
+        }
+    });
+
+    copyLink.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(shareUrl.value);
+            shareStatus.textContent = 'Link copiado.';
+        } catch {
+            shareUrl.focus();
+            shareUrl.select();
+            shareStatus.textContent = 'Selecione e copie o link no campo acima.';
+        }
+    });
+
+    const deletingPlaylists = new Set();
+
+    async function deletePlaylist(playlist, trigger) {
+        if (playlist?.podeExcluir !== true || deletingPlaylists.has(playlist.id)) return;
+        if (!window.confirm('Excluir “' + playlist.titulo + '”? Essa ação é permanente.')) return;
+
+        deletingPlaylists.add(playlist.id);
+        trigger.setAttribute('aria-busy', 'true');
+        if (id) edit.disabled = true;
+        status.textContent = 'Excluindo playlist…';
+        try {
+            const response = await fetch('/playlists/me/' + encodeURIComponent(playlist.id), {
+                method: 'DELETE', credentials: 'same-origin'
+            });
+            if (response.ok || response.status === 404) {
+                if (id) location.replace('playlists.html');
+                else await load();
+                return;
+            }
+            status.textContent = response.status === 401 || response.status === 403
+                ? 'Entre como criador da playlist para excluí-la.'
+                : 'Não foi possível excluir a playlist. Tente novamente.';
+        } catch {
+            status.textContent = 'Não foi possível excluir a playlist. Tente novamente.';
+        } finally {
+            deletingPlaylists.delete(playlist.id);
+            trigger.removeAttribute('aria-busy');
+            if (id) edit.disabled = false;
+        }
+    }
     document.addEventListener('playlist-saved', load);
     retry.addEventListener('click', load);
     load();

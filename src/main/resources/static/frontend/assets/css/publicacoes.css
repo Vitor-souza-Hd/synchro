@@ -127,6 +127,20 @@ html.synchro-light .posts-main {
     width: fit-content;
 }
 
+.post-author-identity {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    min-width: 0;
+    gap: 4px 8px;
+    overflow-wrap: anywhere;
+}
+
+.post-author-identity .profile-role-badge {
+    font-size: .72rem;
+    margin-inline-start: 0;
+}
+
 .post-author img {
     width: 40px;
     height: 40px;

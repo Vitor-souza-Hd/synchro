@@ -4,6 +4,10 @@ let artistName = artistNameFromUrl;
 let artist = null;
 let historyRecorded = false;
 let popularLoaded = false;
+const catalogTrackLimit = 20;
+const catalogTracksToggle = document.getElementById('artistCatalogTracksToggle');
+let catalogTracks = [];
+let catalogTracksExpanded = false;
 const artistPhotoRequests = new Map();
 const placeholder = '../assets/images/artist-placeholder.svg';
 const artistImages = {
@@ -152,11 +156,25 @@ function mediaLink(href, name, className) {
 }
 
 function renderCatalogTracks(tracks) {
-    const container = document.getElementById('tracks'); container.replaceChildren();
-    tracks.forEach((track, index) => container.append(mediaLink('musica.html?id=' + encodeURIComponent(track.id),
+    catalogTracks = tracks;
+    const container = document.getElementById('tracks');
+    const hasMore = tracks.length > catalogTrackLimit;
+    const visibleTracks = catalogTracksExpanded ? tracks : tracks.slice(0, catalogTrackLimit);
+
+    container.replaceChildren();
+    visibleTracks.forEach((track, index) => container.append(mediaLink('musica.html?id=' + encodeURIComponent(track.id),
         `${String(index + 1).padStart(2, '0')} · ${track.titulo}`, 'track catalog-link')));
     if (!tracks.length) container.textContent = 'Nenhuma música cadastrada para este artista.';
+
+    catalogTracksToggle.hidden = !hasMore;
+    catalogTracksToggle.setAttribute('aria-expanded', String(hasMore && catalogTracksExpanded));
+    catalogTracksToggle.textContent = catalogTracksExpanded ? 'Mostrar menos músicas' : 'Exibir todas as músicas';
 }
+
+catalogTracksToggle.addEventListener('click', () => {
+    catalogTracksExpanded = !catalogTracksExpanded;
+    renderCatalogTracks(catalogTracks);
+});
 
 function albumCard(href, title, image) {
     const link = document.createElement('a'); link.href = href; link.className = 'album-card catalog-link';

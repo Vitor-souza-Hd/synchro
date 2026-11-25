@@ -1,14 +1,17 @@
 package org.example.synchro.resources;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.example.synchro.dto.PlaylistDto;
 import org.example.synchro.dto.PlaylistRequestDto;
 import org.example.synchro.dto.PlaylistSummaryDto;
+import org.example.synchro.dto.ProfileSelectionDto;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import java.util.List;
+import java.util.UUID;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
@@ -39,16 +42,72 @@ public class PlaylistResource {
                 .body(playlistService.findMyPlaylistSummaries(cookie));
     }
 
+    @GetMapping("/me/profile-selection")
+    public ResponseEntity<ProfileSelectionDto> playlistSelection(@CookieValue(name = "token_jwt", required = false) String cookie) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(playlistService.playlistSelection(cookie));
+    }
+
+    @PutMapping("/me/profile-selection")
+    public ResponseEntity<Void> savePlaylistSelection(@CookieValue(name = "token_jwt", required = false) String cookie,
+                                                       @Valid @RequestBody ProfileSelectionDto.Request request) {
+        playlistService.savePlaylistSelection(cookie, request.ids());
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/me/{id}")
     public ResponseEntity<PlaylistDto> findMyPlaylist(
             @CookieValue(name = "token_jwt", required = false) String cookie, @PathVariable long id) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(playlistService.findMyPlaylist(cookie, id));
     }
 
+    @DeleteMapping("/me/{id}")
+    public ResponseEntity<Void> deletePlaylist(
+            @CookieValue(name = "token_jwt", required = false) String cookie, @PathVariable long id) {
+        playlistService.deletePlaylist(cookie, id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/me/{id}/artwork/{kind}")
     public ResponseEntity<byte[]> findMyPlaylistArtwork(
             @CookieValue(name = "token_jwt", required = false) String cookie, @PathVariable long id, @PathVariable String kind) {
-        var artwork = playlistService.findMyPlaylistArtwork(cookie, id, kind);
+        return artworkResponse(playlistService.findMyPlaylistArtwork(cookie, id, kind));
+    }
+
+    public record ProfileVisibility(@NotNull Boolean visible) {}
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<List<PlaylistService.ProfilePlaylist>> findProfilePlaylists(@PathVariable long userId) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(playlistService.findProfilePlaylists(userId));
+    }
+
+    @PutMapping("/me/{id}/profile-visibility")
+    public ResponseEntity<Void> updateProfileVisibility(
+            @CookieValue(name = "token_jwt", required = false) String cookie, @PathVariable long id,
+            @Valid @RequestBody ProfileVisibility visibility) {
+        playlistService.setProfileVisibility(cookie, id, visibility.visible());
+        return ResponseEntity.noContent().build();
+    }
+
+    public record SharedLink(UUID token) {}
+
+    @PostMapping("/me/{id}/share")
+    public ResponseEntity<SharedLink> sharePlaylist(
+            @CookieValue(name = "token_jwt", required = false) String cookie, @PathVariable long id) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(new SharedLink(playlistService.sharePlaylist(cookie, id)));
+    }
+
+    @GetMapping("/shared/{token}")
+    public ResponseEntity<PlaylistDto> findSharedPlaylist(@PathVariable UUID token) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(playlistService.findSharedPlaylist(token));
+    }
+
+    @GetMapping("/shared/{token}/artwork/{kind}")
+    public ResponseEntity<byte[]> findSharedArtwork(@PathVariable UUID token, @PathVariable String kind) {
+        return artworkResponse(playlistService.findSharedPlaylistArtwork(token, kind));
+    }
+
+    private ResponseEntity<byte[]> artworkResponse(PlaylistService.Artwork artwork) {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(artwork.contentType()))
                 .cacheControl(CacheControl.noCache().cachePrivate())

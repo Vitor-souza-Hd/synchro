@@ -355,6 +355,7 @@
     white-space: pre-wrap;
 }
 
+.artist-tracks-toggle,
 .artist-review-more,
 .artist-review-card button {
     border: 1px solid currentColor;
@@ -365,6 +366,8 @@
     font: inherit;
     cursor: pointer;
 }
+
+.artist-tracks-toggle { margin-top: 12px; }
 
 .review-modal textarea {
     width: 100%;

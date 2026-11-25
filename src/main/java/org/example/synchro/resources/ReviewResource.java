@@ -1,6 +1,8 @@
 package org.example.synchro.resources;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.synchro.dto.ProfileSelectionDto;
 import org.example.synchro.dto.MidiaRatingDto;
 import org.example.synchro.dto.RecentReviewDto;
 import org.example.synchro.dto.ReviewDto;
@@ -75,6 +77,23 @@ public class ReviewResource {
     @GetMapping("/recent")
     public ResponseEntity<List<RecentReviewDto>> recent() {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(reviewService.recentPublicReviews());
+    }
+
+    @GetMapping("/me/profile-selection")
+    public ResponseEntity<ProfileSelectionDto> reviewSelection(@CookieValue(name = "token_jwt", required = false) String cookie) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(reviewService.reviewSelection(cookie));
+    }
+
+    @PutMapping("/me/profile-selection")
+    public ResponseEntity<Void> saveReviewSelection(@CookieValue(name = "token_jwt", required = false) String cookie,
+                                                     @Valid @RequestBody ProfileSelectionDto.Request request) {
+        reviewService.saveReviewSelection(cookie, request.ids());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/users/{userId}/profile")
+    public ResponseEntity<List<RecentReviewDto>> reviewsOnProfile(@PathVariable long userId) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(reviewService.reviewsOnProfile(userId));
     }
 
     @GetMapping("/users/{userId}")

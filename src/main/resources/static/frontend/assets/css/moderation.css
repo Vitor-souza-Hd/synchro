@@ -1,0 +1,33 @@
+.moderation-delete {
+    align-self: flex-start;
+    padding: 6px 10px;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    background: transparent;
+    color: #ffabbd;
+    font: inherit;
+    cursor: pointer;
+}
+
+html.synchro-light .moderation-delete { color: #9a224d; }
+.moderation-delete:disabled { opacity: .65; cursor: wait; }
+
+.profile-role-badge {
+    display: inline-block;
+    margin-inline-start: .55em;
+    padding: .22em .55em;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    background: #2b230e;
+    color: #ffe092;
+    font-size: .42em;
+    vertical-align: middle;
+}
+
+.profile-role-badge[data-role="VVIP"] {
+    border-color: #000;
+    background: #311a43;
+    color: #fff;
+}
+
+.profile-role-badge.review-role-badge { font-size: .72rem; }

@@ -45,6 +45,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadProfileIcons(refresh) {
         try {
+            if (window.SynchroModeration) {
+                const user = await window.SynchroModeration.currentUser();
+                if (refresh === sessionRefresh) renderUserPhoto(user);
+                return;
+            }
             const response = await fetch("/users/me", {
                 credentials: "same-origin",
                 cache: "no-store",

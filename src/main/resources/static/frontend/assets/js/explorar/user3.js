@@ -87,6 +87,9 @@ async function renderProfileSections({detail: user, type: eventType}) {
 
             const reviews = await response.json();
 
+            const mediaTypes = {Musica: "track", Album: "album", Artista: "artist"};
+            const choose = document.querySelector('[data-profile-selection=reviews]');
+            if (choose) choose.hidden = !Array.isArray(reviews) || reviews.filter(item => mediaTypes[item.midiatype]).length <= 10;
             if (!Array.isArray(reviews) || reviews.length === 0) {
                 empty(
                     reviewGrid,
@@ -97,7 +100,6 @@ async function renderProfileSections({detail: user, type: eventType}) {
 
             reviewGrid.replaceChildren();
 
-            const mediaTypes = {Musica: "track", Album: "album", Artista: "artist"};
             for (const review of reviews) {
                 reviewGrid.append(createProfileReviewCard({
                     mediaType: mediaTypes[review.midiatype],
@@ -106,6 +108,7 @@ async function renderProfileSections({detail: user, type: eventType}) {
                     artistName: review.artistName,
                     coverUrl: review.coverUrl,
                     rating: review.rating,
+                    authorVvip: review.authorVvip,
                     review: review.review
                 }));
             }
@@ -546,6 +549,7 @@ function createProfileReviewCard(review) {
     } else {
         title.textContent = name;
     }
+    window.SynchroModeration?.appendReviewBadge(title, review.authorVvip);
     const details = document.createElement('p');
     details.textContent = [label, review.artistName, review.rating == null ? null : review.rating + '/10']
         .filter(Boolean).join(' · ');
@@ -575,35 +579,33 @@ function createProfileReviewCard(review) {
 function loadPublicReviews(userId) {
     const list = document.getElementById('publicReviewList');
     const status = document.getElementById('publicReviewStatus');
-    const more = document.getElementById('morePublicReviews');
-    let before;
+    const retry = document.getElementById('retryPublicReviews');
 
     async function load() {
-        more.disabled = true;
+        retry.hidden = true;
         status.textContent = 'Carregando avaliações…';
         try {
-            const params = before == null ? '' : '?' + new URLSearchParams({before});
-            const response = await fetch('/review/users/' + encodeURIComponent(userId) + params, {cache: 'no-store'});
+            const response = await fetch('/review/users/' + encodeURIComponent(userId) + '/profile', {cache: 'no-store'});
             if (!response.ok) throw new Error('Avaliações indisponíveis');
-            const data = await response.json();
-            for (const review of data.items) list.append(createProfileReviewCard(review));
-            before = data.nextBefore;
+            const reviews = await response.json();
+            list.replaceChildren(...reviews.map(review => {
+                const card = createProfileReviewCard(review);
+                window.SynchroModeration?.addDelete(card.lastElementChild, {
+                    url: '/review/' + encodeURIComponent(review.id),
+                    label: 'Excluir avaliação', status, onDelete: () => load()
+                });
+                return card;
+            }));
             status.textContent = list.childElementCount ? '' : 'Este perfil ainda não publicou avaliações.';
-            more.textContent = 'Ver mais avaliações';
-            more.hidden = before == null;
         } catch {
             status.textContent = 'Não foi possível carregar as avaliações.';
-            more.textContent = 'Tentar novamente';
-            more.hidden = false;
-        } finally {
-            more.disabled = false;
+            retry.hidden = false;
         }
     }
 
-    more.addEventListener('click', load);
+    retry.addEventListener('click', load);
     load();
 }
-
 
 // =========================================================
 // BOTÃO CONECTAR LAST.FM

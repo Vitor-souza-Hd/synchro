@@ -39,6 +39,12 @@ public class MuralSignatureResource {
         return mural.save(token, image);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> moderate(@CookieValue(name = "token_jwt", required = false) String token, @PathVariable long id) {
+        mural.moderate(token, id);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/minha")
     public ResponseEntity<Void> remove(@CookieValue(name = "token_jwt", required = false) String token) {
         mural.remove(token);

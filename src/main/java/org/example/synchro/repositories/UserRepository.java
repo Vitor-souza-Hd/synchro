@@ -3,6 +3,7 @@ package org.example.synchro.repositories;
 import jakarta.persistence.LockModeType;
 import org.example.synchro.dto.UserSearchResult;
 import org.example.synchro.entities.User;
+import org.example.synchro.entities.UserRole;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -22,6 +23,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT user FROM User user WHERE user.id = :id")
     Optional<User> findByIdForUpdate(@Param("id") Long id);
+
+    @Query("select u.profileReviewSelection from User u where u.id = :id")
+    String findProfileReviewSelection(@Param("id") long id);
+
+    @Query("select u.profilePlaylistSelection from User u where u.id = :id")
+    String findProfilePlaylistSelection(@Param("id") long id);
+
+    boolean existsByIdAndRole(Long id, UserRole role);
+
+    default boolean canModerate(Long id) {
+        return id != null && existsByIdAndRole(id, UserRole.VVIP);
+    }
 
     User findByEmail(String email);
 

@@ -10,7 +10,7 @@
     <title>SYNCHRO</title>
 
     <link rel="stylesheet" href="../assets/css/style.css?v=shared-sidebar-1">
-    <link rel="stylesheet" href="../assets/css/artista.css?v=avaliacoes-artistas">
+    <link rel="stylesheet" href="../assets/css/artista.css?v=limite-musicas">
 
     <link
         href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
@@ -24,10 +24,11 @@
     <!-- Início do trecho adicionado por IA -->
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
     <link rel="stylesheet" href="/frontend/assets/css/catalog.css?v=20261028-artist-contrast-2">
+    <script src="/frontend/assets/js/moderation.js?v=vvip-avaliacoes" defer></script>
     <script src="/frontend/assets/js/search.js?v=username-publico" defer></script>
     <!-- Fim do trecho adicionado por IA -->
     <link rel="stylesheet" href="/frontend/assets/css/auth.css?v=20261029-1">
-    <script src="/frontend/assets/js/auth.js?v=foto-da-conta" defer></script>
+    <script src="/frontend/assets/js/auth.js?v=moderacao-roles" defer></script>
     <!-- Gerado por IA: criação de playlists. -->
     <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
     <!-- Gerado por IA: atualização da compactação de imagens. -->
@@ -41,6 +42,7 @@
     <link rel="stylesheet" href="/frontend/assets/css/site-header.css?v=sino-e-sair">
     <script src="/frontend/assets/js/site-header.js?v=barra-e-menu" defer></script>
     <link rel="stylesheet" href="/frontend/assets/css/catalog-image-refresh.css">
+    <link rel="stylesheet" href="/frontend/assets/css/moderation.css?v=vvip-avaliacoes">
 </head>
 
 <body>
@@ -297,6 +299,8 @@
                     class="tracks">
                     <!-- JavaScript -->
                 </div>
+                <button class="artist-tracks-toggle" id="artistCatalogTracksToggle" type="button"
+                        aria-controls="tracks" aria-expanded="false" hidden>Exibir todas as músicas</button>
 
             </section>
 
@@ -392,10 +396,10 @@
 </div>
 
     <!-- Início do trecho alterado por IA -->
-    <script src="../assets/js/artist-reviews.js" defer></script>
+    <script src="../assets/js/artist-reviews.js?v=vvip-avaliacoes" defer></script>
 <script src="/frontend/assets/js/explorar/favorite-images.js?v=buscar-outra"></script>
 <script src="/frontend/assets/js/catalog-image-refresh.js"></script>
-    <script src="../assets/js/artista.js?v=buscar-outra" defer></script>
+    <script src="../assets/js/artista.js?v=limite-musicas" defer></script>
     <script src="../assets/js/explorar/recentes.js?v=20261105-unified-artist-1"></script>
     <script src="../assets/js/explorar/navegacao-global.js?v=20261105-unified-artist-1"></script>
     <!-- Fim do trecho alterado por IA -->

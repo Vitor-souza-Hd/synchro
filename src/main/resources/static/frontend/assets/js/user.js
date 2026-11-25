@@ -283,6 +283,19 @@ function renderCurrentUser(user) {
     if (isPublicProfile) renderPublicAppearance(user.appearance || {}, displayName, image);
     else image.dataset.customPhoto = publicImageUrl(data.profileImageUrl);
     renderLastFm(user);
+    renderProfileRole(user.role);
+}
+
+function renderProfileRole(role) {
+    const heading = document.getElementById("profileHeading");
+    heading.querySelector(".profile-role-badge")?.remove();
+    if (role === "VIP" || role === "VVIP") {
+        const badge = document.createElement("span");
+        badge.className = "profile-role-badge";
+        badge.dataset.role = role;
+        badge.textContent = role;
+        heading.append(badge);
+    }
 }
 
 function renderPublicAppearance(appearance, displayName, photo) {

@@ -26,7 +26,7 @@ class RestorationFeaturesTests {
     @EnableAutoConfiguration
     @EntityScan("org.example.synchro.entities")
     @EnableJpaRepositories("org.example.synchro.repositories")
-    @Import({ReviewService.class, ReviewResource.class, UserService.class, UserResource.class,
+    @Import({ReviewService.class, ReviewResource.class, PlaylistService.class, PlaylistResource.class, UserService.class, UserResource.class,
             FavoriteArtistService.class, FavoriteArtistResource.class,
             FavoriteAlbumService.class, FavoriteAlbumResource.class,
             FavoriteTrackService.class, FavoriteTrackResource.class, ResourceExceptionHandler.class,
@@ -34,7 +34,9 @@ class RestorationFeaturesTests {
             CommunityPostResource.class, CommunityPostService.class,
             MuralSignatureResource.class, MuralSignatureService.class,
             PostInteractionResource.class, PostInteractionService.class, PostInteractionNotifications.class,
-            CommunityPollResource.class, CommunityPollService.class})
+            CommunityPollResource.class, CommunityPollService.class,
+            PostDiscussionResource.class, PostDiscussionService.class,
+            VvipInvitationResource.class, VvipInvitationService.class})
     static class Config {
         @Bean org.example.synchro.importer.LastFmHistoryClient catalogClient() {
             return mock(org.example.synchro.importer.LastFmHistoryClient.class);
@@ -512,6 +514,188 @@ class RestorationFeaturesTests {
             assertEquals(1, app.getBean(MuralSignatureRepository.class).count());
             expect(204, "DELETE", mine, "owner", null);
             expect(404, "GET", mural + "/" + id + "/imagem", null, null);
+        }
+    }
+
+    @Test
+    void profileShowsAtMostTenAndSavesIndependentOwnerSelections() throws Exception {
+        try (var app = new SpringApplicationBuilder(Config.class).profiles("restoration-test")
+                .properties("server.port=0", "spring.datasource.url=jdbc:h2:mem:profile-selection",
+                        "spring.datasource.driver-class-name=org.h2.Driver", "spring.datasource.username=sa",
+                        "spring.datasource.password=", "spring.jpa.hibernate.ddl-auto=create-drop").run()) {
+            base = "http://localhost:" + app.getEnvironment().getProperty("local.server.port");
+            var users = app.getBean(UserRepository.class);
+            users.save(new User(null, "owner", "owner@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            users.save(new User(null, "other", "other@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            var tracks = app.getBean(MusicaRepository.class);
+            for (int i = 1; i <= 11; i++) {
+                var track = tracks.save(new Musica("Faixa " + i, "", null, null));
+                expect(200, "POST", "/review/midia/" + track.getId(), "owner", "{\"rating\":8}");
+                var playlist = json.readTree(expect(201, "POST", "/playlists/new-playlist", "owner",
+                        "{\"titulo\":\"Playlist " + i + "\"}").body());
+                expect(204, "PUT", "/playlists/me/" + playlist.get("id").asLong() + "/profile-visibility",
+                        "owner", "{\"visible\":true}");
+            }
+            var hidden = json.readTree(expect(201, "POST", "/playlists/new-playlist", "owner",
+                    "{\"titulo\":\"Privada\"}").body()).get("id").asLong();
+            String reviewSelection = "/review/me/profile-selection";
+            String playlistSelection = "/playlists/me/profile-selection";
+            String publicReviews = "/review/users/1/profile";
+            String publicPlaylists = "/playlists/users/1";
+            expect(401, "GET", reviewSelection, null, null);
+            expect(401, "PUT", playlistSelection, null, "{\"ids\":[]}");
+            assertEquals(10, json.readTree(expect(200, "GET", publicReviews, null, null).body()).size());
+            assertEquals(10, json.readTree(expect(200, "GET", publicPlaylists, null, null).body()).size());
+            var reviews = json.readTree(expect(200, "GET", reviewSelection, "owner", null).body());
+            var playlists = json.readTree(expect(200, "GET", playlistSelection, "owner", null).body());
+            assertEquals(11, reviews.path("items").size());
+            assertEquals(11, playlists.path("items").size());
+            assertEquals(10, reviews.path("selectedIds").size());
+            assertEquals(10, playlists.path("selectedIds").size());
+            long oldestReview = reviews.path("items").get(10).get("id").asLong();
+            long oldestPlaylist = playlists.path("items").get(10).get("id").asLong();
+            expect(400, "PUT", playlistSelection, "owner", "{\"ids\":[" + hidden + "]}");
+            expect(409, "PUT", reviewSelection, "other", "{\"ids\":[" + oldestReview + "]}");
+            expect(204, "PUT", reviewSelection, "owner", "{\"ids\":[" + oldestReview + "]}");
+            expect(204, "PUT", playlistSelection, "owner", "{\"ids\":[" + oldestPlaylist + "]}");
+            var shownReviews = json.readTree(expect(200, "GET", publicReviews, null, null).body());
+            var shownPlaylists = json.readTree(expect(200, "GET", publicPlaylists, null, null).body());
+            assertEquals(1, shownReviews.size());
+            assertEquals(1, shownPlaylists.size());
+            assertEquals(oldestReview, shownReviews.get(0).get("id").asLong());
+            assertEquals(oldestPlaylist, shownPlaylists.get(0).get("id").asLong());
+            assertEquals(11, json.readTree(expect(200, "GET", "/review/me", "owner", null).body()).size());
+            assertEquals(12, json.readTree(expect(200, "GET", "/playlists/me/summary", "owner", null).body()).size());
+        }
+    }
+
+    @Test
+    void vvipCanDeleteOthersContentButVipCannotAndEditingRemainsWithAuthor() throws Exception {
+        try (var app = new SpringApplicationBuilder(Config.class).profiles("restoration-test")
+                .properties("server.port=0", "spring.datasource.url=jdbc:h2:mem:account-roles",
+                        "spring.datasource.driver-class-name=org.h2.Driver", "spring.datasource.username=sa",
+                        "spring.datasource.password=", "spring.jpa.hibernate.ddl-auto=create-drop").run()) {
+            base = "http://localhost:" + app.getEnvironment().getProperty("local.server.port");
+            var users = app.getBean(UserRepository.class);
+            users.save(new User(null, "owner", "owner@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            var vip = new User(null, "vip", "vip@example.test", "hash", LocalDate.of(2000, 1, 1), null);
+            vip.setRole(UserRole.VIP);
+            users.save(vip);
+            var moderator = new User(null, "moderator", "moderator@example.test", "hash", LocalDate.of(2000, 1, 1), null);
+            moderator.setRole(UserRole.VVIP);
+            users.save(moderator);
+            assertEquals("USER", json.readTree(expect(200, "GET", "/users/me", "owner", null).body()).get("role").asText());
+            assertEquals("VVIP", json.readTree(expect(200, "GET", "/users/me", "visitor", null).body()).get("role").asText());
+            assertEquals("VIP", json.readTree(expect(200, "GET", "/catalog/users/2", null, null).body()).get("role").asText());
+
+            long post = json.readTree(expect(201, "POST", "/posts", "owner", "{\"text\":\"Post de teste\"}").body()).get("id").asLong();
+            String postPath = "/posts/" + post;
+            assertFalse(json.readTree(expect(200, "GET", postPath, null, null).body()).path("post").get("authorVvip").asBoolean());
+            long comment = json.readTree(expect(201, "POST", postPath + "/comments", "owner",
+                    "{\"text\":\"Comentário de teste\"}").body()).get("id").asLong();
+            String commentPath = postPath + "/comments/" + comment;
+            var music = app.getBean(MusicaRepository.class).save(new Musica("Faixa moderada", "", null, null));
+            long review = json.readTree(expect(200, "POST", "/review/midia/" + music.getId(), "owner",
+                    "{\"rating\":8}").body()).get("id").asLong();
+            String reviewPath = "/review/" + review;
+            var image = uploadSignature("/api/mural-assinaturas/minha", "owner", signaturePng(720, 300, true));
+            assertEquals(200, image.statusCode(), image.body());
+            long signature = json.readTree(image.body()).get("id").asLong();
+            String signaturePath = "/api/mural-assinaturas/" + signature;
+
+            expect(403, "DELETE", postPath, "other", null);
+            expect(403, "DELETE", commentPath, "other", null);
+            expect(401, "DELETE", reviewPath, "other", null);
+            expect(403, "DELETE", signaturePath, "other", null);
+            expect(401, "DELETE", signaturePath, null, null);
+            expect(403, "PUT", postPath, "visitor", "{\"text\":\"Edição alheia\"}");
+            expect(403, "PUT", commentPath, "visitor", "{\"text\":\"Edição alheia\"}");
+            expect(401, "PUT", reviewPath, "visitor", "{\"rating\":1}");
+
+            expect(204, "DELETE", commentPath, "visitor", null);
+            assertTrue(json.readTree(expect(200, "GET", commentPath, null, null).body()).path("deleted").asBoolean());
+            expect(204, "DELETE", reviewPath, "visitor", null);
+            assertFalse(app.getBean(ReviewRepository.class).existsById(review));
+            expect(204, "DELETE", signaturePath, "visitor", null);
+            expect(404, "GET", signaturePath + "/imagem", null, null);
+            expect(204, "DELETE", postPath, "visitor", null);
+            expect(404, "GET", postPath, null, null);
+            var vvipPost = json.readTree(expect(201, "POST", "/posts", "visitor", "{\"text\":\"Post VVIP\"}").body());
+            assertTrue(vvipPost.get("authorVvip").asBoolean());
+            long vvipPostId = vvipPost.get("id").asLong();
+            var vvipReview = json.readTree(expect(200, "POST", "/review/midia/" + music.getId(), "visitor",
+                    "{\"rating\":9,\"review\":\"Avaliação VVIP\"}").body());
+            assertTrue(vvipReview.get("authorVvip").asBoolean());
+            assertTrue(json.readTree(expect(200, "GET", "/review", null, null).body()).get(0).get("authorVvip").asBoolean());
+            assertTrue(json.readTree(expect(200, "GET", "/review/recent", null, null).body()).get(0).get("authorVvip").asBoolean());
+            assertTrue(json.readTree(expect(200, "GET", "/review/users/3/profile", null, null).body()).get(0).get("authorVvip").asBoolean());
+            assertTrue(json.readTree(expect(200, "GET", "/posts/" + vvipPostId, null, null).body())
+                    .path("post").get("authorVvip").asBoolean());
+            assertTrue(json.readTree(expect(200, "GET", "/posts", null, null).body())
+                    .path("items").get(0).get("authorVvip").asBoolean());
+        }
+    }
+
+    @Test
+    void onlyTheInvitedAccountCanAcceptVvipInvitations() throws Exception {
+        try (var app = new SpringApplicationBuilder(Config.class).profiles("restoration-test")
+                .properties("server.port=0", "spring.datasource.url=jdbc:h2:mem:vvip-invitations",
+                        "spring.datasource.driver-class-name=org.h2.Driver", "spring.datasource.username=sa",
+                        "spring.datasource.password=", "spring.jpa.hibernate.ddl-auto=create-drop").run()) {
+            base = "http://localhost:" + app.getEnvironment().getProperty("local.server.port");
+            var users = app.getBean(UserRepository.class);
+            var sender = users.save(new User(null, "owner", "owner@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+            var vip = new User(null, "other", "other@example.test", "hash", LocalDate.of(2000, 1, 1), null);
+            vip.setRole(UserRole.VIP);
+            users.save(vip);
+            users.save(new User(null, "visitor", "visitor@example.test", "hash", LocalDate.of(2000, 1, 1), null));
+
+            String path = "/vvip-invitations";
+            String invite = "{\"username\":\" @OtHeR \"}";
+            expect(401, "GET", path, null, null);
+            expect(403, "POST", path, "owner", invite);
+            expect(403, "POST", path, "other", "{\"username\":\"visitor\"}");
+            sender.setRole(UserRole.VVIP);
+            users.save(sender);
+            expect(204, "POST", path, "owner", invite);
+            expect(204, "POST", path, "owner", invite);
+            var received = json.readTree(expect(200, "GET", path, "other", null).body());
+            assertFalse(received.get("canInvite").asBoolean());
+            assertEquals(1, received.path("incoming").size());
+            long first = received.path("incoming").get(0).get("id").asLong();
+            expect(404, "PUT", path + "/" + first, "visitor", "{\"accept\":true}");
+            expect(404, "DELETE", path + "/" + first, "other", null);
+            expect(204, "DELETE", path + "/" + first, "owner", null);
+            expect(204, "DELETE", path + "/" + first, "owner", null);
+            assertEquals("CANCELED", json.readTree(expect(200, "GET", path, "owner", null).body())
+                    .path("outgoing").get(0).path("status").asText());
+            assertTrue(json.readTree(expect(200, "GET", path, "other", null).body()).path("incoming").isEmpty());
+            expect(409, "PUT", path + "/" + first, "other", "{\"accept\":true}");
+            expect(204, "POST", path, "owner", invite);
+            long declined = json.readTree(expect(200, "GET", path, "other", null).body())
+                    .path("incoming").get(0).get("id").asLong();
+            assertNotEquals(first, declined);
+            expect(204, "PUT", path + "/" + declined, "other", "{\"accept\":false}");
+            assertEquals(UserRole.VIP, users.findById(vip.getId()).orElseThrow().getRole());
+            assertEquals("DECLINED", json.readTree(expect(200, "GET", path, "owner", null).body())
+                    .path("outgoing").get(0).path("status").asText());
+
+            expect(204, "POST", path, "owner", invite);
+            long second = json.readTree(expect(200, "GET", path, "other", null).body())
+                    .path("incoming").get(0).get("id").asLong();
+            assertNotEquals(first, second);
+            expect(204, "PUT", path + "/" + second, "other", "{\"accept\":true}");
+            expect(204, "PUT", path + "/" + second, "other", "{\"accept\":true}");
+            assertEquals(UserRole.VVIP, users.findById(vip.getId()).orElseThrow().getRole());
+            expect(409, "DELETE", path + "/" + second, "owner", null);
+            expect(409, "POST", path, "owner", invite);
+            expect(204, "POST", path, "other", "{\"username\":\"visitor\"}");
+            long pending = json.readTree(expect(200, "GET", path, "visitor", null).body())
+                    .path("incoming").get(0).get("id").asLong();
+            var promoted = users.findById(vip.getId()).orElseThrow();
+            promoted.setRole(UserRole.VIP);
+            users.save(promoted);
+            expect(403, "PUT", path + "/" + pending, "visitor", "{\"accept\":true}");
         }
     }
 

@@ -2,10 +2,11 @@ package org.example.synchro.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.example.synchro.entities.User;
+import org.example.synchro.entities.UserRole;
 
 import java.util.List;
 
-public record PublicProfileDto(Long id, String username, String lastFmUsername, boolean lastFmConnected, Data data,
+public record PublicProfileDto(Long id, String username, String lastFmUsername, boolean lastFmConnected, Data data, UserRole role,
                                @JsonInclude(JsonInclude.Include.NON_NULL) Appearance appearance) {
     public static PublicProfileDto from(User user) {
         return create(user, null);
@@ -24,7 +25,7 @@ public record PublicProfileDto(Long id, String username, String lastFmUsername, 
         var data = user.getData();
         return new PublicProfileDto(user.getId(), user.getUsername(), user.getLastFmUsername(),
                 user.hasLastFmConnection(), data == null ? null : new Data(data.getScrobbles(), data.getArtistas(), data.getLastFmImageUrl(),
-                data.getLastFmTracks(), data.getLastFmAlbums()), appearance);
+                data.getLastFmTracks(), data.getLastFmAlbums()), user.getRole(), appearance);
     }
 
     public record Appearance(String profileImageUrl, String bannerImageUrl, String biography, List<String> genres) {}

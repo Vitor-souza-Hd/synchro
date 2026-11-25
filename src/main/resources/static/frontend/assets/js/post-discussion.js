@@ -201,6 +201,8 @@
                 if (comment.own) {
                     tools.append(button('Editar comentário', 'post-comment-edit', () => startEdit(comment)),
                         button('Excluir comentário', 'post-comment-delete', () => remove(comment)));
+                } else {
+                    window.SynchroModeration?.addAction(tools, 'Excluir comentário', () => remove(comment));
                 }
                 item.append(tools);
             }

@@ -164,6 +164,13 @@
         }
     });
 
+    function clearOwnSignature() {
+        own = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        save.textContent = 'Publicar assinatura';
+        remove.hidden = true;
+    }
+
     remove.addEventListener('click', async () => {
         if (busy || !own || !window.confirm('Excluir sua assinatura do mural público?')) return;
         setBusy(true);
@@ -171,10 +178,7 @@
             const response = await request(api + '/minha', {method: 'DELETE'});
             if (response.status === 401) return requireLogin();
             if (!response.ok) throw new Error();
-            own = null;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            save.textContent = 'Publicar assinatura';
-            remove.hidden = true;
+            clearOwnSignature();
             status.textContent = 'Sua assinatura foi excluída.';
             loadGallery(true);
         } catch {
@@ -202,6 +206,14 @@
         const author = document.createElement('strong');
         author.textContent = '@' + entry.username;
         row.append(image, author);
+        window.SynchroModeration?.addDelete(row, {
+            url: api + '/' + encodeURIComponent(entry.id),
+            label: 'Excluir assinatura', status: galleryStatus,
+            onDelete() {
+                if (own?.id === entry.id) clearOwnSignature();
+                return loadGallery(true);
+            }
+        });
         return row;
     }
 

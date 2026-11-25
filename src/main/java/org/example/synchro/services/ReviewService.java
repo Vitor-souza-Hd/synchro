@@ -1,6 +1,7 @@
 package org.example.synchro.services;
 
 import lombok.RequiredArgsConstructor;
+import org.example.synchro.dto.ProfileSelectionDto;
 import org.example.synchro.dto.RecentReviewDto;
 import org.example.synchro.dto.ReviewDto;
 import org.example.synchro.entities.Album;
@@ -11,6 +12,7 @@ import org.example.synchro.dto.ReviewRequest;
 import org.example.synchro.entities.Midia;
 import org.example.synchro.entities.Review;
 import org.example.synchro.entities.User;
+import org.example.synchro.entities.UserRole;
 import org.example.synchro.entities.UserData;
 import org.example.synchro.repositories.ArtistaRepository;
 import org.example.synchro.repositories.MidiaRepository;
@@ -174,6 +176,38 @@ public class ReviewService {
                 PageRequest.of(0, PUBLIC_PAGE_SIZE + 1)));
     }
 
+    @Transactional(readOnly = true)
+    public List<RecentReviewDto> reviewsOnProfile(long userId) {
+        var available = reviewRepository.findProfileItems(userId).stream().map(ReviewRepository.ProfileItem::getId).toList();
+        String selected = available.size() > ProfileSelectionDto.LIMIT ? userRepository.findProfileReviewSelection(userId) : null;
+        var visible = ProfileSelection.visibleIds(available, selected);
+        if (visible.isEmpty()) return List.of();
+        return reviewRepository.findProfileReviews(userId, visible).stream().map(this::toRecentReview).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ProfileSelectionDto reviewSelection(String cookie) {
+        long userId = requireReviewUserId(cookie);
+        var items = reviewRepository.findProfileItems(userId).stream()
+                .map(row -> new ProfileSelectionDto.Item(row.getId(), row.getTitle())).toList();
+        return ProfileSelection.options(items, userRepository.findProfileReviewSelection(userId));
+    }
+
+    @Transactional
+    public void saveReviewSelection(String cookie, List<Long> ids) {
+        long userId = requireReviewUserId(cookie);
+        User user = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+        var available = reviewRepository.findProfileItems(userId).stream().map(ReviewRepository.ProfileItem::getId).toList();
+        user.setProfileReviewSelection(ProfileSelection.checkedValue(available, ids));
+    }
+
+    private long requireReviewUserId(String cookie) {
+        Long userId = viewerId(cookie);
+        if (userId == null) throw new InvalidTokenException("Entre para editar seu perfil.");
+        return userId;
+    }
+
     private PublicReviewPage publicPage(List<Review> reviews) {
         var items = reviews.stream().limit(PUBLIC_PAGE_SIZE).map(this::toRecentReview).toList();
         Long nextBefore = reviews.size() > PUBLIC_PAGE_SIZE ? items.get(PUBLIC_PAGE_SIZE - 1).id() : null;
@@ -188,13 +222,13 @@ public class ReviewService {
         if (targetArtist != null) {
             return new RecentReviewDto(review.getId(), review.getRating(), review.getReview(), account.getId(),
                     account.getUsername(), author.getLastFmImageUrl(), targetArtist.getId(), "artist",
-                    targetArtist.getNome(), null, cover, author.getProfileImageUrl());
+                    targetArtist.getNome(), null, cover, author.getProfileImageUrl(), account.getRole() == UserRole.VVIP);
         }
 
         var media = review.getMidia();
         return new RecentReviewDto(review.getId(), review.getRating(), review.getReview(), account.getId(),
                 account.getUsername(), author.getLastFmImageUrl(), media.getId(), media instanceof Musica ? "track" : "album",
-                media.getTitulo(), reviewArtistName(media), cover, author.getProfileImageUrl());
+                media.getTitulo(), reviewArtistName(media), cover, author.getProfileImageUrl(), account.getRole() == UserRole.VVIP);
     }
 
     private String reviewArtistName(Midia media) {
@@ -285,6 +319,7 @@ public class ReviewService {
         return new ReviewDto(review);
     }
 
+    @Transactional
     public void deleteReview(String cookie, Long reviewId) {
         if (!cookieService.checkCookie(cookie)) {
             throw new InvalidTokenException("Token invalido");
@@ -295,7 +330,7 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
-        if (!review.getAuthor().getUser().getId().equals(userId)) {
+        if (!review.getAuthor().getUser().getId().equals(userId) && !userRepository.canModerate(userId)) {
             throw new InvalidTokenException("Você não é o autor desta review");
         }
 

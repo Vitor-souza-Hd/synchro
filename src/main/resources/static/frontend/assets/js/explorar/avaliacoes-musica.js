@@ -117,8 +117,9 @@ document.addEventListener("synchro:song", async ({detail: {params, song}}) => {
         card.className = "music-review-card";
 
         const heading = document.createElement("h3");
-        heading.textContent =
-            `${review.author_name || "Usuário"} • ${review.rating}/10`;
+        heading.textContent = review.author_name ? "@" + review.author_name : "Usuário";
+        window.SynchroModeration?.appendReviewBadge(heading, review.authorVvip);
+        heading.append(" • " + review.rating + "/10");
 
         const text = document.createElement("p");
         text.textContent = review.review || "";
@@ -165,6 +166,11 @@ document.addEventListener("synchro:song", async ({detail: {params, song}}) => {
             });
 
             card.append(edit, remove);
+        } else {
+            window.SynchroModeration?.addDelete(card, {
+                url: '/review/' + encodeURIComponent(review.id),
+                label: 'Excluir avaliação', onDelete: () => Promise.all([loadReviews(), loadAverage()])
+            });
         }
 
         list.appendChild(card);

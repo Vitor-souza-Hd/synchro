@@ -41,7 +41,17 @@
         image.loading = 'lazy';
         image.referrerPolicy = 'no-referrer';
         setAvatar(image, [post.profileImageUrl, post.lastFmImageUrl]);
-        author.append(image, authorName(post.author));
+        const identity = document.createElement("span");
+        identity.className = "post-author-identity";
+        identity.textContent = authorName(post.author);
+        if (post.authorVvip === true) {
+            const badge = document.createElement("span");
+            badge.className = "profile-role-badge";
+            badge.dataset.role = "VVIP";
+            badge.textContent = "VVIP";
+            identity.append(badge);
+        }
+        author.append(image, identity);
 
         const meta = document.createElement('p');
         meta.className = 'post-meta';

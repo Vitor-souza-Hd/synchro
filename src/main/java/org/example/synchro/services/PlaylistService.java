@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.synchro.dto.PlaylistDto;
 import org.example.synchro.dto.PlaylistRequestDto;
 import org.example.synchro.dto.PlaylistSummaryDto;
+import org.example.synchro.dto.ProfileSelectionDto;
 import org.example.synchro.dto.SearchUserDTO;
 import org.example.synchro.entities.*;
 import org.example.synchro.repositories.MidiaRepository;
@@ -21,6 +22,7 @@ import java.util.Base64;
 import java.util.Set;
 import java.util.List;
 import java.util.LinkedHashMap;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -53,12 +55,48 @@ public class PlaylistService {
 
     @Transactional(readOnly = true)
     public List<PlaylistSummaryDto> findMyPlaylistSummaries(String cookie) {
-        return playlistRepository.findSummaries(requireUser(cookie)).stream()
+        User user = requireUser(cookie);
+        return playlistRepository.findSummaries(user).stream()
                 .map(row -> new PlaylistSummaryDto(row.getId(), row.getTitulo(), row.getTotalMusicas(),
                         new SearchUserDTO(row.getCriadorId(), row.getCriadorNome()),
                         row.getCapaInterna() ? artworkUrl(row.getId(), "cover") : row.getCapaExterna(),
-                        row.getBannerInterno() ? artworkUrl(row.getId(), "banner") : row.getBannerExterno()))
+                        row.getBannerInterno() ? artworkUrl(row.getId(), "banner") : row.getBannerExterno(),
+                        user.getId().equals(row.getCriadorId()), row.getExibirNoPerfil()))
                 .toList();
+    }
+
+    public record ProfilePlaylist(Long id, String titulo, int totalMusicas, String capa, String banner, UUID token) {}
+
+    @Transactional(readOnly = true)
+    public List<ProfilePlaylist> findProfilePlaylists(long userId) {
+        var published = playlistRepository.findProfilePlaylists(userId);
+        var available = published.stream().map(PlaylistRepository.SummaryRow::getId).toList();
+        String selected = available.size() > ProfileSelectionDto.LIMIT ? userRepository.findProfilePlaylistSelection(userId) : null;
+        var visible = ProfileSelection.visibleIds(available, selected);
+        return published.stream().filter(row -> visible.contains(row.getId())).map(row -> {
+            String path = "/playlists/shared/" + row.getShareToken() + "/artwork/";
+            return new ProfilePlaylist(row.getId(), row.getTitulo(), row.getTotalMusicas(),
+                    row.getCapaInterna() ? path + "cover" : row.getCapaExterna(),
+                    row.getBannerInterno() ? path + "banner" : row.getBannerExterno(), row.getShareToken());
+        }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ProfileSelectionDto playlistSelection(String cookie) {
+        User user = requireUser(cookie);
+        var items = playlistRepository.findProfilePlaylists(user.getId()).stream()
+                .map(row -> new ProfileSelectionDto.Item(row.getId(), row.getTitulo())).toList();
+        return ProfileSelection.options(items, user.getProfilePlaylistSelection());
+    }
+
+    @Transactional
+    public void savePlaylistSelection(String cookie, List<Long> ids) {
+        long userId = requireUser(cookie).getId();
+        User user = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+        var available = playlistRepository.findProfilePlaylists(userId).stream()
+                .map(PlaylistRepository.SummaryRow::getId).toList();
+        user.setProfilePlaylistSelection(ProfileSelection.checkedValue(available, ids));
     }
 
     @Transactional(readOnly = true)
@@ -73,11 +111,73 @@ public class PlaylistService {
         return result;
     }
 
+    @Transactional
+    public void deletePlaylist(String cookie, long id) {
+        User user = requireUser(cookie);
+        Playlist playlist = playlistRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Playlist não encontrada."));
+        if (!playlist.criadaPor(user)) {
+            throw new UnauthorizedException("Somente quem criou a playlist pode excluí-la.");
+        }
+        playlistRepository.delete(playlist);
+    }
+
     @Transactional(readOnly = true)
     public Artwork findMyPlaylistArtwork(String cookie, long id, String kind) {
         User user = requireUser(cookie);
         if (!Set.of("cover", "banner").contains(kind)) throw missingArtwork();
         String data = playlistRepository.findArtwork(id, user, kind.equals("cover")).orElseThrow(this::missingArtwork);
+        return decodeArtwork(data);
+    }
+
+    @Transactional
+    public UUID sharePlaylist(String cookie, long id) {
+        return ensureShareToken(requireOwnedForSharing(cookie, id));
+    }
+
+    @Transactional
+    public void setProfileVisibility(String cookie, long id, boolean visible) {
+        Playlist playlist = requireOwnedForSharing(cookie, id);
+        if (visible) ensureShareToken(playlist);
+        playlist.setExibirNoPerfil(visible);
+    }
+
+    private Playlist requireOwnedForSharing(String cookie, long id) {
+        User user = requireUser(cookie);
+        return playlistRepository.findForSharing(id)
+                .filter(item -> item.criadaPor(user))
+                .orElseThrow(() -> new ResourceNotFoundException("Playlist não encontrada."));
+    }
+
+    private UUID ensureShareToken(Playlist playlist) {
+        if (playlist.getShareToken() == null) playlist.setShareToken(UUID.randomUUID());
+        return playlist.getShareToken();
+    }
+
+    @Transactional(readOnly = true)
+    public PlaylistDto findSharedPlaylist(UUID token) {
+        Playlist playlist = sharedPlaylist(token);
+        var result = new PlaylistDto(playlist);
+        result.setUsuarios(Set.of());
+        String path = "/playlists/shared/" + token + "/artwork/";
+        if (isInternalArtwork(result.getCapa())) result.setCapa(path + "cover");
+        if (isInternalArtwork(result.getBanner())) result.setBanner(path + "banner");
+        return result;
+    }
+
+    @Transactional(readOnly = true)
+    public Artwork findSharedPlaylistArtwork(UUID token, String kind) {
+        if (!Set.of("cover", "banner").contains(kind)) throw missingArtwork();
+        Playlist playlist = sharedPlaylist(token);
+        return decodeArtwork(kind.equals("cover") ? playlist.getCapa() : playlist.getBanner());
+    }
+
+    private Playlist sharedPlaylist(UUID token) {
+        return playlistRepository.findByShareToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Playlist compartilhada não encontrada."));
+    }
+
+    private Artwork decodeArtwork(String data) {
         if (!isInternalArtwork(data)) throw missingArtwork();
         int separator = data.indexOf(',');
         if (separator < 0 || !data.substring(0, separator).endsWith(";base64")) throw missingArtwork();

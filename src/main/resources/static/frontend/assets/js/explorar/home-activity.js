@@ -21,6 +21,12 @@
         details.href = '/frontend/pages/publicacoes.html?' + new URLSearchParams({post: post.id});
         details.textContent = 'Abrir publicação';
         article.append(details);
+        if (signedIn && !post.own) {
+            window.SynchroModeration?.addDelete(article, {
+                url: '/posts/' + encodeURIComponent(post.id),
+                label: 'Excluir publicação', status, onDelete: () => article.remove()
+            });
+        }
         return article;
     }
 

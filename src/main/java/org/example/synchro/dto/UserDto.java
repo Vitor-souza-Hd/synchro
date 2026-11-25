@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.synchro.entities.User;
-import org.example.synchro.entities.UserData;
+import org.example.synchro.entities.UserRole;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -27,6 +27,7 @@ public class UserDto implements Serializable {
 
     private Long id;
     private String username;
+    private UserRole role;
     private String email;
     private LocalDate birthDay;
     private String lastFmUsername;
@@ -39,6 +40,7 @@ public class UserDto implements Serializable {
     public UserDto(User user) {
         this.id = user.getId();
         this.username = user.getUsername();
+        this.role = user.getRole();
         this.email = user.getEmail();
         this.birthDay = user.getBirthDay();
         this.lastFmUsername = user.getLastFmUsername();

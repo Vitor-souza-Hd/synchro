@@ -14,6 +14,7 @@ import org.example.synchro.entities.Midia;
 import org.example.synchro.entities.Musica;
 import org.example.synchro.entities.PostCatalogAttachment;
 import org.example.synchro.entities.User;
+import org.example.synchro.entities.UserRole;
 import org.example.synchro.repositories.AlbumRepository;
 import org.example.synchro.repositories.ArtistaRepository;
 import org.example.synchro.repositories.CommunityPostRepository;
@@ -61,7 +62,7 @@ public class CommunityPostService {
                                     @NotNull @Positive Long id) {}
     public record AttachmentView(String type, Long id, String title, String artist, String coverUrl) {}
     public record PostView(Long id, String body, Instant createdAt, Instant editedAt, UserSearchResult author,
-                           String profileImageUrl, String lastFmImageUrl, boolean own, AttachmentView attachment,
+                           String profileImageUrl, String lastFmImageUrl, boolean own, boolean authorVvip, AttachmentView attachment,
                            PostInteractionService.View interaction, PollView poll, List<AttachmentView> attachments) {}
     public record Feed(List<PostView> items, Long nextBefore, boolean canPublish, UserSearchResult author, boolean signedIn) {}
     public record FocusedPost(PostView post, boolean signedIn) {}
@@ -98,7 +99,7 @@ public class CommunityPostService {
             return view(post, viewer, reactions.getOrDefault(post.getId(), PostInteractionService.EMPTY),
                     postPolls.get(post.getId()),
                     new UserSearchResult(profile.getId(), profile.getUsername()),
-                    profile.getProfileImageUrl(), profile.getLastFmImageUrl());
+                    profile.getProfileImageUrl(), profile.getLastFmImageUrl(), profile.getRole());
         }).filter(Objects::nonNull).toList();
         Long nextBefore = entries.size() > limit ? ids.get(limit - 1) : null;
         boolean canPublish = viewer != null && (authorId == null || viewer.equals(authorId));
@@ -126,7 +127,7 @@ public class CommunityPostService {
     @Transactional
     public PostView edit(String token, long id, String text, List<AttachmentRequest> requested) {
         Long viewer = requireViewer(token);
-        var post = ownedPost(id, viewer);
+        var post = postForChange(id, viewer, false);
         var attachments = resolveAttachments(requested);
         var poll = polls.findForPost(id, viewer);
         String body = postBody(text, poll != null);
@@ -138,7 +139,7 @@ public class CommunityPostService {
 
     @Transactional
     public void delete(String token, long id) {
-        posts.delete(ownedPost(id, requireViewer(token)));
+        posts.delete(postForChange(id, requireViewer(token), true));
     }
 
     private static String postBody(String text, boolean hasPoll) {
@@ -153,9 +154,9 @@ public class CommunityPostService {
         return interactions.views(List.of(post.getId()), viewer).getOrDefault(post.getId(), PostInteractionService.EMPTY);
     }
 
-    private CommunityPost ownedPost(long id, Long viewer) {
+    private CommunityPost postForChange(long id, Long viewer, boolean allowModeration) {
         var post = posts.findByIdForUpdate(id).orElseThrow(() -> new ResourceNotFoundException("Publicação não encontrada."));
-        if (!post.getAuthor().getId().equals(viewer)) {
+        if (!post.getAuthor().getId().equals(viewer) && !(allowModeration && users.canModerate(viewer))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o autor pode alterar esta publicação.");
         }
         return post;
@@ -209,15 +210,15 @@ public class CommunityPostService {
         var author = post.getAuthor();
         var data = author.getData();
         return view(post, viewer, reaction, poll, publicAuthor(author),
-                data == null ? null : data.getProfileImageUrl(), data == null ? null : data.getLastFmImageUrl());
+                data == null ? null : data.getProfileImageUrl(), data == null ? null : data.getLastFmImageUrl(), author.getRole());
     }
 
     private static PostView view(CommunityPost post, Long viewer, PostInteractionService.View reaction, PollView poll,
-                                 UserSearchResult author, String profileImageUrl, String lastFmImageUrl) {
+                                 UserSearchResult author, String profileImageUrl, String lastFmImageUrl, UserRole role) {
         var attachments = post.catalogueAttachments().stream().map(CommunityPostService::attachmentView)
                 .filter(Objects::nonNull).toList();
         return new PostView(post.getId(), post.getBody(), post.getCreatedAt(), post.getEditedAt(), author,
-                profileImageUrl, lastFmImageUrl, author.id().equals(viewer),
+                profileImageUrl, lastFmImageUrl, author.id().equals(viewer), role == UserRole.VVIP,
                 attachments.isEmpty() ? null : attachments.get(0), reaction, poll, attachments);
     }
 

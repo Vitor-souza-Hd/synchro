@@ -2,6 +2,7 @@ package org.example.synchro.repositories;
 
 import jakarta.persistence.LockModeType;
 import org.example.synchro.entities.CommunityPost;
+import org.example.synchro.entities.UserRole;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -40,12 +41,13 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
     interface AuthorProfile {
         Long getId();
         String getUsername();
+        UserRole getRole();
         String getProfileImageUrl();
         String getLastFmImageUrl();
     }
 
     @Query("""
-            SELECT author.id AS id, author.username AS username,
+            SELECT author.id AS id, author.username AS username, author.role AS role,
                    data.profileImageUrl AS profileImageUrl, data.lastFmImageUrl AS lastFmImageUrl
             FROM User author LEFT JOIN author.data data WHERE author.id IN :ids
             """)

@@ -100,9 +100,11 @@
         if (!document.querySelector(".feature-header .feature-nav, #header-container .top-header")) document.body.prepend(nav);
         const destinations = new Map([['explorar',base+'explorar.html'],['recentes',base+'recentes.html'],['favoritos',base+'favoritos.html'],['avaliações',base+'perfil.html#minhas-avaliacoes'],['suas playlists',base+'playlists.html'],['criar uma nova',base+'playlists.html']]);
         document.querySelectorAll('.sidebar a').forEach(a=>{if(a.hasAttribute('data-create-playlist'))return;const href=destinations.get(a.textContent.trim().toLowerCase());if(href)a.href=href;});
-        document.addEventListener('synchro:own-profile', () => {
-            const grid = document.querySelector('.user-playlist .playlist');
-            if (!grid) return;
+        const grid = document.querySelector('.user-playlist .playlist');
+        if (!grid) return;
+        const isPublicProfile = document.body.dataset.profile === 'public';
+        document.addEventListener(isPublicProfile ? 'synchro:public-profile' : 'synchro:own-profile', ({detail: user}) => {
+            const endpoint = isPublicProfile ? '/playlists/users/' + encodeURIComponent(user.id) : '/playlists/me/summary';
 
             const playlistPage = base + 'playlists.html';
             const status = document.createElement('p');
@@ -141,7 +143,8 @@
             function playlistLink(playlist) {
                 const link = document.createElement('a');
                 link.className = 'feature-detail-link playlist-card';
-                link.href = `${playlistPage}?id=${encodeURIComponent(playlist.id)}`;
+                const query = isPublicProfile ? {share: playlist.token} : {id: playlist.id};
+                link.href = playlistPage + "?" + new URLSearchParams(query);
 
                 const title = document.createElement('h3');
                 title.textContent = playlist.titulo || 'Playlist sem título';
@@ -162,11 +165,11 @@
                 activeRequest?.abort();
                 const request = new AbortController();
                 activeRequest = request;
-                status.textContent = 'Carregando suas playlists…';
+                status.textContent = 'Carregando playlists…';
                 grid.prepend(status);
 
                 try {
-                    const response = await fetch('/playlists/me/summary', {
+                    const response = await fetch(endpoint, {
                         credentials: 'same-origin',
                         cache: 'no-store',
                         headers: { Accept: 'application/json' },
@@ -177,19 +180,23 @@
                     if (request.signal.aborted) return;
                     if (!Array.isArray(playlists)) throw new Error('Lista de playlists inválida');
 
+                    if (!isPublicProfile) {
+                        const choose = grid.closest("section").querySelector("[data-profile-selection=playlists]");
+                        if (choose) choose.hidden = playlists.filter(item => item.podeExcluir && item.exibirNoPerfil).length <= 10;
+                    }
                     const links = playlists.map(playlistLink);
                     grid.replaceChildren(...links);
                     if (!links.length) {
-                        status.textContent = 'Você ainda não tem playlists.';
+                        status.textContent = isPublicProfile ? 'Este perfil ainda não publicou playlists.' : 'Você ainda não tem playlists.';
                         grid.prepend(status);
                     }
                 } catch {
                     if (request.signal.aborted) return;
-                    status.textContent = 'Não foi possível carregar suas playlists. Abra a biblioteca para tentar novamente.';
+                    status.textContent = 'Não foi possível carregar as playlists.';
                 }
             }
 
-            document.addEventListener('playlist-saved', loadPlaylists);
+            if (!isPublicProfile) document.addEventListener('playlist-saved', loadPlaylists);
             whenProfileSectionNear(grid.closest('.user-playlist'), () => {
                 if (!activeRequest) loadPlaylists();
             });

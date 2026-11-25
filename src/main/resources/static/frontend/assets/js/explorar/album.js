@@ -55,9 +55,13 @@ document.addEventListener("synchro:album", async ({detail: {id: albumId}}) => {
         card.style.borderLeft = "4px solid #ff1744";
 
         card.innerHTML = `
-            <h3 style="color: white; margin-bottom: 5px;">${escapeHtml(review.author_name || "Usuário")} • ${escapeHtml(review.rating)}/10</h3>
+            <h3 style="color: white; margin-bottom: 5px;">${escapeHtml(review.author_name ? "@" + review.author_name : "Usuário")}</h3>
             <p style="color: #b3b3b3;">${escapeHtml(review.review || "")}</p>
         `;
+
+        const heading = card.querySelector("h3");
+        window.SynchroModeration?.appendReviewBadge(heading, review.authorVvip);
+        heading.append(" • " + review.rating + "/10");
 
         if (myReview && review.id === myReview.id) {
             const edit = document.createElement("button");
@@ -93,6 +97,11 @@ document.addEventListener("synchro:album", async ({detail: {id: albumId}}) => {
                 await loadAverage();
             });
             card.append(edit, remove);
+        } else {
+            window.SynchroModeration?.addDelete(card, {
+                url: '/review/' + encodeURIComponent(review.id),
+                label: 'Excluir avaliação', onDelete: () => Promise.all([loadReviews(), loadAverage()])
+            });
         }
         list.appendChild(card);
     }

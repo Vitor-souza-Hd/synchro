@@ -25,6 +25,8 @@ public class PlaylistDto {
     private SearchUserDTO criador;
     private Set<SearchUserDTO> usuarios = new HashSet<>();
     private boolean colaborador;
+    private boolean podeExcluir;
+    private boolean exibirNoPerfil;
 
     public PlaylistDto() {
     }
@@ -32,6 +34,8 @@ public class PlaylistDto {
     public PlaylistDto(Playlist playlist, User usuarioAtual) {
         this(playlist);
         this.colaborador = playlist.colaborador(usuarioAtual);
+        this.podeExcluir = playlist.criadaPor(usuarioAtual);
+        this.exibirNoPerfil = playlist.isExibirNoPerfil();
     }
 
     public PlaylistDto(Playlist playlist) {

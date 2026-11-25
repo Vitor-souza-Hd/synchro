@@ -115,6 +115,8 @@
             actions.className = 'post-actions';
             actions.append(button('Editar', () => openEditor(post)), button('Excluir', () => deletePost(post)));
             article.append(actions);
+        } else if (signedIn) {
+            window.SynchroModeration?.addAction(article, 'Excluir publicação', () => deletePost(post));
         }
         window.SynchroPostDiscussion?.attach(article, post, signedIn);
         postCards.set(post.id, {post, article, signedIn});

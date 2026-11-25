@@ -86,6 +86,7 @@ document.addEventListener('synchro:artist', ({detail: artist}) => {
         const author = document.createElement('a');
         author.href = 'perfil-publico.html?' + new URLSearchParams({user: review.authorId});
         author.textContent = '@' + review.username;
+        window.SynchroModeration?.appendReviewBadge(author, review.authorVvip);
         const score = document.createElement('strong');
         score.textContent = number.format(review.rating) + '/10';
         heading.append(author, score);
@@ -99,6 +100,11 @@ document.addEventListener('synchro:artist', ({detail: artist}) => {
             remove.textContent = 'Excluir';
             remove.addEventListener('click', deleteReview);
             heading.append(edit, remove);
+        } else if (signedIn) {
+            window.SynchroModeration?.addDelete(heading, {
+                url: '/review/' + encodeURIComponent(review.id),
+                label: 'Excluir avaliação', status, onDelete: () => load()
+            });
         }
         card.append(heading);
         if (review.review) {

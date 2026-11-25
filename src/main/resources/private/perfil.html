@@ -7,7 +7,7 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/style.css?v=shared-sidebar-1">
-    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=fotos-avaliacoes">
+    <link rel="stylesheet" href="/frontend/assets/css/explorar/user.css?v=convites-vvip">
     <link rel="stylesheet" href="/frontend/assets/css/explorar/tema-usuario.css?v=20261105-compact-profile-1">
     <link rel="stylesheet" href="/frontend/assets/css/search.css">
     <link rel="stylesheet" href="/frontend/assets/css/playlists.css?v=20261029-2">
@@ -15,12 +15,14 @@
     <script src="/frontend/assets/js/explorar/tema-global.js"></script>
 <link rel="stylesheet" href="/frontend/assets/css/auth.css">
 <link rel="stylesheet" href="/frontend/assets/css/features.css">
-<script src="/frontend/assets/js/features.js?v=cabecalho-estatico" defer></script>
+<script src="/frontend/assets/js/features.js?v=escolher-itens-perfil" defer></script>
 <script src="/frontend/assets/js/auth.js?v=perfil-rapido" defer></script>
     <link rel="stylesheet" href="/frontend/assets/css/post-discussion.css?v=sino-cabecalho">
     <script src="/frontend/assets/js/post-notifications.js?v=username-publico" defer></script>
     <link rel="stylesheet" href="/frontend/assets/css/site-header.css?v=sino-e-sair">
     <script src="/frontend/assets/js/site-header.js?v=barra-e-menu" defer></script>
+    <link rel="stylesheet" href="/frontend/assets/css/moderation.css?v=vvip-avaliacoes">
+    <script src="/frontend/assets/js/moderation.js?v=vvip-avaliacoes" defer></script>
 </head>
 <body class="synchro-usuario" data-profile="private">
 <div class="feature-session"><div id="authActions"><a href="/frontend/pages/login.html">Entrar</a> <a href="/frontend/pages/formulario.html">Criar conta</a></div></div>
@@ -96,7 +98,8 @@
                     <h1 id="profileHeading">Meu perfil</h1>
                     <p><a id="profilePostsLink" class="profile-account-settings" hidden>Ver publicações</a></p>
                     <p><a id="viewPublicProfile" class="profile-account-settings" hidden>Ver perfil público</a>
-                        <a id="editProfileLink" class="profile-account-settings" href="#profileSettings">Editar perfil</a></p>
+                        <a id="editProfileLink" class="profile-account-settings" href="#profileSettings">Editar perfil</a>
+                        <a id="vvipInvitationsLink" class="profile-account-settings" href="#vvipInvitations" hidden>Convites VVIP</a></p>
                     <p id="profileBiography" class="profile-biography" hidden></p>
                     <p id="profileLastFm"></p>
                     <p id="lastFmStatus" class="lastfm-status" role="status" aria-live="polite" hidden></p>
@@ -164,18 +167,47 @@
         </section>
 
         <section class="music-profile" id="minhas-avaliacoes" aria-labelledby="profileReviewsTitle">
-            <h2 id="profileReviewsTitle">Avaliações publicadas</h2>
+            <div class="profile-selection-heading">
+                <h2 id="profileReviewsTitle">Avaliações publicadas</h2>
+                <button class="profile-selection-trigger" type="button" data-profile-selection="reviews" aria-haspopup="dialog" hidden>Escolher avaliações</button>
+            </div>
             <div class="profile-review-list" aria-live="polite"></div>
         </section>
 
         <section class="music-profile user-playlist owner-only">
             <div class="profile-playlist-heading">
                 <h2>Playlists Criadas</h2>
+                <button class="profile-selection-trigger" type="button" data-profile-selection="playlists" aria-haspopup="dialog" hidden>Escolher playlists</button>
                 <a class="profile-playlist-manage" href="/frontend/pages/playlists.html">Gerenciar playlists</a>
             </div>
             <div class="playlist"></div>
         </section>
 
+        <section class="music-profile" id="vvipInvitations" aria-labelledby="vvipInvitationsTitle" hidden>
+            <h2 id="vvipInvitationsTitle">Convites VVIP</h2>
+            <div id="vvipIncoming" class="vvip-invitations-table" hidden>
+                <table>
+                    <caption>Convites recebidos</caption>
+                    <thead><tr><th scope="col">Convidado por</th><th scope="col">Ações</th></tr></thead>
+                    <tbody id="vvipIncomingRows"></tbody>
+                </table>
+            </div>
+            <div id="vvipOutgoing" hidden>
+                <form id="vvipInviteForm" class="vvip-invite-form">
+                    <label for="vvipInviteUsername">Convidar pelo nome de usuário</label>
+                    <input id="vvipInviteUsername" name="username" placeholder="@usuário" autocomplete="off" maxlength="200" required>
+                    <button type="submit">Enviar convite</button>
+                </form>
+                <div class="vvip-invitations-table">
+                    <table>
+                        <caption>Convites enviados</caption>
+                        <thead><tr><th scope="col">Usuário</th><th scope="col">Status</th><th scope="col">Enviado em</th><th scope="col">Ações</th></tr></thead>
+                        <tbody id="vvipOutgoingRows"></tbody>
+                    </table>
+                </div>
+            </div>
+            <p id="vvipInvitationStatus" role="status" aria-live="polite"></p>
+        </section>
         <details class="profile-settings owner-only" id="profileSettings">
             <summary><i class="fa-solid fa-gear" aria-hidden="true"></i> Configurações do perfil</summary>
             <div class="profile-settings-content">
@@ -270,9 +302,9 @@
     </main>
 </div>
 
-<script src="/frontend/assets/js/user.js?v=layout-perfis"></script>
+<script src="/frontend/assets/js/user.js?v=convites-vvip"></script>
 <script src="/frontend/assets/js/explorar/perfil-musical.js?v=perfil-dados-salvos"></script>
-<script src="/frontend/assets/js/explorar/user3.js?v=fotos-avaliacoes"></script>
+<script src="/frontend/assets/js/explorar/user3.js?v=vvip-avaliacoes"></script>
 <script src="/frontend/assets/js/search.js?v=username-publico"></script>
 <script src="/frontend/assets/js/explorar/foto-perfil.js?v=perfil-rapido"></script>
 <script src="/frontend/assets/js/music-profile-genres.js?v=imagem-primeiro-lugar"></script>
@@ -280,5 +312,22 @@
 <script src="/frontend/assets/js/explorar/banner-perfil.js?v=perfil-rapido"></script>
 <script src="/frontend/assets/js/image-visibility.js"></script>
 <script src="/frontend/assets/js/explorar/favorite-images.js?v=fotos-artistas-perfil-2"></script>
+    <dialog id="profileSelectionDialog" class="playlist-dialog" aria-labelledby="profileSelectionTitle">
+        <form id="profileSelectionForm" class="playlist-form">
+            <h2 id="profileSelectionTitle"></h2>
+            <p>Escolha até 10 itens para exibir no seu perfil público.</p>
+            <fieldset id="profileSelectionItems" class="profile-selection-items" hidden>
+                <legend id="profileSelectionCount"></legend>
+                <div id="profileSelectionChoices" class="profile-selection-choices"></div>
+            </fieldset>
+            <p id="profileSelectionStatus" class="playlist-feedback" role="status"></p>
+            <div class="playlist-actions">
+                <button id="closeProfileSelection" type="button">Fechar</button>
+                <button id="saveProfileSelection" type="submit" disabled>Salvar seleção</button>
+            </div>
+        </form>
+    </dialog>
+    <script src="/frontend/assets/js/profile-selection.js" defer></script>
+    <script src="/frontend/assets/js/vvip-invitations.js?v=cancelar-convite" defer></script>
 </body>
 </html>

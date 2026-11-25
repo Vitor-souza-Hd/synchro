@@ -74,6 +74,18 @@ public class MuralSignatureService {
         signatures.findByAuthorId(user).ifPresent(signatures::delete);
     }
 
+    @Transactional
+    public void moderate(String token, long id) {
+        if (!users.canModerate(userId(token))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "A moderação do mural é exclusiva de VVIP.");
+        }
+        var signature = signatures.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Assinatura não encontrada."));
+        long authorId = signature.getAuthor().getId();
+        users.findByIdForUpdate(authorId).orElseThrow(() -> new ResourceNotFoundException("Assinatura não encontrada."));
+        signatures.findByAuthorId(authorId).filter(item -> item.getId().equals(id)).ifPresent(signatures::delete);
+    }
+
     private static Entry entry(MuralSignature signature) {
         return new Entry(signature.getId(), signature.getAuthor().getUsername(), signature.getUpdatedAt());
     }

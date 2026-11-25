@@ -1,7 +1,10 @@
 package org.example.synchro;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.synchro.entities.Musica;
 import org.example.synchro.entities.User;
+import org.example.synchro.repositories.MusicaRepository;
+import org.example.synchro.repositories.PlaylistRepository;
 import org.example.synchro.repositories.UserRepository;
 import org.example.synchro.resources.PlaylistResource;
 import org.example.synchro.resources.exception.ResourceExceptionHandler;
@@ -87,6 +90,7 @@ class PlaylistEditingTests {
             assertEquals(cover, card.get("capa").asText());
             assertEquals(0, card.get("totalMusicas").asInt());
             assertFalse(card.has("musicas"));
+            assertTrue(card.path("podeExcluir").asBoolean());
 
             var detail = client.send(HttpRequest.newBuilder(URI.create(base + "/playlists/me/" + id))
                     .header("Cookie", "token_jwt=test-session").build(), HttpResponse.BodyHandlers.ofString());
@@ -105,6 +109,10 @@ class PlaylistEditingTests {
             assertEquals(404, client.send(coverRequest.copy().header("Cookie", "token_jwt=other-session")
                     .header("If-None-Match", etag).build(), HttpResponse.BodyHandlers.discarding()).statusCode());
             app.getBean(PlaylistService.class).addUserToPlaylist("test-session", id, other.getId());
+            var collaboratorLibrary = client.send(HttpRequest.newBuilder(URI.create(base + "/playlists/me/summary"))
+                    .header("Cookie", "token_jwt=other-session").build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, collaboratorLibrary.statusCode());
+            assertFalse(mapper.readTree(collaboratorLibrary.body()).get(0).get("podeExcluir").asBoolean());
             assertEquals(200, client.send(coverRequest.copy().header("Cookie", "token_jwt=other-session").build(),
                     HttpResponse.BodyHandlers.discarding()).statusCode());
             var sharedUpdate = client.send(HttpRequest.newBuilder(URI.create(base + "/playlists/update-playlist/" + id))
@@ -113,6 +121,70 @@ class PlaylistEditingTests {
                     .build(), HttpResponse.BodyHandlers.ofString());
             assertEquals(200, sharedUpdate.statusCode());
             assertEquals(image, mapper.readTree(sharedUpdate.body()).get("capa").asText());
+            assertFalse(mapper.readTree(sharedUpdate.body()).path("podeExcluir").asBoolean());
+            assertTrue(mapper.readTree(detail.body()).path("podeExcluir").asBoolean());
+
+            var songs = app.getBean(MusicaRepository.class);
+            var song = songs.save(new Musica("Catalog track", "", null, null));
+            app.getBean(PlaylistService.class).addMidiaToPlaylist("test-session", id, song.getId());
+            var share = HttpRequest.newBuilder(URI.create(base + "/playlists/me/" + id + "/share"))
+                    .POST(HttpRequest.BodyPublishers.noBody());
+            assertEquals(401, client.send(share.copy().build(), HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertEquals(404, client.send(share.copy().header("Cookie", "token_jwt=other-session").build(),
+                    HttpResponse.BodyHandlers.discarding()).statusCode());
+            var ownerShare = share.copy().header("Cookie", "token_jwt=test-session").build();
+            var link = client.send(ownerShare, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, link.statusCode(), link.body());
+            String token = mapper.readTree(link.body()).get("token").asText();
+            assertEquals(token, mapper.readTree(client.send(ownerShare, HttpResponse.BodyHandlers.ofString()).body())
+                    .get("token").asText());
+            var publicDetail = HttpRequest.newBuilder(URI.create(base + "/playlists/shared/" + token)).build();
+            var shared = client.send(publicDetail, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, shared.statusCode());
+            var visible = mapper.readTree(shared.body());
+            assertEquals(1, visible.path("musicas").size());
+            assertTrue(visible.path("usuarios").isEmpty());
+            assertFalse(visible.path("podeExcluir").asBoolean());
+            assertFalse(visible.path("colaborador").asBoolean());
+            String sharedCover = visible.get("capa").asText();
+            assertEquals("/playlists/shared/" + token + "/artwork/cover", sharedCover);
+            assertEquals(200, client.send(HttpRequest.newBuilder(URI.create(base + sharedCover)).build(),
+                    HttpResponse.BodyHandlers.discarding()).statusCode());
+
+            var publicList = HttpRequest.newBuilder(URI.create(base + "/playlists/users/" + owner.getId())).build();
+            assertTrue(mapper.readTree(client.send(publicList, HttpResponse.BodyHandlers.ofString()).body()).isEmpty());
+            var publish = HttpRequest.newBuilder(URI.create(base + "/playlists/me/" + id + "/profile-visibility"))
+                    .header("Content-Type", "application/json").PUT(HttpRequest.BodyPublishers.ofString("{\"visible\":true}"));
+            assertEquals(404, client.send(publish.copy().header("Cookie", "token_jwt=other-session").build(),
+                    HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertEquals(204, client.send(publish.copy().header("Cookie", "token_jwt=test-session").build(),
+                    HttpResponse.BodyHandlers.discarding()).statusCode());
+            var published = mapper.readTree(client.send(publicList, HttpResponse.BodyHandlers.ofString()).body());
+            assertEquals(1, published.size());
+            assertEquals(token, published.get(0).get("token").asText());
+            assertEquals(sharedCover, published.get(0).get("capa").asText());
+            assertEquals(1, published.get(0).get("totalMusicas").asInt());
+
+            var hide = publish.copy().header("Cookie", "token_jwt=test-session")
+                    .PUT(HttpRequest.BodyPublishers.ofString("{\"visible\":false}")).build();
+            assertEquals(204, client.send(hide, HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertTrue(mapper.readTree(client.send(publicList, HttpResponse.BodyHandlers.ofString()).body()).isEmpty());
+            assertEquals(200, client.send(publicDetail, HttpResponse.BodyHandlers.discarding()).statusCode());
+
+            var delete = HttpRequest.newBuilder(URI.create(base + "/playlists/me/" + id)).DELETE();
+            assertEquals(401, client.send(delete.copy().build(), HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertEquals(401, client.send(delete.copy().header("Cookie", "token_jwt=other-session").build(),
+                    HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertTrue(app.getBean(PlaylistRepository.class).existsById(id));
+
+            var ownerDelete = delete.copy().header("Cookie", "token_jwt=test-session").build();
+            assertEquals(204, client.send(ownerDelete, HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertEquals(404, client.send(ownerDelete, HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertFalse(app.getBean(PlaylistRepository.class).existsById(id));
+            assertEquals(404, client.send(publicDetail, HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertTrue(songs.existsById(song.getId()));
+            assertTrue(app.getBean(PlaylistService.class).findMyPlaylistSummaries("test-session").isEmpty());
+            assertTrue(app.getBean(PlaylistService.class).findMyPlaylistSummaries("other-session").isEmpty());
         }
     }
 }

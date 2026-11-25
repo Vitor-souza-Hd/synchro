@@ -1,5 +1,6 @@
 package org.example.synchro.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,6 +28,20 @@ public class User implements Serializable {
     private String password;
     private LocalDate birthDay;
     private String lastFmUsername;
+
+    @JsonIgnore
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_role", nullable = false, length = 12)
+    @org.hibernate.annotations.ColumnDefault("'USER'")
+    private UserRole role = UserRole.USER;
+
+    @JsonIgnore
+    @Column(length = 200)
+    private String profileReviewSelection;
+
+    @JsonIgnore
+    @Column(length = 200)
+    private String profilePlaylistSelection;
 
     @Column(name = "imagem_perfil")
     private byte[] imagemPerfil;

@@ -47,6 +47,33 @@ public interface ReviewRepository
             """)
     List<Review> findPublicReviewsByArtist(@Param("artistId") long artistId, @Param("before") long before, Pageable pageable);
 
+    interface ProfileItem {
+        Long getId();
+        String getTitle();
+    }
+
+    @Query("""
+            select r.id as id, coalesce(artist.nome, media.titulo) as title
+            from Review r
+            left join r.midia media
+            left join r.artist artist
+            where r.author.user.id = :userId and (artist is not null or type(media) in (Album, Musica))
+            order by r.id desc
+            """)
+    List<ProfileItem> findProfileItems(@Param("userId") long userId);
+
+    @Query("""
+            select r from Review r
+            join fetch r.author author
+            join fetch author.user
+            left join fetch r.midia media
+            left join fetch r.artist artist
+            where author.user.id = :userId and r.id in :ids
+              and (artist is not null or type(media) in (Album, Musica))
+            order by r.id desc
+            """)
+    List<Review> findProfileReviews(@Param("userId") long userId, @Param("ids") List<Long> ids);
+
     Optional<Review> findByAuthorUserIdAndArtistId(Long userId, Long artistId);
 
     long countByArtistId(long artistId);

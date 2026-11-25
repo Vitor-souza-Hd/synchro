@@ -374,6 +374,22 @@ body{
 .review-card img, .playlist-card img{
     border-radius: 8px;
 }
+.user-playlist .playlist {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 10px;
+    overflow: visible;
+}
+
+.user-playlist .playlist-card {
+    width: min(180px, calc((100% - 10px) / 2));
+    min-width: 0;
+    padding: 7px;
+    overflow-wrap: anywhere;
+}
+
 .profile-playlist-heading {
     display: flex;
     flex-wrap: wrap;
@@ -1269,6 +1285,27 @@ html.synchro-light :is(.music-profile-period, #musicProfileStatus, #musicProfile
     object-fit: cover;
 }
 
+.profile-selection-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.profile-selection-trigger {
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    padding: 6px 10px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+.profile-selection-items { min-width: 0; border: 0; }
+.profile-selection-choices { max-height: 45dvh; overflow-y: auto; padding: 4px; }
+.profile-selection-choice {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 7px 2px;
+    overflow-wrap: anywhere;
+}
+.profile-selection-choice input[type="checkbox"] { width: auto; flex: 0 0 auto; }
+
 .profile-review-list:not(:empty) {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
@@ -1649,3 +1686,24 @@ html.synchro-light .synchro-usuario {
 .synchro-usuario .weekly-report .report-leader-artwork > img[src$="-placeholder.svg"] {
     object-fit: contain;
 }
+
+#vvipInvitations [hidden], #vvipInvitationsLink[hidden] { display: none; }
+.vvip-invite-form { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.vvip-invite-form label { flex-basis: 100%; }
+.vvip-invite-form input, #vvipInvitations button {
+    min-width: 0;
+    padding: 8px 12px;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+}
+#vvipInvitations button { cursor: pointer; }
+#vvipInvitations button:disabled { opacity: .6; cursor: wait; }
+.vvip-invitations-table { overflow-x: auto; margin-block: 16px; }
+.vvip-invitations-table table { width: 100%; border-collapse: collapse; text-align: start; }
+.vvip-invitations-table caption { text-align: start; font-weight: 700; margin-bottom: 8px; }
+.vvip-invitations-table th, .vvip-invitations-table td { padding: 8px; text-align: start; border-bottom: 1px solid #8885; }
+.vvip-invitation-actions button { margin: 2px 6px 2px 0; }
+#vvipInvitationStatus:empty { display: none; }

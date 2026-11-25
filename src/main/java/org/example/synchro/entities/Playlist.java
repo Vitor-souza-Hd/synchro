@@ -14,11 +14,20 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
 public class Playlist extends Midia {
+    @jakarta.persistence.Column(unique = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private UUID shareToken;
+
+    @jakarta.persistence.Column(nullable = false)
+    @org.hibernate.annotations.ColumnDefault("false")
+    private boolean exibirNoPerfil;
+
     @jakarta.persistence.Column(columnDefinition = "text")
     private String capa;
 
@@ -82,11 +91,16 @@ public class Playlist extends Midia {
         usuario.getPlaylists().remove(this);
     }
 
+    public boolean criadaPor(User usuario) {
+        return usuario != null && usuario.getId() != null && criador != null
+                && usuario.getId().equals(criador.getId());
+    }
+
     public boolean colaborador(User usuario) {
         if (usuario == null || usuario.getId() == null) return false;
+        if (criadaPor(usuario)) return true;
         // Compare identifiers through getters: Hibernate may load users as proxies.
         Long userId = usuario.getId();
-        if (criador != null && userId.equals(criador.getId())) return true;
         return colaboradores.stream().anyMatch(user -> userId.equals(user.getId()));
     }
 }

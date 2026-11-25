@@ -2,6 +2,7 @@ package org.example.synchro.dto;
 
 import lombok.Data;
 import org.example.synchro.entities.Review;
+import org.example.synchro.entities.UserRole;
 
 @Data
 public class ReviewDto {
@@ -11,6 +12,7 @@ public class ReviewDto {
     private String review;
     private String midiatype;
     private String author_name;
+    private boolean authorVvip;
     private String midiaTitulo;
     private Long midiaId;
     private Long artistId;
@@ -22,7 +24,9 @@ public class ReviewDto {
         this.rating = review.getRating();
         this.review = review.getReview();
         this.midiatype = review.getMidiatype();
-        this.author_name = review.getAuthor_Name();
+        var account = review.getAuthor() == null ? null : review.getAuthor().getUser();
+        this.author_name = account == null ? review.getAuthor_Name() : account.getUsername();
+        this.authorVvip = account != null && account.getRole() == UserRole.VVIP;
         this.midiaTitulo = (review.getMidia() != null)
                 ? review.getMidia().getTitulo()
                 : review.getArtist() != null ? review.getArtist().getNome() : null;

@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SYNCHRO | Playlists</title>
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
@@ -10,11 +11,11 @@
     <link rel="stylesheet" href="../assets/css/search.css">
     <link rel="stylesheet" href="../assets/css/auth.css?v=20261029-1">
     <link rel="stylesheet" href="../assets/css/playlists.css?v=20261029-2">
-    <link rel="stylesheet" href="../assets/css/playlist-page.css?v=shared-sidebar-1">
+    <link rel="stylesheet" href="../assets/css/playlist-page.css?v=menu-playlists">
     <script src="../assets/js/search.js?v=username-publico" defer></script>
     <script src="../assets/js/auth.js?v=20261029-1" defer></script>
     <script src="../assets/js/playlists.js?v=20261101-4" defer></script>
-    <script src="../assets/js/playlist-page.js?v=perfil-publico" defer></script>
+    <script src="../assets/js/playlist-page.js?v=playlists-no-perfil" defer></script>
 <link rel="stylesheet" href="/frontend/assets/css/features.css">
 <script src="/frontend/assets/js/features.js?v=cabecalho-estatico" defer></script>
 <script src="/frontend/assets/js/explorar/tema-global.js"></script>
@@ -160,12 +161,41 @@
                     </div>
                 </div>
                 <p id="playlistParticipation" class="playlist-participation"></p>
-                <div class="playlist-toolbar"><button id="playlistEdit" class="playlist-primary" type="button" hidden>Editar playlist</button><a class="playlist-secondary" href="/">Buscar músicas</a></div>
+                <div class="playlist-toolbar"><button id="playlistEdit" class="playlist-primary" type="button" hidden>Editar playlist</button><a class="playlist-secondary" href="/">Buscar músicas</a><div id="playlistDetailActions"></div></div>
                 <section class="playlist-songs" aria-labelledby="playlistSongsHeading"><h2 id="playlistSongsHeading">Músicas</h2><div id="playlistTracks"></div><p id="playlistTracksEmpty" hidden>Esta playlist ainda não tem músicas. Abra uma música e use “Adicionar à playlist”.</p></section>
                 <section class="playlist-people" aria-labelledby="playlistPeopleHeading"><h2 id="playlistPeopleHeading">Quem participa</h2><div id="playlistCollaborators"></div></section>
             </section>
             <div class="playlist-page-status"><p id="playlistPageStatus" role="status" aria-live="polite">Carregando suas playlists…</p><a id="playlistPageLogin" href="login.html" hidden>Entrar na minha conta</a><button id="playlistPageRetry" class="playlist-secondary" type="button" hidden>Tentar novamente</button></div>
         </main>
     </div>
+    <dialog id="playlistInviteDialog" class="playlist-dialog" aria-labelledby="playlistInviteHeading">
+        <form id="playlistInviteForm" class="playlist-form">
+            <h2 id="playlistInviteHeading">Convidar colaborador</h2>
+            <p>A conta adicionada poderá editar a playlist.</p>
+            <label for="playlistInviteUsername">Nome de usuário</label>
+            <input id="playlistInviteUsername" name="username" placeholder="@usuário" autocomplete="off" maxlength="200" required>
+            <p id="playlistInviteStatus" class="playlist-feedback" role="status"></p>
+            <div class="playlist-actions">
+                <button type="button" data-close-playlist-dialog>Fechar</button>
+                <button type="submit">Adicionar colaborador</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="playlistShareDialog" class="playlist-dialog" aria-labelledby="playlistShareHeading">
+        <div class="playlist-form">
+            <h2 id="playlistShareHeading">Compartilhar playlist</h2>
+            <p id="playlistShareDescription"></p>
+            <label id="playlistShareField" hidden>Link da playlist
+                <input id="playlistShareUrl" type="url" readonly>
+            </label>
+            <p id="playlistShareStatus" class="playlist-feedback" role="status"></p>
+            <div class="playlist-actions">
+                <button type="button" data-close-playlist-dialog>Fechar</button>
+                <button type="button" id="playlistProfileVisibility" hidden>Mostrar no perfil público</button>
+                <button type="button" id="playlistShareGenerate">Gerar link</button>
+                <button type="button" id="playlistShareCopy" hidden>Copiar link</button>
+            </div>
+        </div>
+    </dialog>
 </body>
 </html>
